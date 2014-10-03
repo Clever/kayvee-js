@@ -10,6 +10,11 @@ format = (data, sort = true) ->
 
 # Similar to format, but takes additional reserved params to promote logging best-practices
 formatLog = (source, level, title, data) ->
+  # consistently output empty string for unset keys, because null values differ by language
+  source = "" if source in [null, undefined]
+  level = "" if level in [null, undefined]
+  title = "" if title in [null, undefined]
+
   reserved = format {source, level, title}, false
   return reserved unless (_.isObject data) and (_.keys data).length > 0
   "#{reserved} #{format data}"

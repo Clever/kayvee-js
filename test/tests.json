@@ -21,18 +21,7 @@
       "output": "context=\"fake_context\" level=\"WARNING\""
     },
     {
-      "input": {
-        "data" : {
-          "context": "fake_context",
-          "level": "WARNING",
-          "title": "fake_title"
-        }
-
-      },
-      "output": "context=\"fake_context\" level=\"WARNING\" title=\"fake_title\""
-    },
-    {
-      "title": "maps multiple data fields",
+      "title": "allows nested objects",
       "input": {
         "data" : {
           "baz": {
@@ -44,6 +33,7 @@
       "output": "baz={\"nested\":\"object\"}"
     },
     {
+      "title": "allows spaces",
       "input": {
         "data" : {
           "spaces": " set' c"
@@ -79,7 +69,7 @@
     {
       "title": "outputs reserved fields, even if undefined",
       "input": {},
-      "output": "source=undefined level=undefined title=undefined"
+      "output": "source=\"\" level=\"\" title=\"\""
     }
   ]
 }
