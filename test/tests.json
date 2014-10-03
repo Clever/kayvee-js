@@ -1,41 +1,85 @@
 {
+  "version": "0.0.1",
   "format": [
     {
-      "title": "Maps one data field",
+      "title": "maps one data field",
       "input": {
-        "context": "fake_context"
+        "data" : {
+          "context": "fake_context"
+        }
       },
       "output": "context=\"fake_context\""
     },
     {
-      "title": "Maps multiple data fields",
+      "title": "maps multiple data fields",
       "input": {
-        "level": "WARNING",
-        "context": "fake_context"
+        "data" : {
+          "level": "WARNING",
+          "context": "fake_context"
+        }
       },
       "output": "context=\"fake_context\" level=\"WARNING\""
     },
     {
       "input": {
-        "context": "fake_context",
-        "level": "WARNING",
-        "title": "fake_title"
+        "data" : {
+          "context": "fake_context",
+          "level": "WARNING",
+          "title": "fake_title"
+        }
+
       },
       "output": "context=\"fake_context\" level=\"WARNING\" title=\"fake_title\""
     },
     {
+      "title": "maps multiple data fields",
       "input": {
-        "baz": {
-          "nested": "object"
+        "data" : {
+          "baz": {
+            "nested": "object"
+          }
         }
+
       },
       "output": "baz={\"nested\":\"object\"}"
     },
     {
       "input": {
-        "spaces": " set' c"
+        "data" : {
+          "spaces": " set' c"
+        }
       },
       "output": "spaces=\" set' c\""
+    }
+  ],
+  "formatLog": [
+    {
+      "title": "outputs reserved fields",
+      "input": {
+        "source": "SOURCE",
+        "level": "error",
+        "title": "BAD_THINGS_HAPPENING",
+        "data": {}
+      },
+      "output": "source=\"SOURCE\" level=\"error\" title=\"BAD_THINGS_HAPPENING\""
+    },
+    {
+      "title": "outputs reserved fields and sorted data",
+      "input": {
+        "source": "SOURCE",
+        "level": "error",
+        "title": "BAD_THINGS_HAPPENING",
+        "data": {
+          "foo": "bar",
+          "baz": "boo"
+        }
+      },
+      "output": "source=\"SOURCE\" level=\"error\" title=\"BAD_THINGS_HAPPENING\" baz=\"boo\" foo=\"bar\""
+    },
+    {
+      "title": "outputs reserved fields, even if undefined",
+      "input": {},
+      "output": "source=undefined level=undefined title=undefined"
     }
   ]
 }
