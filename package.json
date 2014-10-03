@@ -1,0 +1,25 @@
+{
+  "name": "kayvee",
+  "description": "Write data to key=val pairs, for human and machine readability",
+  "version": "0.0.1",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Clever/kayvee-node"
+  },
+  "dependencies": {
+    "underscore": "~1.5.2"
+  },
+  "devDependencies": {
+    "mocha": "~1.17.0",
+    "coffee-script": "~1.6.3"
+  },
+  "scripts": {
+    "test": "make -Br test"
+  },
+  "author": "Clever <tech-notify@clever.com>",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/Clever/kayvee-node/issues"
+  }
+}

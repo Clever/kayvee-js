@@ -1,0 +1,41 @@
+{
+  "format": [
+    {
+      "title": "Maps one data field",
+      "input": {
+        "context": "fake_context"
+      },
+      "output": "context=\"fake_context\""
+    },
+    {
+      "title": "Maps multiple data fields",
+      "input": {
+        "level": "WARNING",
+        "context": "fake_context"
+      },
+      "output": "context=\"fake_context\" level=\"WARNING\""
+    },
+    {
+      "input": {
+        "context": "fake_context",
+        "level": "WARNING",
+        "title": "fake_title"
+      },
+      "output": "context=\"fake_context\" level=\"WARNING\" title=\"fake_title\""
+    },
+    {
+      "input": {
+        "baz": {
+          "nested": "object"
+        }
+      },
+      "output": "baz={\"nested\":\"object\"}"
+    },
+    {
+      "input": {
+        "spaces": " set' c"
+      },
+      "output": "spaces=\" set' c\""
+    }
+  ]
+}
