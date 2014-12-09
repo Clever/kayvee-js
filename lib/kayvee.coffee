@@ -3,10 +3,8 @@ _ = require 'underscore'
 toKeyVal = (data) -> _.map (data), (v, k) -> "#{k}=#{JSON.stringify v}"
 
 # Converts a map to a string space-delimited key=val pairs
-format = (data, sort = true) ->
-  keyvals = toKeyVal(data)
-  keyvals.sort() if sort
-  keyvals.join(" ")
+format = (data) ->
+  JSON.stringify data
 
 # Similar to format, but takes additional reserved params to promote logging best-practices
 formatLog = (source, level, title, data) ->
@@ -15,9 +13,11 @@ formatLog = (source, level, title, data) ->
   level = "" if level in [null, undefined]
   title = "" if title in [null, undefined]
 
-  reserved = format {source, level, title}, false
-  return reserved unless (_.isObject data) and (_.keys data).length > 0
-  "#{reserved} #{format data}"
+  reserved = {source, level, title}
+  data = {} if not _.isObject data
+
+  # reserved keys overwrite other keys in data
+  return format(_.extend data, reserved)
 
 module.exports =
   format: format

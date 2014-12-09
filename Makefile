@@ -12,7 +12,7 @@ build: $(LIBS)
 lib-js/%.js : lib/%.coffee
 	node_modules/coffee-script/bin/coffee --bare -c -o $(@D) $(patsubst lib-js/%,lib/%,$(patsubst %.js,%.coffee,$@))
 
-test: $(TESTS) lint
+test: tests.json $(TESTS)
 
 $(TESTS): build
 	DEBUG=us:progress NODE_ENV=test node_modules/mocha/bin/mocha --timeout 60000 --compilers coffee:coffee-script test/$@.coffee
@@ -35,8 +35,8 @@ publish: clean build
 	    git push --tags; \
 	fi
 
-lint:
-	./node_modules/.bin/lint
-
 clean:
 	rm -rf lib-js lib-js-cov
+
+tests.json:
+	wget https://raw.githubusercontent.com/Clever/kayvee/master/tests.json -O test/tests.json

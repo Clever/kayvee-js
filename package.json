@@ -1,7 +1,7 @@
 {
   "name": "kayvee",
   "description": "Write data to key=val pairs, for human and machine readability",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "main": "index.js",
   "repository": {
     "type": "git",
@@ -11,8 +11,10 @@
     "underscore": "~1.5.2"
   },
   "devDependencies": {
+    "coffee-script": "~1.6.3",
+    "lint": "^1.1.2",
     "mocha": "~1.17.0",
-    "coffee-script": "~1.6.3"
+    "underscore.deep": "^0.5.1"
   },
   "scripts": {
     "test": "make -Br test"
