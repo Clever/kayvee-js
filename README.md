@@ -10,12 +10,12 @@ Read the [Kayvee spec](https://github.com/Clever/kayvee) to learn more about the
 Here's are two examples snippets that log a kayvee formatted string:
 
 ```coffee
-console.log kayvee.format {"hello":"world"}
+console.error kayvee.format {"hello":"world"}
 # {"hello":"world"}
 ```
 
 ```coffee
-console.log kayvee.formatLog "test_source", kayvee.INFO, "title", {"foo" : 1, "bar" : "baz"}
+console.error kayvee.formatLog "test_source", kayvee.INFO, "title", {"foo" : 1, "bar" : "baz"}
 # {"foo":1,"bar":"baz","source":"test_source","level":"info","title":"title"}
 ```
 
