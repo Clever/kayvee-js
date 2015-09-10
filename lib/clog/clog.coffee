@@ -18,7 +18,15 @@ LOG_LEVEL_ENUM = {
 }
 
 class Logger
-  constructor: (source, @logLvl=LOG_LEVELS.Debug, @formatter=kv.format, output=console.error) ->
+  constructor: (source, logLvl=null, @formatter=kv.format, output=console.error) ->
+    if !logLvl?
+      strLogLvl = process.env.LOG_LEVEL_CONFIG
+      if !strLogLvl?
+        logLvl = LOG_LEVELS.Debug
+      else
+        vals = (val for key, val of LOG_LEVELS)
+        logLvl = if (strLogLvl in vals) then strLogLvl else LOG_LEVELS.Debug
+    @logLvl = logLvl
     @globals = {}
     @globals["source"] = source
     @logWriter = output
