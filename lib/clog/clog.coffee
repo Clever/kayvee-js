@@ -2,19 +2,19 @@ _ = require 'underscore'
 kv  = require "../kayvee"
 
 LOG_LEVELS = {
-  Debug:    "debug",
-  Info:     "info",
-  Warning:  "warning",
-  Error:    "error",
-  Critical: "critical",
+  "Debug":    "debug",
+  "Info":     "info",
+  "Warning":  "warning",
+  "Error":    "error",
+  "Critical": "critical",
 }
 
 LOG_LEVEL_ENUM = {
-  debug:    0,
-  info:     1,
-  warning:  2,
-  error:    3,
-  critical: 4,
+  "debug":    0,
+  "info":     1,
+  "warning":  2,
+  "error":    3,
+  "critical": 4,
 }
 
 class Logger
