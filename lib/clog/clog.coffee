@@ -20,22 +20,25 @@ LOG_LEVEL_ENUM = {
 class Logger
   constructor: (source, logLvl=null, @formatter=kv.format, output=console.error) ->
     if !logLvl?
-      strLogLvl = process.env.LOG_LEVEL_CONFIG
-      if !strLogLvl?
-        logLvl = LOG_LEVELS.Debug
-      else
-        vals = (val for key, val of LOG_LEVELS)
-        logLvl = if (strLogLvl in vals) then strLogLvl else LOG_LEVELS.Debug
-    @logLvl = logLvl
+      logLvl = process.env.LOG_LEVEL_CONFIG
+    @logLvl = @_validateLogLvl(logLvl)
     @globals = {}
     @globals["source"] = source
     @logWriter = output
 
   setConfig: (source, logLvl, formatter, output) ->
     @source = source
-    @logLvl = logLvl
+    @logLvl = @_validateLogLvl(logLvl)
     @formatter = formatter
     @logWriter = output
+
+  _validateLogLvl: (logLvl) ->
+    if !logLvl?
+      return LOG_LEVELS.Debug
+    else
+      for own key, value of LOG_LEVELS
+        if logLvl.toLowerCase() == value
+          return value
 
   setLogLevel: (logLvl) ->
     @logLvl = logLvl
