@@ -27,7 +27,7 @@ class Logger
     @logWriter = output
 
   setConfig: (source, logLvl, formatter, output) ->
-    @source = source
+    @global["source"] = source
     @logLvl = @_validateLogLvl(logLvl)
     @formatter = formatter
     @logWriter = output
