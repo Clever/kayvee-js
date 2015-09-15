@@ -17,11 +17,11 @@ LOG_LEVEL_ENUM = {
   "critical": 4,
 }
 
-# This is a port from kayvee-go/c-log/clog.go
+# This is a port from kayvee-go/logger/logger.go
 class Logger
   constructor: (source, logLvl=null, @formatter=kv.format, output=console.error) ->
     if !logLvl?
-      logLvl = process.env.LOG_LEVEL_CONFIG
+      logLvl = process.env.KAYVEE_LOG_LEVEL
     @logLvl = @_validateLogLvl(logLvl)
     @globals = {}
     @globals["source"] = source
