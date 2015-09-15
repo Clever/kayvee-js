@@ -16,6 +16,29 @@ describe 'clog_test', ->
   	sample = ""
   	logger.setOutput outputFunc
 
+  describe '.constructor', ->
+    it 'constructor', ->
+      formatter = (data) -> data["level"] + "." + data["source"] + "." + data["title"]
+      logger = new clog("clog-test", clog.Info, formatter, outputFunc)
+      logger.debug "testlogdebug"
+      expected = ""
+      assert.equal sample, expected
+
+      logger.info "testloginfo"
+      expected = clog.Info + ".clog-test.testloginfo"
+      assert.equal sample, expected
+  describe '.invalidlog', ->
+    it 'invalidlog', ->
+      # Invalid log levels will default to debug
+      logger.setLogLevel "debu"
+      logger.debug "testlogdebug"
+      expected = "{\"source\": \"clog-tester\", \"level\": \"" + clog.Debug + "\", \"title\": \"testlogdebug\"}"
+      assert.deepEqual JSON.parse(sample), JSON.parse(expected)
+
+      logger.setLogLevel "sometest"
+      logger.info "testloginfo"
+      expected = "{\"source\": \"clog-tester\", \"level\": \"" + clog.Info + "\", \"title\": \"testloginfo\"}"
+      assert.deepEqual JSON.parse(sample), JSON.parse(expected)
   describe '.debug', ->
   	it 'debug', ->
   	  logger.debug "testlogdebug"
@@ -99,23 +122,42 @@ describe 'clog_test', ->
       assert.notDeepEqual JSON.parse(output2), JSON.parse(sample)
 
   describe '.hiddenlog', ->
-    beforeEach ->
-      logger.setLogLevel clog.Warning
-    it 'empty', ->
-      logger.debug "testlogdebug"
-      assert.equal sample, ""
+    describe '.logwarning', ->
+      beforeEach ->
+        logger.setLogLevel clog.Warning
+      it 'empty', ->
+        logger.debug "testlogdebug"
+        assert.equal sample, ""
 
-      logger.info "testloginfo"
-      assert.equal sample, ""
-    it 'notempty', ->
-      logger.warn "testlogwarning"
-      assert.notDeepEqual JSON.parse(sample), ""
+        logger.info "testloginfo"
+        assert.equal sample, ""
+      it 'notempty', ->
+        logger.warn "testlogwarning"
+        assert.notDeepEqual JSON.parse(sample), ""
 
-      logger.error "testlogerror"
-      assert.notDeepEqual JSON.parse(sample), ""
+        logger.error "testlogerror"
+        assert.notDeepEqual JSON.parse(sample), ""
 
-      logger.critical "testlogcritical"
-      assert.notDeepEqual JSON.parse(sample), ""
+        logger.critical "testlogcritical"
+        assert.notDeepEqual JSON.parse(sample), ""
+    describe '.logcritical', ->
+      beforeEach ->
+        logger.setLogLevel clog.Critical
+      it 'empty', ->
+        logger.debug "testlogdebug"
+        assert.equal sample, ""
+
+        logger.info "testloginfo"
+        assert.equal sample, ""
+
+        logger.warn "testlogwarning"
+        assert.equal sample, ""
+
+        logger.error "testlogerror"
+        assert.equal sample, ""
+      it 'notempty', ->
+        logger.critical "testlogcritical"
+        assert.notDeepEqual JSON.parse(sample), ""
 
   describe '.diffformat', ->
     it 'diffformat', ->

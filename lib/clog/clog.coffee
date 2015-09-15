@@ -17,6 +17,7 @@ LOG_LEVEL_ENUM = {
   "critical": 4,
 }
 
+# This is a port from kayvee-go/c-log/clog.go
 class Logger
   constructor: (source, logLvl=null, @formatter=kv.format, output=console.error) ->
     if !logLvl?
@@ -39,6 +40,7 @@ class Logger
       for own key, value of LOG_LEVELS
         if logLvl.toLowerCase() == value
           return value
+    return LOG_LEVELS.Debug
 
   setLogLevel: (logLvl) ->
     @logLvl = @_validateLogLvl(logLvl)
