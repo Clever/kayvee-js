@@ -41,7 +41,7 @@ class Logger
           return value
 
   setLogLevel: (logLvl) ->
-    @logLvl = logLvl
+    @logLvl = @_validateLogLvl(logLvl)
 
   setFormatter: (formatter) ->
     @formatter = formatter
