@@ -17,5 +17,7 @@ publish:
     when:
       branch: master
 script:
+- nvm install 0.10.29
+- npm install npm@2.7.0 -g
 - npm install
 - npm test
