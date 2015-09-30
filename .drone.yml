@@ -10,9 +10,10 @@ notify:
     webhook_url: $$slack_webhook
 publish:
   npm:
-    email: $$email
-    password: $$npmdeploypassword
-    username: $$npmdeployusername
+    email: $$npm_drone_email
+    password: $$npm_drone_password
+    username: $$npm_drone_username
+    registry: https://registry.npmjs.org
     when:
       branch: master
 script:
