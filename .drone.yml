@@ -8,6 +8,13 @@ notify:
     on_started: false
     on_success: false
     webhook_url: $$slack_webhook
+publish:
+  npm:
+    email: $$email
+    password: $$npmdeploypassword
+    username: $$npmdeployusername
+    when:
+      branch: master
 script:
 - npm install
 - npm test
