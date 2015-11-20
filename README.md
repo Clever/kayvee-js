@@ -10,9 +10,9 @@ Read the [Kayvee spec](https://github.com/Clever/kayvee) to learn more about the
 Initialization:
 
 ```coffee
-logger = require "kayvee/logger"
+kayvee = require "kayvee"
 
-log = logger("logger-source")
+log = kayvee.logger "logger-source"
 ```
 
 Use it to write metrics:
