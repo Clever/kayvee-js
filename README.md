@@ -55,6 +55,8 @@ Run `make test` to execute the tests
 
 ## Usage
 
+### Logger
+
 #### kayvee/logger constructor
 
 ```coffee
@@ -70,7 +72,7 @@ An environment variable named `KAYVEE_LOG_LEVEL` can be used instead of setting 
 logger.setConfig source, logLvl, formatter, output
 ```
 
-You can also individually set the `config` using: 
+You can also individually set the `config` using:
 
 * `setLogLevel`: defaults to `LOG_LEVELS.Debug`
 * `setFormatter`: defaults to `kv.format`
@@ -102,6 +104,8 @@ Title + Metadata:
 * `log.counterD "counter-with-data", 2, {extra: "info"}`
 * `log.gaugeD "gauge-with-data", 2, {extra: "info"}`
 
+### Formatters
+
 #### format
 
 ```coffee
@@ -126,3 +130,45 @@ logging best-practices
     - "info"
 - `title` (string) - the event that occurred
 - `data` (object) - other parameters describing the event
+
+### Middleware
+
+Kayvee includes logging middleware, compatible with expressJS.
+
+The middleware can be added most simply via
+
+```js
+kayveeMiddleware = require('kayvee/middleware')
+
+var app = express()
+app.use(kayveeMiddleware())
+```
+
+It also supports user configuration via an `options` object.
+It prints the values of the headers or the results of the handlers.
+If a value is `undefined`, the key will not be printed.
+
+- `headers`
+    - type: array of strings
+    - each of these strings is a request header, e.g. `X-Request-Id`
+- `handlers`
+    - type: an array of functions that return dicts of key-val pairs to be added to the logger's output.
+        These functions have the interface `(request, response) => { "key": "val" }`.
+
+For example, this causes `X-Request-Id` request header and a param called `some_id` to be logged.
+
+
+```js
+kayveeMiddleware = require('kayvee/middleware')
+
+var addSomeId = function(request, response) {
+    return {"some_id": request.params.some_id}
+}
+
+var app = express()
+var options = {
+    headers: ['X-Request-Id'],
+    handlers: [addSomeId]
+}
+app.use(kayveeMiddleware(options))
+```
