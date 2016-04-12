@@ -1,37 +1,21 @@
-.PHONY: test test-cov build
+.PHONY: test build
 TESTS=$(shell cd test && ls *.ts | sed s/\.ts$$//)
-LIBS=$(shell find . -regex "^./lib\/.*\.coffee\$$" | sed s/\.coffee$$/\.js/ | sed s/lib/lib-js/)
+TS_FILES := $(shell find . -name "*.ts" -not -path "./node_modules/*" -not -path "./typings/*")
 
-build: $(LIBS)
-
-lib-js/%.js : lib/%.coffee
-	node_modules/coffee-script/bin/coffee --bare -c -o $(@D) $(patsubst lib-js/%,lib/%,$(patsubst %.js,%.coffee,$@))
+build: clean
+	./node_modules/.bin/tsc --outDir build
 
 test: tests.json $(TESTS)
 
-$(TESTS): build
-	DEBUG=us:progress NODE_ENV=test node_modules/mocha/bin/mocha --require ts-node/register --timeout 60000 --compilers coffee:coffee-script test/$@.ts
-
-test-cov: build
-	# jscoverage only accepts directory arguments so have to rebuild everything
-	rm -rf lib-js-cov
-	jscoverage lib-js lib-js-cov
-	NODE_ENV=test TEST_COV=1 node_modules/mocha/bin/mocha --compilers coffee:coffee-script -R html-cov test/*.coffee | tee coverage.html
-	open coverage.html
-
-publish: clean build
-	$(eval VERSION := $(shell grep version package.json | sed -ne 's/^[ ]*"version":[ ]*"\([0-9\.]*\)",/\1/p';))
-	@echo \'$(VERSION)\'
-	$(eval REPLY := $(shell read -p "Publish and tag as $(VERSION)? " -n 1 -r; echo $$REPLY))
-	@echo \'$(REPLY)\'
-	@if [[ $(REPLY) =~ ^[Yy]$$ ]]; then \
-	    npm publish; \
-	    git tag -a v$(VERSION) -m "version $(VERSION)"; \
-	    git push --tags; \
-	fi
+$(TESTS):
+	DEBUG=us:progress NODE_ENV=test node_modules/mocha/bin/mocha --require ts-node/register --timeout 60000 test/$@.ts
 
 clean:
-	rm -rf lib-js lib-js-cov
+	rm -rf build
+
+lint:
+	./node_modules/.bin/tslint $(TS_FILES)
+	./node_modules/.bin/eslint $(TS_FILES)
 
 tests.json:
 	wget https://raw.githubusercontent.com/Clever/kayvee/master/tests.json -O test/tests.json
