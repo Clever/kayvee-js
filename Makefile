@@ -1,5 +1,5 @@
 .PHONY: test test-cov build
-TESTS=$(shell cd test && ls *.coffee | sed s/\.coffee$$//)
+TESTS=$(shell cd test && ls *.ts | sed s/\.ts$$//)
 LIBS=$(shell find . -regex "^./lib\/.*\.coffee\$$" | sed s/\.coffee$$/\.js/ | sed s/lib/lib-js/)
 
 build: $(LIBS)
@@ -10,7 +10,7 @@ lib-js/%.js : lib/%.coffee
 test: tests.json $(TESTS)
 
 $(TESTS): build
-	DEBUG=us:progress NODE_ENV=test node_modules/mocha/bin/mocha --timeout 60000 --compilers coffee:coffee-script test/$@.coffee
+	DEBUG=us:progress NODE_ENV=test node_modules/mocha/bin/mocha --require ts-node/register --timeout 60000 --compilers coffee:coffee-script test/$@.ts
 
 test-cov: build
 	# jscoverage only accepts directory arguments so have to rebuild everything
