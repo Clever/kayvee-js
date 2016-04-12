@@ -8,9 +8,12 @@
     "url": "git://github.com/Clever/kayvee-node"
   },
   "dependencies": {
+    "morgan": "^1.7.0",
+    "split": "^1.0.0",
+    "supertest": "^1.2.0",
     "ts-node": "^0.7.1",
     "typescript": "^1.8.9",
-    "underscore": "~1.5.2"
+    "underscore": "^1.8.3"
   },
   "devDependencies": {
     "coffee-script": "~1.6.3",
