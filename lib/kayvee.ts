@@ -1,6 +1,8 @@
+"use strict";
+
 var _ = require('underscore');
 
-var toKeyVal = function(data) { return _.map((data), function(v, k) { return `${k}=${JSON.stringify(v)}`; }); };
+var toKeyVal = (data) => _.map(data, (v, k) => `${k}=${JSON.stringify(v)}`);
 
 // Converts a map to a string space-delimited key=val pairs
 var format = function(data) {

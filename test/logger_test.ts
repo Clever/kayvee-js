@@ -9,8 +9,8 @@ var sample = "";
 var outputFunc = function(text) { return sample = text; };
 
 describe('logger_test', function() {
-  var logObj = {};
-  var logObj2 = {};
+  var logObj = null;
+  var logObj2 = null;
   beforeEach(function() {
   	logObj = new logger("logger-tester");
   	sample = "";

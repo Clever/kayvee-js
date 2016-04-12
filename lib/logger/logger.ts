@@ -1,7 +1,9 @@
+"use strict";
+
 var _ = require('underscore');
 var kv  = require("../kayvee");
 
-var LOG_LEVELS = {
+var LEVELS = {
   "Debug":    "debug",
   "Info":     "info",
   "Warning":  "warning",
@@ -19,6 +21,11 @@ var LOG_LEVEL_ENUM = {
 
 // This is a port from kayvee-go/logger/logger.go
 class Logger {
+  formatter = null;
+  logLvl = null;
+  globals = null;
+  logWriter = null;
+
   constructor(source, logLvl=null, formatter=kv.format, output=console.error) {
     this.formatter = formatter;
     if (!(typeof logLvl !== "undefined" && logLvl !== null)) {
@@ -31,7 +38,7 @@ class Logger {
   }
 
   setConfig(source, logLvl, formatter, output) {
-    this.global["source"] = source;
+    this.globals["source"] = source;
     this.logLvl = this._validateLogLvl(logLvl);
     this.formatter = formatter;
     return this.logWriter = output;
@@ -39,18 +46,18 @@ class Logger {
 
   _validateLogLvl(logLvl) {
     if (!(typeof logLvl !== "undefined" && logLvl !== null)) {
-      return LOG_LEVELS.Debug;
+      return LEVELS.Debug;
     } else {
-      for (var key in LOG_LEVELS) {
-        if (Object.prototype.hasOwnProperty.call(LOG_LEVELS, key)) {
-          var value = LOG_LEVELS[key];
+      for (var key in LEVELS) {
+        if (Object.prototype.hasOwnProperty.call(LEVELS, key)) {
+          var value = LEVELS[key];
           if (logLvl.toLowerCase() === value) {
             return value;
           }
         }
       }
     }
-    return LOG_LEVELS.Debug;
+    return LEVELS.Debug;
   }
 
   setLogLevel(logLvl) {
@@ -95,41 +102,41 @@ class Logger {
 
   debugD(title, data) {
     data["title"] = title;
-    return this.logWithLevel(LOG_LEVELS.Debug, data);
+    return this.logWithLevel(LEVELS.Debug, data);
   }
 
   infoD(title, data) {
     data["title"] = title;
-    return this.logWithLevel(LOG_LEVELS.Info, data);
+    return this.logWithLevel(LEVELS.Info, data);
   }
 
   warnD(title, data) {
     data["title"] = title;
-    return this.logWithLevel(LOG_LEVELS.Warning, data);
+    return this.logWithLevel(LEVELS.Warning, data);
   }
 
   errorD(title, data) {
     data["title"] = title;
-    return this.logWithLevel(LOG_LEVELS.Error, data);
+    return this.logWithLevel(LEVELS.Error, data);
   }
 
   criticalD(title, data) {
     data["title"] = title;
-    return this.logWithLevel(LOG_LEVELS.Critical, data);
+    return this.logWithLevel(LEVELS.Critical, data);
   }
 
   counterD(title, value, data) {
     data["title"] = title;
     data["value"] = value;
     data["type"] = "counter";
-    return this.logWithLevel(LOG_LEVELS.Info, data);
+    return this.logWithLevel(LEVELS.Info, data);
   }
 
   gaugeD(title, value, data) {
     data["title"] = title;
     data["value"] = value;
     data["type"] = "gauge";
-    return this.logWithLevel(LOG_LEVELS.Info, data);
+    return this.logWithLevel(LEVELS.Info, data);
   }
 
   logWithLevel(logLvl, data) {
@@ -151,4 +158,4 @@ class Logger {
 }
 
 module.exports = Logger;
-_.extend(module.exports, LOG_LEVELS);
+_.extend(module.exports, LEVELS);
