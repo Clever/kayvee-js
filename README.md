@@ -138,10 +138,10 @@ Kayvee includes logging middleware, compatible with expressJS.
 The middleware can be added most simply via
 
 ```js
-kayveeMiddleware = require('kayvee/middleware')
+var kayvee = require('kayvee')
 
 var app = express()
-app.use(kayveeMiddleware())
+app.use(kayvee.middleware())
 ```
 
 It also supports user configuration via an `options` object.
@@ -159,7 +159,7 @@ For example, the below snippet causes the `X-Request-Id` request header and a pa
 
 
 ```js
-kayveeMiddleware = require('kayvee/middleware')
+var kayvee = require('kayvee')
 
 var app = express()
 var options = {
@@ -168,5 +168,5 @@ var options = {
         (request, response) => {"some_id": request.params.some_id});
     ]
 }
-app.use(kayveeMiddleware(options))
+app.use(kayvee.middleware(options))
 ```
