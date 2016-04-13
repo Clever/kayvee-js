@@ -140,7 +140,8 @@ describe("logger_test", () => {
     });
     it("test counterD function", () => {
       logObj.counterD("testlogcounter", 2, {key1: "val1", key2: "val2"});
-      const expected = `{"source": "logger-tester", "level": "${kayvee.logger.Info}", "title": "testlogcounter","type": "counter", "value": 2,"key1": "val1", "key2": "val2"}`;
+      const expected = `{"source": "logger-tester", "level": "${kayvee.logger.Info}", "title": "testlogcounter","type": "counter", "value": 2,"key1": "val1",` +
+        " \"key2\": \"val2\"}";
       assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
     });
   });
@@ -153,7 +154,8 @@ describe("logger_test", () => {
     });
     it("test gaugeD function", () => {
       logObj.gaugeD("testloggauge", 4, {key1: "val1", key2: "val2"});
-      const expected = `{"source": "logger-tester", "level": "${kayvee.logger.Info}", "title": "testloggauge", "type": "gauge", "value": 4, "key1": "val1", "key2": "val2"}`;
+      const expected = `{"source": "logger-tester", "level": "${kayvee.logger.Info}", "title": "testloggauge", "type": "gauge", "value": 4, "key1": "val1",` +
+        "\"key2\": \"val2\"}";
       assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
     });
   });
