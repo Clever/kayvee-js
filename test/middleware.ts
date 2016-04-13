@@ -17,7 +17,7 @@ function afterTest(count, callback) {
   var i = 0;
 
   return (err, arg1, arg2) => {
-    assert.ok(i++ < count, "callback called #{count} times");
+    assert.ok(i++ < count, `callback called ${count} times`);
 
     args[0] = args[0] || err;
     args[1] = args[1] || arg1;
