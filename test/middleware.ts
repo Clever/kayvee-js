@@ -1,6 +1,5 @@
 var assert = require("assert");
 var http = require("http");
-var morgan = require("morgan");
 var request = require("supertest");
 var split = require("split");
 var kayvee = require("../lib/kayvee");
@@ -10,7 +9,7 @@ describe("middleware", function () {
   var expected;
   it("should pass default fields", function (done) {
     var cb = afterTest(2, function (err, res, line) {
-      if (err) return done(err);
+      if (err) { return done(err); }
       var masked = line.replace(/response-time\":\d+/, 'response-time":99999');
       expected = kayvee.format({
         "method": "GET",
@@ -45,7 +44,7 @@ describe("middleware", function () {
 
   it("should allow logging user-specified request headers", function (done) {
     var cb = afterTest(2, function (err, res, line) {
-      if (err) return done(err);
+      if (err) { return done(err); }
       var masked = line.replace(/response-time\":\d+/, 'response-time":99999');
       expected = kayvee.format({
         "some-header": "some-header-value",
@@ -85,7 +84,7 @@ describe("middleware", function () {
 
   it("should allow logging from user-specified handlers", function (done) {
     var cb = afterTest(2, function (err, res, line) {
-      if (err) return done(err);
+      if (err) { return done(err); }
       var masked = line.replace(/response-time\":\d+/, 'response-time":99999');
       expected = kayvee.format({
         "global": 1,
@@ -109,10 +108,10 @@ describe("middleware", function () {
 
     var options = {
       handlers: [
-        function (req, res) {return {"global": 1};},
-        function (req, res) {return {"global2": 2};},
-        function (req, res) {return {"url": req.url};},
-      ]
+        function (req, res) { return {"global": 1}; },
+        function (req, res) { return {"global2": 2}; },
+        function (req, res) { return {"url": req.url}; },
+      ],
     };
 
     var server = createServer(options, {stream: stream}, function (req, res, next) {
@@ -128,7 +127,7 @@ describe("middleware", function () {
 
   it("should not log null or undefined values", function (done) {
     var cb = afterTest(2, function (err, res, line) {
-      if (err) return done(err);
+      if (err) { return done(err); }
       var masked = line.replace(/response-time\":\d+/, 'response-time":99999');
       expected = kayvee.format({
         "method": "GET",
@@ -151,8 +150,8 @@ describe("middleware", function () {
       // These values should not be logged
       headers: ["this-header-dne"],
       handlers: [
-        function () { return {"undefined": undefined}; }
-      ]
+        function () { return {"undefined": undefined}; },
+      ],
     };
 
     var server = createServer(options, {stream: stream}, function (req, res, next) {
@@ -168,7 +167,7 @@ describe("middleware", function () {
 
   it("should warn on broken user-specified handlers, and keep processing", function (done) {
     var cb = afterTest(2, function (err, res, line) {
-      if (err) return done(err);
+      if (err) { return done(err); }
       var masked = line.replace(/response-time\":\d+/, 'response-time":99999');
       expected = kayvee.format({
         "global": 1,
@@ -191,12 +190,12 @@ describe("middleware", function () {
     var options = {
       handlers: [
         // These handlers should be ignored
-        function (req, res) {throw ("error!");},
-        function (req, res) {return req.foo.bar;},
-        function (req, res) {return [];},
+        function (req, res) { throw ("error!"); },
+        function (req, res) { return req.foo.bar; },
+        function (req, res) { return []; },
         // This handler should still work
-        function (req, res) {return {"global":1}; },
-      ]
+        function (req, res) { return {"global": 1}; },
+      ],
     };
 
     var server = createServer(options, {stream: stream}, function (req, res, next) {
