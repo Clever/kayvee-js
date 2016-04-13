@@ -228,7 +228,7 @@ _.each(["http", "express"], (serverType) => {
       .expect(200, cb);
     });
 
-    it("should warn on broken user-specified handlers, and keep processing", (done) => {
+    it("should keep processing if there are broken user-specified handlers", (done) => {
       var cb = afterTest(2, (err, res, line) => {
         if (err) { return done(err); }
         var masked = line.replace(/response-time":\d+/, 'response-time":99999');
@@ -258,6 +258,41 @@ _.each(["http", "express"], (serverType) => {
           () => ([]),
           () => (3), // TODO: should be robust to wrong data types
           // This handler should still work
+          () => ({global: 1}),
+        ],
+      };
+
+      var server = createServer(serverType, options, {stream}, (req, res, next) => {
+        next();
+      });
+
+      request(server)
+      .get("/hello/world?a=1&b=2")
+      .expect(200, cb);
+    });
+
+    it("should allow the user to override `base_handlers`", (done) => {
+      var cb = afterTest(2, (err, res, line) => {
+        if (err) { return done(err); }
+        var masked = line.replace(/response-time":\d+/, 'response-time":99999');
+        const expected = kayvee.format({
+          global: 1,
+          base: 1,
+        });
+        assert.equal(masked, expected);
+        return done();
+      });
+
+      var stream = createLineStream((line) => {
+        cb(null, null, line);
+      });
+
+      var options = {
+        base_handlers: [
+          () => ({base: 1}),
+
+        ],
+        handlers: [
           () => ({global: 1}),
         ],
       };
