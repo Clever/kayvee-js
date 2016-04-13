@@ -1,189 +1,192 @@
-var kv  = require("../lib/kayvee");
-var logger = require("../lib/logger/logger");
-var assert = require('assert');
-var _ = require('underscore');
-_.mixin = require('underscore.deep');
-var fs = require('fs');
+var kayvee = {logger: require("../lib/logger/logger")};
+var assert = require("assert");
+var _ = require("underscore");
+_.mixin = require("underscore.deep");
 
-var sample = "";
-var outputFunc = function(text) { return sample = text; };
+let sample = "";
+function outputFunc(text) {
+  sample = text;
+  return sample;
+}
 
-describe('logger_test', function() {
-  var logObj = null;
-  var logObj2 = null;
-  beforeEach(function() {
-  	logObj = new logger("logger-tester");
-  	sample = "";
-  	return logObj.setOutput(outputFunc);
+describe("logger_test", () => {
+  let logObj = null;
+  let logObj2 = null;
+  beforeEach(() => {
+    logObj = new kayvee.logger("logger-tester");
+    sample = "";
+    return logObj.setOutput(outputFunc);
   });
 
-  describe('.constructor', function() {
-    return it('passing in parameters to constructor', function() {
-      var formatter = function(data) { return data["level"] + "." + data["source"] + "." + data["title"]; };
-      logObj = new logger("logger-test", logger.Info, formatter, outputFunc);
+  describe(".constructor", () => {
+    it("passing in parameters to constructor", () => {
+      const formatter = (data) => `${data.level}.${data.source}.${data.title}`;
+      logObj = new kayvee.logger("logger-test", kayvee.logger.Info, formatter, outputFunc);
       logObj.debug("testlogdebug");
-      var expected = "";
+      let expected = "";
       assert.equal(sample, expected);
 
       logObj.info("testloginfo");
-      expected = logger.Info + ".logger-test.testloginfo";
-      return assert.equal(sample, expected);
+      expected = `${kayvee.logger.Info}.logger-test.testloginfo`;
+      assert.equal(sample, expected);
     });
   });
-  describe('.validateloglvl', function() {
+  describe(".validateloglvl", () => {
     // Explicit validation checks
-    it('is case-insensitive in log level name', function() {
-      var logLvl = logObj._validateLogLvl("debug");
-      assert.equal(logLvl, logger.Debug);
+    it("is case-insensitive in log level name", () => {
+      let logLvl = logObj._validateLogLvl("debug");
+      assert.equal(logLvl, kayvee.logger.Debug);
       logLvl = logObj._validateLogLvl("Debug");
-      return assert.equal(logLvl, logger.Debug);
+      assert.equal(logLvl, kayvee.logger.Debug);
     });
 
-    it('sets non-default log levels', function() {
-      var logLvl = logObj._validateLogLvl("info");
-      assert.equal(logLvl, logger.Info);
+    it("sets non-default log levels", () => {
+      let logLvl = logObj._validateLogLvl("info");
+      assert.equal(logLvl, kayvee.logger.Info);
       // TODO: for each possible log level ...
       logLvl = logObj._validateLogLvl("critical");
-      return assert.equal(logLvl, logger.Critical);
+      assert.equal(logLvl, kayvee.logger.Critical);
     });
 
-    return it('sets level to Debug, if given an invalid log level', function() {
-      var logLvl = logObj._validateLogLvl("sometest");
-      return assert.equal(logLvl, logger.Debug);
+    it("sets level to Debug, if given an invalid log level", () => {
+      const logLvl = logObj._validateLogLvl("sometest");
+      assert.equal(logLvl, kayvee.logger.Debug);
     });
   });
-  describe('.invalidlog', function() {
-    return it('check valid debug level JSON output of invalid log level', function() {
+  describe(".invalidlog", () => {
+    it("check valid debug level JSON output of invalid log level", () => {
       // Invalid log levels will default to debug
       logObj.setLogLevel("invalidloglevel");
       logObj.debug("testlogdebug");
-      var expected = "{\"source\": \"logger-tester\", \"level\": \"" + logger.Debug + "\", \"title\": \"testlogdebug\"}";
+      let expected = `{"source": "logger-tester", "level": "${kayvee.logger.Debug}", "title": "testlogdebug"}`;
       assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
 
       logObj.setLogLevel("sometest");
       logObj.info("testloginfo");
-      expected = "{\"source\": \"logger-tester\", \"level\": \"" + logger.Info + "\", \"title\": \"testloginfo\"}";
-      return assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
+      expected = `{"source": "logger-tester", "level": "${kayvee.logger.Info}", "title": "testloginfo"}`;
+      assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
     });
   });
-  describe('.debug', function() {
-  	it('test debug function', function() {
-  	  logObj.debug("testlogdebug");
-  	  var expected = "{\"source\": \"logger-tester\", \"level\": \"" + logger.Debug + "\", \"title\": \"testlogdebug\"}";
-  	  return assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
-  });
-  	return it('test debugD function', function() {
-  	  logObj.debugD("testlogdebug", {"key1":"val1","key2":"val2"});
-  	  var expected = "{\"source\": \"logger-tester\", \"level\": \"" + logger.Debug + "\", \"title\": \"testlogdebug\",\"key1\": \"val1\", \"key2\": \"val2\"}";
-  	  return assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
-  });
-  });
-
-  describe('.info', function() {
-  	it('test info function', function() {
-  	  logObj.info("testloginfo");
-  	  var expected = "{\"source\": \"logger-tester\", \"level\": \"" + logger.Info + "\", \"title\": \"testloginfo\"}";
-  	  return assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
-  });
-  	return it('test infoD function', function() {
-  	  logObj.infoD("testloginfo", {"key1":"val1","key2":"val2"});
-
-  	  var expected = "{\"source\": \"logger-tester\", \"level\": \"" + logger.Info + "\", \"title\": \"testloginfo\",\"key1\": \"val1\", \"key2\": \"val2\"}";
-  	  return assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
-  });
+  describe(".debug", () => {
+    it("test debug function", () => {
+      logObj.debug("testlogdebug");
+      const expected = `{"source": "logger-tester", "level": "${kayvee.logger.Debug}", "title": "testlogdebug"}`;
+      assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
+    });
+    it("test debugD function", () => {
+      logObj.debugD("testlogdebug", {key1: "val1", key2: "val2"});
+      const expected = `{"source": "logger-tester", "level": "${kayvee.logger.Debug}", "title": "testlogdebug","key1": "val1", "key2": "val2"}`;
+      assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
+    });
   });
 
-  describe('.warning', function() {
-  	it('test warn function', function() {
-  	  logObj.warn("testlogwarning");
-  	  var expected = "{\"source\": \"logger-tester\", \"level\": \"" + logger.Warning + "\", \"title\": \"testlogwarning\"}";
-  	  return assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
-  });
-  	return it('test warnD function', function() {
-  	  logObj.warnD("testlogwarning", {"key1":"val1","key2":"val2"});
-  	  var expected = "{\"source\": \"logger-tester\", \"level\": \"" + logger.Warning + "\", \"title\": \"testlogwarning\",\"key1\": \"val1\", \"key2\": \"val2\"}";
-  	  return assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
-  });
-  });
-
-  describe('.error', function() {
-  	it('test error function', function() {
-  	  logObj.error("testlogerror");
-  	  var expected = "{\"source\": \"logger-tester\", \"level\": \"" + logger.Error + "\", \"title\": \"testlogerror\"}";
-  	  return assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
-  });
-  	return it('test errorD function', function() {
-  	  logObj.errorD("testlogerror", {"key1":"val1","key2":"val2"});
-  	  var expected = "{\"source\": \"logger-tester\", \"level\": \"" + logger.Error + "\", \"title\": \"testlogerror\",\"key1\": \"val1\", \"key2\": \"val2\"}";
-  	  return assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
-  });
-  });
-
-  describe('.critical', function() {
-  	it('test critical function', function() {
-  	  logObj.critical("testlogcritical");
-  	  var expected = "{\"source\": \"logger-tester\", \"level\": \"" + logger.Critical + "\", \"title\": \"testlogcritical\"}";
-  	  return assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
-  });
-  	return it('test criticalD function', function() {
-  	  logObj.criticalD("testlogcritical", {"key1":"val1","key2":"val2"});
-  	  var expected = "{\"source\": \"logger-tester\", \"level\": \"" + logger.Critical + "\", \"title\": \"testlogcritical\",\"key1\": \"val1\", \"key2\": \"val2\"}";
-  	  return assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
-  });
-  });
-
-  describe('.counter', function() {
-  	it('test counter function', function() {
-  	  logObj.counter("testlogcounter");
-  	  var expected = "{\"source\": \"logger-tester\", \"level\": \"" + logger.Info + "\", \"title\": \"testlogcounter\", \"type\": \"counter\", \"value\": 1}";
-  	  return assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
-  });
-  	return it('test counterD function', function() {
-  	  logObj.counterD("testlogcounter", 2, {"key1":"val1","key2":"val2"});
-  	  var expected = "{\"source\": \"logger-tester\", \"level\": \"" + logger.Info + "\", \"title\": \"testlogcounter\",\"type\": \"counter\", \"value\": 2,\"key1\": \"val1\", \"key2\": \"val2\"}";
-  	  return assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
-  });
-  });
-
-  describe('.gauge', function() {
-  	it('test gauge function', function() {
-  	  logObj.gauge("testloggauge", 0);
-  	  var expected = "{\"source\": \"logger-tester\", \"level\": \"" + logger.Info + "\", \"title\": \"testloggauge\", \"type\": \"gauge\", \"value\": 0}";
-  	  return assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
-  });
-  	return it('test gaugeD function', function() {
-  	  logObj.gaugeD("testloggauge", 4, {"key1":"val1","key2":"val2"});
-  	  var expected = "{\"source\": \"logger-tester\", \"level\": \"" + logger.Info + "\", \"title\": \"testloggauge\", \"type\": \"gauge\", \"value\": 4, \"key1\": \"val1\", \"key2\": \"val2\"}";
-  	  return assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
-  });
-  });
-
-  describe('.diffoutput', function() {
-    return it('output to different output functions using same logger', function() {
+  describe(".info", () => {
+    it("test info function", () => {
       logObj.info("testloginfo");
-      var infoLog = sample;
-      var output2 = "";
-      var outputFunc2 = function(text) { return output2 = text; };
+      const expected = `{"source": "logger-tester", "level": "${kayvee.logger.Info}", "title": "testloginfo"}`;
+      assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
+    });
+    it("test infoD function", () => {
+      logObj.infoD("testloginfo", {key1: "val1", key2: "val2"});
+      const expected = `{"source": "logger-tester", "level": "${kayvee.logger.Info}", "title": "testloginfo","key1": "val1", "key2": "val2"}`;
+      assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
+    });
+  });
+
+  describe(".warning", () => {
+    it("test warn function", () => {
+      logObj.warn("testlogwarning");
+      const expected = `{"source": "logger-tester", "level": "${kayvee.logger.Warning}", "title": "testlogwarning"}`;
+      assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
+    });
+    it("test warnD function", () => {
+      logObj.warnD("testlogwarning", {key1: "val1", key2: "val2"});
+      const expected = `{"source": "logger-tester", "level": "${kayvee.logger.Warning}", "title": "testlogwarning","key1": "val1", "key2": "val2"}`;
+      assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
+    });
+  });
+
+  describe(".error", () => {
+    it("test error function", () => {
+      logObj.error("testlogerror");
+      const expected = `{"source": "logger-tester", "level": "${kayvee.logger.Error}", "title": "testlogerror"}`;
+      assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
+    });
+    it("test errorD function", () => {
+      logObj.errorD("testlogerror", {key1: "val1", key2: "val2"});
+      const expected = `{"source": "logger-tester", "level": "${kayvee.logger.Error}", "title": "testlogerror","key1": "val1", "key2": "val2"}`;
+      assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
+    });
+  });
+
+  describe(".critical", () => {
+    it("test critical function", () => {
+      logObj.critical("testlogcritical");
+      const expected = `{"source": "logger-tester", "level": "${kayvee.logger.Critical}", "title": "testlogcritical"}`;
+      assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
+    });
+    it("test criticalD function", () => {
+      logObj.criticalD("testlogcritical", {key1: "val1", key2: "val2"});
+      const expected = `{"source": "logger-tester", "level": "${kayvee.logger.Critical}", "title": "testlogcritical","key1": "val1", "key2": "val2"}`;
+      assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
+    });
+  });
+
+  describe(".counter", () => {
+    it("test counter function", () => {
+      logObj.counter("testlogcounter");
+      const expected = `{"source": "logger-tester", "level": "${kayvee.logger.Info}", "title": "testlogcounter", "type": "counter", "value": 1}`;
+      assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
+    });
+    it("test counterD function", () => {
+      logObj.counterD("testlogcounter", 2, {key1: "val1", key2: "val2"});
+      const expected = `{"source": "logger-tester", "level": "${kayvee.logger.Info}", "title": "testlogcounter","type": "counter", "value": 2,"key1": "val1",` +
+        " \"key2\": \"val2\"}";
+      assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
+    });
+  });
+
+  describe(".gauge", () => {
+    it("test gauge function", () => {
+      logObj.gauge("testloggauge", 0);
+      const expected = `{"source": "logger-tester", "level": "${kayvee.logger.Info}", "title": "testloggauge", "type": "gauge", "value": 0}`;
+      assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
+    });
+    it("test gaugeD function", () => {
+      logObj.gaugeD("testloggauge", 4, {key1: "val1", key2: "val2"});
+      const expected = `{"source": "logger-tester", "level": "${kayvee.logger.Info}", "title": "testloggauge", "type": "gauge", "value": 4, "key1": "val1",` +
+        "\"key2\": \"val2\"}";
+      assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
+    });
+  });
+
+  describe(".diffoutput", () => {
+    it("output to different output functions using same logger", () => {
+      logObj.info("testloginfo");
+      const infoLog = sample;
+      let output2 = "";
+      const outputFunc2 = (text) => {
+        output2 = text;
+        return output2;
+      };
       logObj.setOutput(outputFunc2);
       logObj.warn("testlogwarning");
       assert.deepEqual(JSON.parse(infoLog), JSON.parse(sample));
-      return assert.notDeepEqual(JSON.parse(output2), JSON.parse(sample));
+      assert.notDeepEqual(JSON.parse(output2), JSON.parse(sample));
     });
   });
 
-  describe('.hiddenlog', function() {
-    describe('.logwarning', function() {
-      beforeEach(function() {
-        return logObj.setLogLevel(logger.Warning);
-      });
-      it('empty cases due to log level', function() {
+  describe(".hiddenlog", () => {
+    describe(".logwarning", () => {
+      beforeEach(() => logObj.setLogLevel(kayvee.logger.Warning));
+      it("empty cases due to log level", () => {
         logObj.debug("testlogdebug");
         assert.equal(sample, "");
 
         logObj.info("testloginfo");
-        return assert.equal(sample, "");
+        assert.equal(sample, "");
       });
-      return it('not empty cases due to log level', function() {
+      it("not empty cases due to log level", () => {
         logObj.warn("testlogwarning");
         assert.notDeepEqual(JSON.parse(sample), "");
 
@@ -191,14 +194,14 @@ describe('logger_test', function() {
         assert.notDeepEqual(JSON.parse(sample), "");
 
         logObj.critical("testlogcritical");
-        return assert.notDeepEqual(JSON.parse(sample), "");
+        assert.notDeepEqual(JSON.parse(sample), "");
       });
     });
-    return describe('.logcritical', function() {
-      beforeEach(function() {
-        return logObj.setLogLevel(logger.Critical);
+    return describe(".logcritical", () => {
+      beforeEach(() => {
+        logObj.setLogLevel(kayvee.logger.Critical);
       });
-      it('empty cases due to log level', function() {
+      it("empty cases due to log level", () => {
         logObj.debug("testlogdebug");
         assert.equal(sample, "");
 
@@ -209,48 +212,52 @@ describe('logger_test', function() {
         assert.equal(sample, "");
 
         logObj.error("testlogerror");
-        return assert.equal(sample, "");
+        assert.equal(sample, "");
       });
-      return it('not empty cases due to log level', function() {
+      it("not empty cases due to log level", () => {
         logObj.critical("testlogcritical");
-        return assert.notDeepEqual(JSON.parse(sample), "");
+        assert.notDeepEqual(JSON.parse(sample), "");
       });
     });
   });
 
-  describe('.diffformat', function() {
-    return it('use a different formatter than KV', function() {
-      var testFormatter = function(data) { return "\"This is a test\""; };
+  describe(".diffformat", () => {
+    it("use a different formatter than KV", () => {
+      const testFormatter = () => "\"This is a test\"";
       logObj.setFormatter(testFormatter);
       logObj.warn("testlogwarning");
-      return assert.deepEqual(JSON.parse(sample), "This is a test");
+      assert.deepEqual(JSON.parse(sample), "This is a test");
     });
   });
 
-  return describe('.multipleloggers', function() {
-    before(function() {
-      return logObj2 = new logger("logger-tester2");
+  return describe(".multipleloggers", () => {
+    before(() => {
+      logObj2 = new kayvee.logger("logger-tester2");
+      return logObj2;
     });
-    it('log to same output buffer', function() {
+    it("log to same output buffer", () => {
       logObj2.setOutput(outputFunc);
       logObj.warn("testlogwarning");
-      var output1 = sample;
+      const output1 = sample;
       logObj2.info("testloginfo");
-      return assert.notDeepEqual(JSON.parse(sample), JSON.parse(output1));
+      assert.notDeepEqual(JSON.parse(sample), JSON.parse(output1));
     });
 
-    return it('log to different output buffer', function() {
-      var output2 = "";
-      var outputFunc2 = function(text) { return output2 = text; };
+    it("log to different output buffer", () => {
+      let output2 = "";
+      const outputFunc2 = (text) => {
+        output2 = text;
+        return output2;
+      };
       logObj2.setOutput(outputFunc2);
       logObj.warn("testlogwarning");
       logObj2.info("testloginfo");
 
-      var loggerExpected = "{\"source\": \"logger-tester\", \"level\": \"" + logger.Warning + "\", \"title\": \"testlogwarning\"}";
+      const loggerExpected = `{"source": "logger-tester", "level": "${kayvee.logger.Warning}", "title": "testlogwarning"}`;
       assert.deepEqual(JSON.parse(sample), JSON.parse(loggerExpected));
 
-      var logger2Expected = "{\"source\": \"logger-tester2\", \"level\": \"" + logger.Info + "\", \"title\": \"testloginfo\"}";
-      return assert.deepEqual(JSON.parse(output2), JSON.parse(logger2Expected));
+      const logger2Expected = `{"source": "logger-tester2", "level": "${kayvee.logger.Info}", "title": "testloginfo"}`;
+      assert.deepEqual(JSON.parse(output2), JSON.parse(logger2Expected));
     });
   });
 });

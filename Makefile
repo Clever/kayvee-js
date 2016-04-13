@@ -5,7 +5,7 @@ TS_FILES := $(shell find . -name "*.ts" -not -path "./node_modules/*" -not -path
 build: clean
 	./node_modules/.bin/tsc --outDir build
 
-test: tests.json $(TESTS)
+test: lint tests.json $(TESTS)
 
 $(TESTS):
 	DEBUG=us:progress NODE_ENV=test node_modules/mocha/bin/mocha --require ts-node/register --timeout 60000 test/$@.ts
