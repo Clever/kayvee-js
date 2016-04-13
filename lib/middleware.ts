@@ -59,7 +59,9 @@ var getResponseTimeNs = function getResponseTimeNs(req, res) {
 };
 
 /**
- * response time in nanoseconds
+ * IP address that sent the request.
+ *
+ * `req.ip` is defined in Express: http://expressjs.com/en/api.html#req.ip
  */
 var getIp = function getIp(req) {
   return req.ip || req.headers["x-forwarded-for"];
