@@ -140,7 +140,6 @@ var formatLine = (options_arg) => {
     all_handlers.forEach((h) => {
       try {
         var handler_data = h(req, res);
-        // TODO: reject anything that's not an object
         _.extend(data, handler_data);
       } catch (e) {
         // ignore invalid handler
