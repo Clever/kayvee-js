@@ -58,6 +58,14 @@ var getResponseTimeNs = function getResponseTimeNs(req, res) {
   return ns;
 };
 
+/**
+ * response time in nanoseconds
+ */
+var getIp = function getIp(req) {
+  return req.ip || req.headers["x-forwarded-for"];
+};
+
+
 /*
  * User configuration is passed via an `options` object.
  *
@@ -79,7 +87,9 @@ var formatLine = (options_arg) => {
     var custom_headers = options.headers || [];
     var header_data = {};
     custom_headers.forEach((h) => {
-      header_data[h] = req.headers[h];
+      // Header field names are case insensitive, so let's be consistent
+      var lc = h.toLowerCase();
+      header_data[lc] = req.headers[lc];
     });
     _.extend(data, header_data);
 
@@ -103,7 +113,7 @@ var formatLine = (options_arg) => {
       "response-size": getResponseSize(res),
       "response-time": getResponseTimeNs(req, res),
       "status-code": res.statusCode,
-      "x-forwarded-for": req.headers["x-forwarded-for"],
+      ip: getIp(req),
     };
     _.extend(data, default_data);
 

@@ -58,19 +58,18 @@ function createServer(clever_options, morgan_options, fn) {
 }
 
 describe("middleware", () => {
-  var expected;
   it("should pass default fields", (done) => {
     var cb = afterTest(2, (err, res, line) => {
       if (err) { return done(err); }
       var masked = line.replace(/response-time":\d+/, 'response-time":99999');
-      expected = kayvee.format({
+      const expected = kayvee.format({
         method: "GET",
         path: "/hello/world",
         params: "?a=1&b=2",
         "response-size": 12345,
         "response-time": 99999,
         "status-code": 200,
-        "x-forwarded-for": "foo",
+        ip: "foo",
       });
       assert.equal(masked, expected);
       return done();
@@ -90,7 +89,7 @@ describe("middleware", () => {
 
     request(server)
     .get("/hello/world?a=1&b=2")
-    .set("x-forwarded-for", "foo")
+    .set("X-Forwarded-For", "foo")
     .expect(200, cb);
   });
 
@@ -98,7 +97,7 @@ describe("middleware", () => {
     var cb = afterTest(2, (err, res, line) => {
       if (err) { return done(err); }
       var masked = line.replace(/response-time":\d+/, 'response-time":99999');
-      expected = kayvee.format({
+      const expected = kayvee.format({
         "some-header": "some-header-value",
         "another-header": "another-header-value",
         method: "GET",
@@ -107,7 +106,7 @@ describe("middleware", () => {
         "response-size": 12345,
         "response-time": 99999,
         "status-code": 200,
-        "x-forwarded-for": "foo",
+        ip: "foo",
       });
       assert.equal(masked, expected);
       return done();
@@ -130,7 +129,7 @@ describe("middleware", () => {
     .get("/hello/world?a=1&b=2")
     .set("some-header", "some-header-value")
     .set("another-header", "another-header-value")
-    .set("x-forwarded-for", "foo")
+    .set("X-Forwarded-For", "foo")
     .expect(200, cb);
   });
 
@@ -138,7 +137,7 @@ describe("middleware", () => {
     var cb = afterTest(2, (err, res, line) => {
       if (err) { return done(err); }
       var masked = line.replace(/response-time":\d+/, 'response-time":99999');
-      expected = kayvee.format({
+      const expected = kayvee.format({
         global: 1,
         global2: 2,
         url: "/hello/world?a=1&b=2",
@@ -148,7 +147,7 @@ describe("middleware", () => {
         "response-size": 12345,
         "response-time": 99999,
         "status-code": 200,
-        "x-forwarded-for": "foo",
+        ip: "foo",
       });
       assert.equal(masked, expected);
       return done();
@@ -173,7 +172,7 @@ describe("middleware", () => {
 
     request(server)
     .get("/hello/world?a=1&b=2")
-    .set("x-forwarded-for", "foo")
+    .set("X-Forwarded-For", "foo")
     .expect(200, cb);
   });
 
@@ -181,14 +180,14 @@ describe("middleware", () => {
     var cb = afterTest(2, (err, res, line) => {
       if (err) { return done(err); }
       var masked = line.replace(/response-time":\d+/, 'response-time":99999');
-      expected = kayvee.format({
+      const expected = kayvee.format({
         method: "GET",
         path: "/hello/world",
         params: "?a=1&b=2",
         "response-size": 12345,
         "response-time": 99999,
         "status-code": 200,
-        "x-forwarded-for": "foo",
+        ip: "foo",
       });
       assert.equal(masked, expected);
       return done();
@@ -213,7 +212,7 @@ describe("middleware", () => {
 
     request(server)
     .get("/hello/world?a=1&b=2")
-    .set("x-forwarded-for", "foo")
+    .set("X-Forwarded-For", "foo")
     .expect(200, cb);
   });
 
@@ -221,7 +220,7 @@ describe("middleware", () => {
     var cb = afterTest(2, (err, res, line) => {
       if (err) { return done(err); }
       var masked = line.replace(/response-time":\d+/, 'response-time":99999');
-      expected = kayvee.format({
+      const expected = kayvee.format({
         global: 1,
         method: "GET",
         path: "/hello/world",
@@ -229,7 +228,7 @@ describe("middleware", () => {
         "response-size": 12345,
         "response-time": 99999,
         "status-code": 200,
-        "x-forwarded-for": "foo",
+        ip: "foo",
       });
       assert.equal(masked, expected);
       return done();
@@ -258,7 +257,7 @@ describe("middleware", () => {
 
     request(server)
     .get("/hello/world?a=1&b=2")
-    .set("x-forwarded-for", "foo")
+    .set("X-Forwarded-For", "foo")
     .expect(200, cb);
   });
 });
