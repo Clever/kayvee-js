@@ -48,6 +48,8 @@ Run `make test` to execute the tests
 
 ## Change log
 
+- v2.4.0 - Add middleware.
+- v2.3.0 - Convert CoffeeScript to ES6 / Typescript.
 - v2.0.0 - Implement `logger` functionality along with support for `gauge` and `counter` metrics
 - v1.0.3 - Readme cleanup.
 - v1.0.2 - Prints stringified JSON, published as Javascript lib to NPM.
