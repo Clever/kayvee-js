@@ -70,13 +70,47 @@ var getIp = function getIp(req) {
 
 
 /*
+ * Default handlers
+ */
+var defaultHandlers = [
+  // Request method
+  (req) => ({method: req.method}),
+  // Path (URL without query params)
+  (req) => ({path: getBaseUrl(req)}),
+  // Query params
+  (req) => ({params: getQueryParams(req)}),
+  // Response size
+  (req, res) => ({"response-size": getResponseSize(res)}),
+  // Response time (ns)
+  (req, res) => ({"response-time": getResponseTimeNs(req, res)}),
+  // Status code
+  (req, res) => ({"status-code": res.statusCode}),
+  // Ip address
+  (req) => ({ip: getIp(req)}),
+];
+
+/*
  * User configuration is passed via an `options` object.
+ * Results from configuration are prioritized such that (`base_handlers` > `handlers` > `headers`).
  *
  * // `headers` - logs these request headers, if they exist
+ *
  * headers: e.g. ['X-Request-Id', 'Host']
  *
  * // `handlers` - an array of functions of that return dicts to be logged.
+ *
  * handlers: e.g. [function(request, response) { return {"key":"val"}]
+ *
+ * // `base_handlers` - an array of functions of that return dicts to be logged.
+ * // Barring exceptional circumstances, `base_handlers` should not be overriden by the user.
+ * // `base_handlers` defaults to a core set of handlers to run... see `defaultHandlers`.
+ * //
+ * // Separating `base_handlers` from `handlers` is done to ensure that reserved keys
+ * // don't accidentally get overriden by custom handlers. This can now only happen if
+ * // the user explicitly overrides `base_handlers`.
+ *
+ * base_handlers: e.g. [function(request, response) { return {"key":"val"}]
+ *
  */
 
 var formatLine = (options_arg) => {
@@ -98,7 +132,13 @@ var formatLine = (options_arg) => {
 
     // Run user-configured handlers; add custom data
     var custom_handlers = options.handlers || [];
-    custom_handlers.forEach((h) => {
+
+    // Allow user to override `base_handlers`; provide sane default set of handlers
+    var base_handlers = options.base_handlers || defaultHandlers;
+
+    // Execute custom-handlers THEN base-handlers
+    var all_handlers = custom_handlers.concat(base_handlers);
+    all_handlers.forEach((h) => {
       try {
         var handler_data = h(req, res);
         // TODO: reject anything that's not an object
@@ -107,18 +147,6 @@ var formatLine = (options_arg) => {
         // ignore invalid handler
       }
     });
-
-    // Add default request fields
-    var default_data = {
-      method: req.method,
-      path: getBaseUrl(req),
-      params: getQueryParams(req),
-      "response-size": getResponseSize(res),
-      "response-time": getResponseTimeNs(req, res),
-      "status-code": res.statusCode,
-      ip: getIp(req),
-    };
-    _.extend(data, default_data);
 
     return kayvee.format(data);
   };
