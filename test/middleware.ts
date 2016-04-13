@@ -1,7 +1,9 @@
 var assert = require("assert");
+var express = require("express");
 var http = require("http");
 var request = require("supertest");
 var split = require("split");
+var _ = require("underscore");
 var kayvee = require("../lib/kayvee");
 var kv_middleware = require("../lib/middleware");
 
@@ -37,227 +39,236 @@ function noopMiddleware(req, res, next) {
   next();
 }
 
-function createServer(clever_options, morgan_options, fn) {
+function createServer(server_type, clever_options, morgan_options, fn) {
   var logger = kv_middleware(clever_options, morgan_options);
   var middle = fn || noopMiddleware;
 
-  return http.createServer((req, res) => {
-    logger(req, res, (err) => {
-      // allow req, res alterations
-      middle(req, res, () => {
-        if (err) {
-          res.statusCode = 500;
-          res.end(err.message);
-        }
+  var server = null;
+  if (server_type === "http") {
+    server = http.createServer((req, res) => {
+      logger(req, res, (err) => {
+        // allow req, res alterations
+        middle(req, res, () => {
+          if (err) {
+            res.statusCode = 500;
+            res.end(err.message);
+          }
 
-        res.setHeader("X-Sent", "true");
-        res.end((req.connection && req.connection.remoteAddress) || "-");
+          res.setHeader("X-Sent", "true");
+          res.setHeader("Content-Length", 12345);
+          res.end((req.connection && req.connection.remoteAddress) || "-");
+        });
       });
     });
-  });
+  } else if (server_type === "express") {
+    var app = express();
+    app.use(logger);
+    app.get("*", (req, res) => {
+      res.header("Content-Length", 12345);
+      res.end();
+    });
+
+    server = app;
+  } else {
+    throw (new Error(`unknown server type: ${server_type}`));
+  }
+
+  return server;
 }
 
-describe("middleware", () => {
-  it("should pass default fields", (done) => {
-    var cb = afterTest(2, (err, res, line) => {
-      if (err) { return done(err); }
-      var masked = line.replace(/response-time":\d+/, 'response-time":99999');
-      const expected = kayvee.format({
-        method: "GET",
-        path: "/hello/world",
-        params: "?a=1&b=2",
-        "response-size": 12345,
-        "response-time": 99999,
-        "status-code": 200,
-        ip: "foo",
+_.each(["http", "express"], (serverType) => {
+  describe(`middleware for *${serverType}* server`, () => {
+    it("should pass default fields", (done) => {
+      var cb = afterTest(2, (err, res, line) => {
+        if (err) { return done(err); }
+        var masked = line.replace(/response-time":\d+/, 'response-time":99999');
+        const expected = kayvee.format({
+          method: "GET",
+          path: "/hello/world",
+          params: "?a=1&b=2",
+          "response-size": 12345,
+          "response-time": 99999,
+          "status-code": 200,
+          ip: "::ffff:127.0.0.1",
+        });
+        assert.equal(masked, expected);
+        return done();
       });
-      assert.equal(masked, expected);
-      return done();
-    });
 
-    var stream = createLineStream((line) => {
-      cb(null, null, line);
-    });
-
-    var options = undefined;
-
-    var server = createServer(options, {stream}, (req, res, next) => {
-      res.setHeader("some-header", "some-header-value");
-      res.setHeader("content-length", 12345);
-      next();
-    });
-
-    request(server)
-    .get("/hello/world?a=1&b=2")
-    .set("X-Forwarded-For", "foo")
-    .expect(200, cb);
-  });
-
-  it("should allow logging user-specified request headers", (done) => {
-    var cb = afterTest(2, (err, res, line) => {
-      if (err) { return done(err); }
-      var masked = line.replace(/response-time":\d+/, 'response-time":99999');
-      const expected = kayvee.format({
-        "some-header": "some-header-value",
-        "another-header": "another-header-value",
-        method: "GET",
-        path: "/hello/world",
-        params: "?a=1&b=2",
-        "response-size": 12345,
-        "response-time": 99999,
-        "status-code": 200,
-        ip: "foo",
+      var stream = createLineStream((line) => {
+        cb(null, null, line);
       });
-      assert.equal(masked, expected);
-      return done();
-    });
 
-    var stream = createLineStream((line) => {
-      cb(null, null, line);
-    });
+      var options = undefined;
 
-    var options = {
-      headers: ["some-header", "another-header"],
-    };
-
-    var server = createServer(options, {stream}, (req, res, next) => {
-      res.setHeader("content-length", 12345);
-      next();
-    });
-
-    request(server)
-    .get("/hello/world?a=1&b=2")
-    .set("some-header", "some-header-value")
-    .set("another-header", "another-header-value")
-    .set("X-Forwarded-For", "foo")
-    .expect(200, cb);
-  });
-
-  it("should allow logging from user-specified handlers", (done) => {
-    var cb = afterTest(2, (err, res, line) => {
-      if (err) { return done(err); }
-      var masked = line.replace(/response-time":\d+/, 'response-time":99999');
-      const expected = kayvee.format({
-        global: 1,
-        global2: 2,
-        url: "/hello/world?a=1&b=2",
-        method: "GET",
-        path: "/hello/world",
-        params: "?a=1&b=2",
-        "response-size": 12345,
-        "response-time": 99999,
-        "status-code": 200,
-        ip: "foo",
+      var server = createServer(serverType, options, {stream}, (req, res, next) => {
+        res.setHeader("some-header", "some-header-value");
+        next();
       });
-      assert.equal(masked, expected);
-      return done();
+
+      request(server)
+      .get("/hello/world?a=1&b=2")
+      .expect(200, cb);
     });
 
-    var stream = createLineStream((line) => {
-      cb(null, null, line);
-    });
-
-    var options = {
-      handlers: [
-        () => ({global: 1}),
-        () => ({global2: 2}),
-        (req) => ({url: req.url}),
-      ],
-    };
-
-    var server = createServer(options, {stream}, (req, res, next) => {
-      res.setHeader("content-length", 12345);
-      next();
-    });
-
-    request(server)
-    .get("/hello/world?a=1&b=2")
-    .set("X-Forwarded-For", "foo")
-    .expect(200, cb);
-  });
-
-  it("should not log null or undefined values", (done) => {
-    var cb = afterTest(2, (err, res, line) => {
-      if (err) { return done(err); }
-      var masked = line.replace(/response-time":\d+/, 'response-time":99999');
-      const expected = kayvee.format({
-        method: "GET",
-        path: "/hello/world",
-        params: "?a=1&b=2",
-        "response-size": 12345,
-        "response-time": 99999,
-        "status-code": 200,
-        ip: "foo",
+    it("should allow logging user-specified request headers", (done) => {
+      var cb = afterTest(2, (err, res, line) => {
+        if (err) { return done(err); }
+        var masked = line.replace(/response-time":\d+/, 'response-time":99999');
+        const expected = kayvee.format({
+          "some-header": "some-header-value",
+          "another-header": "another-header-value",
+          method: "GET",
+          path: "/hello/world",
+          params: "?a=1&b=2",
+          "response-size": 12345,
+          "response-time": 99999,
+          "status-code": 200,
+          ip: "::ffff:127.0.0.1",
+        });
+        assert.equal(masked, expected);
+        return done();
       });
-      assert.equal(masked, expected);
-      return done();
-    });
 
-    var stream = createLineStream((line) => {
-      cb(null, null, line);
-    });
-
-    var options = {
-      // These values should not be logged
-      headers: ["this-header-dne"],
-      handlers: [
-        () => ({undef: undefined}),
-      ],
-    };
-
-    var server = createServer(options, {stream}, (req, res, next) => {
-      res.setHeader("content-length", 12345);
-      next();
-    });
-
-    request(server)
-    .get("/hello/world?a=1&b=2")
-    .set("X-Forwarded-For", "foo")
-    .expect(200, cb);
-  });
-
-  it("should warn on broken user-specified handlers, and keep processing", (done) => {
-    var cb = afterTest(2, (err, res, line) => {
-      if (err) { return done(err); }
-      var masked = line.replace(/response-time":\d+/, 'response-time":99999');
-      const expected = kayvee.format({
-        global: 1,
-        method: "GET",
-        path: "/hello/world",
-        params: "?a=1&b=2",
-        "response-size": 12345,
-        "response-time": 99999,
-        "status-code": 200,
-        ip: "foo",
+      var stream = createLineStream((line) => {
+        cb(null, null, line);
       });
-      assert.equal(masked, expected);
-      return done();
+
+      var options = {
+        headers: ["some-header", "another-header"],
+      };
+
+      var server = createServer(serverType, options, {stream}, (req, res, next) => {
+        next();
+      });
+
+      request(server)
+      .get("/hello/world?a=1&b=2")
+      .set("some-header", "some-header-value")
+      .set("another-header", "another-header-value")
+      .expect(200, cb);
     });
 
-    var stream = createLineStream((line) => {
-      cb(null, null, line);
+    it("should allow logging from user-specified handlers", (done) => {
+      var cb = afterTest(2, (err, res, line) => {
+        if (err) { return done(err); }
+        var masked = line.replace(/response-time":\d+/, 'response-time":99999');
+        const expected = kayvee.format({
+          global: 1,
+          global2: 2,
+          url: "/hello/world?a=1&b=2",
+          method: "GET",
+          path: "/hello/world",
+          params: "?a=1&b=2",
+          "response-size": 12345,
+          "response-time": 99999,
+          "status-code": 200,
+          ip: "::ffff:127.0.0.1",
+        });
+        assert.equal(masked, expected);
+        return done();
+      });
+
+      var stream = createLineStream((line) => {
+        cb(null, null, line);
+      });
+
+      var options = {
+        handlers: [
+          () => ({global: 1}),
+          () => ({global2: 2}),
+          (req) => ({url: req.url}),
+        ],
+      };
+
+      var server = createServer(serverType, options, {stream}, (req, res, next) => {
+        next();
+      });
+
+      request(server)
+      .get("/hello/world?a=1&b=2")
+      .expect(200, cb);
     });
 
-    var options = {
-      handlers: [
-        // These handlers should be ignored, because they have errors
-        () => { throw (new Error("handler that throws an error")); },
-        (req) => (req.foo.bar),
-        () => ([]),
-        () => (3), // TODO: should be robust to wrong data types
-        // This handler should still work
-        () => ({global: 1}),
-      ],
-    };
+    it("should not log null or undefined values", (done) => {
+      var cb = afterTest(2, (err, res, line) => {
+        if (err) { return done(err); }
+        var masked = line.replace(/response-time":\d+/, 'response-time":99999');
+        const expected = kayvee.format({
+          method: "GET",
+          path: "/hello/world",
+          params: "?a=1&b=2",
+          "response-size": 12345,
+          "response-time": 99999,
+          "status-code": 200,
+          ip: "::ffff:127.0.0.1",
+        });
+        assert.equal(masked, expected);
+        return done();
+      });
 
-    var server = createServer(options, {stream}, (req, res, next) => {
-      res.setHeader("content-length", 12345);
-      next();
+      var stream = createLineStream((line) => {
+        cb(null, null, line);
+      });
+
+      var options = {
+        // These values should not be logged
+        headers: ["this-header-dne"],
+        handlers: [
+          () => ({undef: undefined}),
+        ],
+      };
+
+      var server = createServer(serverType, options, {stream}, (req, res, next) => {
+        next();
+      });
+
+      request(server)
+      .get("/hello/world?a=1&b=2")
+      .expect(200, cb);
     });
 
-    request(server)
-    .get("/hello/world?a=1&b=2")
-    .set("X-Forwarded-For", "foo")
-    .expect(200, cb);
+    it("should warn on broken user-specified handlers, and keep processing", (done) => {
+      var cb = afterTest(2, (err, res, line) => {
+        if (err) { return done(err); }
+        var masked = line.replace(/response-time":\d+/, 'response-time":99999');
+        const expected = kayvee.format({
+          global: 1,
+          method: "GET",
+          path: "/hello/world",
+          params: "?a=1&b=2",
+          "response-size": 12345,
+          "response-time": 99999,
+          "status-code": 200,
+          ip: "::ffff:127.0.0.1",
+        });
+        assert.equal(masked, expected);
+        return done();
+      });
+
+      var stream = createLineStream((line) => {
+        cb(null, null, line);
+      });
+
+      var options = {
+        handlers: [
+          // These handlers should be ignored, because they have errors
+          () => { throw (new Error("handler that throws an error")); },
+          (req) => (req.foo.bar),
+          () => ([]),
+          () => (3), // TODO: should be robust to wrong data types
+          // This handler should still work
+          () => ({global: 1}),
+        ],
+      };
+
+      var server = createServer(serverType, options, {stream}, (req, res, next) => {
+        next();
+      });
+
+      request(server)
+      .get("/hello/world?a=1&b=2")
+      .expect(200, cb);
+    });
   });
 });
