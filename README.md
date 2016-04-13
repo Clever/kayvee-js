@@ -155,20 +155,18 @@ If a value is `undefined`, the key will not be printed.
     - type: an array of functions that return dicts of key-val pairs to be added to the logger's output.
         These functions have the interface `(request, response) => { "key": "val" }`.
 
-For example, this causes `X-Request-Id` request header and a param called `some_id` to be logged.
+For example, the below snippet causes the `X-Request-Id` request header and a param called `some_id` to be logged.
 
 
 ```js
 kayveeMiddleware = require('kayvee/middleware')
 
-var addSomeId = function(request, response) {
-    return {"some_id": request.params.some_id}
-}
-
 var app = express()
 var options = {
     headers: ['X-Request-Id'],
-    handlers: [addSomeId]
+    handlers: [
+        (request, response) => {"some_id": request.params.some_id});
+    ]
 }
 app.use(kayveeMiddleware(options))
 ```
