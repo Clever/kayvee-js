@@ -11,27 +11,27 @@ var _ = require("underscore");
  * request path
  */
 
-var getBaseUrl = function getBaseUrl(req) {
+function getBaseUrl(req) {
   var url = req.originalUrl || req.url;
   var parsed = require("url").parse(url, true);
   return parsed.pathname;
-};
+}
 
 /**
  * request query params
  */
 
-var getQueryParams = function getQueryParams(req) {
+function getQueryParams(req) {
   var url = req.originalUrl || req.url;
   var parsed = require("url").parse(url, true);
   return parsed.search;
-};
+}
 
 /**
  * response size
  */
 
-var getResponseSize = function getResponseSize(res) {
+function getResponseSize(res) {
   var result = undefined;
   var headers = res.headers || res._headers;
   if (headers && headers["content-length"]) {
@@ -40,13 +40,13 @@ var getResponseSize = function getResponseSize(res) {
     result = res.data.length;
   }
   return result;
-};
+}
 
 /**
  * response time in nanoseconds
  */
 
-var getResponseTimeNs = function getResponseTimeNs(req, res) {
+function getResponseTimeNs(req, res) {
   if (!req._startAt || !res._startAt) {
     // missing request and/or response start time
     return undefined;
@@ -56,18 +56,17 @@ var getResponseTimeNs = function getResponseTimeNs(req, res) {
   var ns = (res._startAt[0] - req._startAt[0]) * 1e9
     + (res._startAt[1] - req._startAt[1]);
   return ns;
-};
+}
 
 /**
  * IP address that sent the request.
  *
  * `req.ip` is defined in Express: http://expressjs.com/en/api.html#req.ip
  */
-var getIp = function getIp(req) {
+function getIp(req) {
   var remoteAddress = req.connection ? req.connection.remoteAddress : undefined;
   return req.ip || remoteAddress;
-};
-
+}
 
 /*
  * Default handlers
