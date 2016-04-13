@@ -8,8 +8,6 @@
     "url": "git://github.com/Clever/kayvee-node"
   },
   "dependencies": {
-    "ts-node": "^0.7.1",
-    "typescript": "^1.8.9",
     "underscore": "~1.5.2"
   },
   "devDependencies": {
@@ -22,6 +20,8 @@
     "lint": "^1.1.2",
     "mocha": "~1.17.0",
     "tslint": "^3.7.4",
+    "ts-node": "^0.7.1",
+    "typescript": "^1.8.9",
     "underscore.deep": "^0.5.1"
   },
   "scripts": {
