@@ -9,36 +9,36 @@ Read the [Kayvee spec](https://github.com/Clever/kayvee) to learn more about the
 
 Initialization:
 
-```coffee
-kayvee = require "kayvee"
+```js
+var kayvee = require("kayvee");
 
-log = kayvee.logger "logger-source"
+var log = new kayvee.Logger("logger-source");
 ```
 
 Use it to write metrics:
 
-```coffee
-log.gaugeD "gauge-title", 3, {user_id: "value", scope: "scope_system"}
-log.gauge "gauge-simple", 18
+```js
+log.gauge("gauge-simple", 18)
+log.gaugeD("gauge-with-extra-data", 3, {user_id: "value", scope: "scope_system"})
 ```
 and structured logs:
 
-```coffee
-log.infoD "non-metric-log", {"msg": "this is my info", user: "user-id", group: "group-id"}
-log.error "really. this is an error with no more structured metadata"
+```js
+log.infoD("non-metric-log", {"msg": "this is my info", user: "user-id", group: "group-id"})
+log.error("this is an error with no extra structured metadata")
 ```
 
 ## Example: Kayvee Internals
 
 Here's are two examples snippets that log a kayvee formatted string:
 
-```coffee
-console.error kayvee.format {"hello":"world"}
+```js
+console.error(kayvee.format({"hello":"world"}));
 # {"hello":"world"}
 ```
 
-```coffee
-console.error kayvee.formatLog "test_source", kayvee.INFO, "title", {"foo" : 1, "bar" : "baz"}
+```js
+console.error(kayvee.formatLog("test_source", kayvee.INFO, "title", {"foo" : 1, "bar" : "baz"}));
 # {"foo":1,"bar":"baz","source":"test_source","level":"info","title":"title"}
 ```
 
@@ -59,17 +59,17 @@ Run `make test` to execute the tests
 
 #### kayvee/logger constructor
 
-```coffee
+```js
 # only source is required
-logger source, logLvl=null, @formatter=kv.format, output=console.error
+var log = new kayvee.Logger(source, logLvl = process.env.KAYVEE_LOG_LEVEL, formatter = kv.format, output = console.error)
 ```
 
 An environment variable named `KAYVEE_LOG_LEVEL` can be used instead of setting `logLvl` in the application.
 
 #### kayvee/logger setConfig
 
-```coffee
-logger.setConfig source, logLvl, formatter, output
+```js
+log.setConfig(source, logLvl, formatter, output)
 ```
 
 You can also individually set the `config` using:
@@ -82,41 +82,41 @@ You can also individually set the `config` using:
 
 Titles only:
 
-* `log.debug "title"`
-* `log.info "title"`
-* `log.warn "title"`
-* `log.error "title"`
-* `log.critical "title"`
+* `log.debug("title")`
+* `log.info("title")`
+* `log.warn("title")`
+* `log.error("title")`
+* `log.critical("title")`
 
 Title + Metadata:
 
-* `log.debugD "title" {key1: "value", key2: "val"}`
-* `log.infoD "title" {key1: "value", key2: "val"}`
-* `log.warnD "title" {key1: "value", key2: "val"}`
-* `log.errorD "title" {key1: "value", key2: "val"}`
-* `log.criticalD "title" {key1: "value", key2: "val"}`
+* `log.debugD("title" {key1: "value", key2: "val"})`
+* `log.infoD("title" {key1: "value", key2: "val"})`
+* `log.warnD("title" {key1: "value", key2: "val"})`
+* `log.errorD("title" {key1: "value", key2: "val"})`
+* `log.criticalD("title" {key1: "value", key2: "val"})`
 
 #### kayvee/logger metrics
 
-* `log.counter "counter-name"` defaults to value of `1`
-* `log.gauge "gauge-name", 100`
+* `log.counter("counter-name")` defaults to value of `1`
+* `log.gauge("gauge-name", 100)`
 
-* `log.counterD "counter-with-data", 2, {extra: "info"}`
-* `log.gaugeD "gauge-with-data", 2, {extra: "info"}`
+* `log.counterD("counter-with-data", 2, {extra: "info"})`
+* `log.gaugeD("gauge-with-data", 2, {extra: "info"})`
 
 ### Formatters
 
 #### format
 
-```coffee
-kayvee.format data
+```js
+kayvee.format(data)
 ```
 Format converts a map to stringified json output
 
 #### formatLog
 
-```coffee
-kayvee.formatLog source, level, title, data
+```js
+kayvee.formatLog(source, level, title, data)
 ```
 `formatLog` is similar to `format`, but takes additional reserved params to promote
 logging best-practices
