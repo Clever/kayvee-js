@@ -103,8 +103,14 @@ var defaultHandlers = [
   (req, res) => ({"status-code": res.statusCode}),
   // Ip address
   (req) => ({ip: getIp(req)}),
+
+  // Kayvee's reserved fields
   // Log level
   (req, res) => ({level: getLogLevel(req, res)}),
+  // Source
+  () => ({source: "kayvee"}),
+  // Title
+  () => ({title: "request-info"}),
 ];
 
 /*
