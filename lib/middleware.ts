@@ -4,6 +4,7 @@
  */
 
 var kayvee = require("../lib/kayvee");
+var kayveeLogger = require("../lib/logger/logger");
 var morgan = require("morgan");
 var _ = require("underscore");
 
@@ -68,6 +69,22 @@ function getIp(req) {
   return req.ip || remoteAddress;
 }
 
+/**
+ * Log level
+ */
+function getLogLevel(req, res) {
+  var statusCode = res.statusCode;
+  var result;
+  if (statusCode >= 500) {
+    result = kayveeLogger.Error;
+  } else if (statusCode >= 400) {
+    result = kayveeLogger.Warning;
+  } else {
+    result = kayveeLogger.Info;
+  }
+  return result;
+}
+
 /*
  * Default handlers
  */
@@ -86,6 +103,8 @@ var defaultHandlers = [
   (req, res) => ({"status-code": res.statusCode}),
   // Ip address
   (req) => ({ip: getIp(req)}),
+  // Log level
+  (req, res) => ({level: getLogLevel(req, res)}),
 ];
 
 /*

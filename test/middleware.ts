@@ -90,6 +90,7 @@ _.each(["http", "express"], (serverType) => {
           "response-time": 99999,
           "status-code": 200,
           ip: "::ffff:127.0.0.1",
+          level: "info",
         });
         assert.equal(masked, expected);
         return done();
@@ -125,6 +126,7 @@ _.each(["http", "express"], (serverType) => {
           "response-time": 99999,
           "status-code": 200,
           ip: "::ffff:127.0.0.1",
+          level: "info",
         });
         assert.equal(masked, expected);
         return done();
@@ -164,6 +166,7 @@ _.each(["http", "express"], (serverType) => {
           "response-time": 99999,
           "status-code": 200,
           ip: "::ffff:127.0.0.1",
+          level: "info",
         });
         assert.equal(masked, expected);
         return done();
@@ -202,6 +205,7 @@ _.each(["http", "express"], (serverType) => {
           "response-time": 99999,
           "status-code": 200,
           ip: "::ffff:127.0.0.1",
+          level: "info",
         });
         assert.equal(masked, expected);
         return done();
@@ -241,6 +245,7 @@ _.each(["http", "express"], (serverType) => {
           "response-time": 99999,
           "status-code": 200,
           ip: "::ffff:127.0.0.1",
+          level: "info",
         });
         assert.equal(masked, expected);
         return done();
