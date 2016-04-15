@@ -108,7 +108,7 @@ var defaultHandlers = [
   // Log level
   (req, res) => ({level: getLogLevel(req, res)}),
   // Source
-  () => ({source: "kayvee"}),
+  // -> Gets passed in among `options` during library initialization
   // Title
   () => ({title: "request-info"}),
 ];
@@ -140,6 +140,11 @@ var defaultHandlers = [
 var formatLine = (options_arg) => {
   var options = options_arg || {};
 
+  // `source` is the one required field
+  if (!options.source) {
+    throw (Error("Missing required config for 'source' in Kayvee middleware 'options'"));
+  }
+
   return (tokens, req, res) => {
     // Build a dict of data to log
     var data = {};
@@ -159,6 +164,7 @@ var formatLine = (options_arg) => {
 
     // Allow user to override `base_handlers`; provide sane default set of handlers
     var base_handlers = options.base_handlers || defaultHandlers;
+    base_handlers = base_handlers.concat([() => ({source: options.source})]);
 
     // Execute custom-handlers THEN base-handlers
     var all_handlers = custom_handlers.concat(base_handlers);
