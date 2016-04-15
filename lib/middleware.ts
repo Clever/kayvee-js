@@ -4,6 +4,7 @@
  */
 
 var kayvee = require("../lib/kayvee");
+var kayveeLogger = require("../lib/logger/logger");
 var morgan = require("morgan");
 var _ = require("underscore");
 
@@ -68,6 +69,20 @@ function getIp(req) {
   return req.ip || remoteAddress;
 }
 
+/**
+ * Log level
+ */
+function getLogLevel(req, res) {
+  const statusCode = res.statusCode;
+  let result;
+  if (statusCode >= 499) {
+    result = kayveeLogger.Error;
+  } else {
+    result = kayveeLogger.Info;
+  }
+  return result;
+}
+
 /*
  * Default handlers
  */
@@ -86,6 +101,16 @@ var defaultHandlers = [
   (req, res) => ({"status-code": res.statusCode}),
   // Ip address
   (req) => ({ip: getIp(req)}),
+  // Via -- what library/code produced this log?
+  () => ({via: "kayvee-middleware"}),
+
+  // Kayvee's reserved fields
+  // Log level
+  (req, res) => ({level: getLogLevel(req, res)}),
+  // Source -- which app emitted this log?
+  // -> Gets passed in among `options` during library initialization
+  // Title
+  () => ({title: "request-finished"}),
 ];
 
 /*
@@ -115,6 +140,11 @@ var defaultHandlers = [
 var formatLine = (options_arg) => {
   var options = options_arg || {};
 
+  // `source` is the one required field
+  if (!options.source) {
+    throw (Error("Missing required config for 'source' in Kayvee middleware 'options'"));
+  }
+
   return (tokens, req, res) => {
     // Build a dict of data to log
     var data = {};
@@ -134,6 +164,7 @@ var formatLine = (options_arg) => {
 
     // Allow user to override `base_handlers`; provide sane default set of handlers
     var base_handlers = options.base_handlers || defaultHandlers;
+    base_handlers = base_handlers.concat([() => ({source: options.source})]);
 
     // Execute custom-handlers THEN base-handlers
     var all_handlers = custom_handlers.concat(base_handlers);
@@ -155,4 +186,8 @@ var formatLine = (options_arg) => {
  * @public
  */
 
-module.exports = (clever_options, morgan_options) => morgan(formatLine(clever_options), morgan_options);
+if (process.env.NODE_ENV === "test") {
+  module.exports = (clever_options, morgan_options) => morgan(formatLine(clever_options), morgan_options);
+} else {
+  module.exports = (clever_options) => morgan(formatLine(clever_options), {stream: process.stderr});
+}

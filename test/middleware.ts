@@ -78,6 +78,16 @@ function createServer(server_type, clever_options, morgan_options, fn) {
 
 _.each(["http", "express"], (serverType) => {
   describe(`middleware for *${serverType}* server`, () => {
+    it("should throw error on intialization if `source` not set in `options`", (done) => {
+      var options = {};
+      var erroringServer = () => createServer(serverType, options, null, (req, res, next) => {
+        res.setHeader("some-header", "some-header-value");
+        next();
+      });
+      assert.throws(erroringServer, Error, "Expected an error to be thrown");
+      return done();
+    });
+
     it("should pass default fields", (done) => {
       var cb = afterTest(2, (err, res, line) => {
         if (err) { return done(err); }
@@ -90,6 +100,10 @@ _.each(["http", "express"], (serverType) => {
           "response-time": 99999,
           "status-code": 200,
           ip: "::ffff:127.0.0.1",
+          via: "kayvee-middleware",
+          level: "info",
+          title: "request-finished",
+          source: "test-app",
         });
         assert.equal(masked, expected);
         return done();
@@ -99,7 +113,7 @@ _.each(["http", "express"], (serverType) => {
         cb(null, null, line);
       });
 
-      var options = undefined;
+      var options = {source: "test-app"};
 
       var server = createServer(serverType, options, {stream}, (req, res, next) => {
         res.setHeader("some-header", "some-header-value");
@@ -125,6 +139,10 @@ _.each(["http", "express"], (serverType) => {
           "response-time": 99999,
           "status-code": 200,
           ip: "::ffff:127.0.0.1",
+          via: "kayvee-middleware",
+          level: "info",
+          title: "request-finished",
+          source: "test-app",
         });
         assert.equal(masked, expected);
         return done();
@@ -135,6 +153,7 @@ _.each(["http", "express"], (serverType) => {
       });
 
       var options = {
+        source: "test-app",
         headers: ["some-header", "another-header"],
       };
 
@@ -164,6 +183,10 @@ _.each(["http", "express"], (serverType) => {
           "response-time": 99999,
           "status-code": 200,
           ip: "::ffff:127.0.0.1",
+          via: "kayvee-middleware",
+          level: "info",
+          title: "request-finished",
+          source: "test-app",
         });
         assert.equal(masked, expected);
         return done();
@@ -174,6 +197,7 @@ _.each(["http", "express"], (serverType) => {
       });
 
       var options = {
+        source: "test-app",
         handlers: [
           () => ({global: 1}),
           () => ({global2: 2}),
@@ -202,6 +226,10 @@ _.each(["http", "express"], (serverType) => {
           "response-time": 99999,
           "status-code": 200,
           ip: "::ffff:127.0.0.1",
+          via: "kayvee-middleware",
+          level: "info",
+          title: "request-finished",
+          source: "test-app",
         });
         assert.equal(masked, expected);
         return done();
@@ -212,6 +240,7 @@ _.each(["http", "express"], (serverType) => {
       });
 
       var options = {
+        source: "test-app",
         // These values should not be logged
         headers: ["this-header-dne"],
         handlers: [
@@ -241,6 +270,10 @@ _.each(["http", "express"], (serverType) => {
           "response-time": 99999,
           "status-code": 200,
           ip: "::ffff:127.0.0.1",
+          via: "kayvee-middleware",
+          level: "info",
+          title: "request-finished",
+          source: "test-app",
         });
         assert.equal(masked, expected);
         return done();
@@ -251,6 +284,7 @@ _.each(["http", "express"], (serverType) => {
       });
 
       var options = {
+        source: "test-app",
         handlers: [
           // This handler should be ignored, because it has an error
           () => { throw (new Error("handler that throws an error")); },
@@ -275,6 +309,7 @@ _.each(["http", "express"], (serverType) => {
         const expected = kayvee.format({
           global: 1,
           base: 1,
+          source: "test-app",
         });
         assert.equal(masked, expected);
         return done();
@@ -285,6 +320,7 @@ _.each(["http", "express"], (serverType) => {
       });
 
       var options = {
+        source: "test-app",
         base_handlers: [
           () => ({base: 1}),
         ],
@@ -309,6 +345,7 @@ _.each(["http", "express"], (serverType) => {
         const expected = kayvee.format({
           global: 1,
           base: 1,
+          source: "test-app",
         });
         assert.equal(masked, expected);
         return done();
@@ -319,6 +356,7 @@ _.each(["http", "express"], (serverType) => {
       });
 
       var options = {
+        source: "test-app",
         base_handlers: [
           () => (1),
           () => ("a"),
