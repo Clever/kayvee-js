@@ -101,14 +101,16 @@ var defaultHandlers = [
   (req, res) => ({"status-code": res.statusCode}),
   // Ip address
   (req) => ({ip: getIp(req)}),
+  // Via -- what library/code produced this log?
+  () => ({via: "kayvee-middleware"}),
 
   // Kayvee's reserved fields
   // Log level
   (req, res) => ({level: getLogLevel(req, res)}),
-  // Source
+  // Source -- which app emitted this log?
   // -> Gets passed in among `options` during library initialization
   // Title
-  () => ({title: "request-info"}),
+  () => ({title: "request-finished"}),
 ];
 
 /*
