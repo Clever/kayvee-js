@@ -186,4 +186,8 @@ var formatLine = (options_arg) => {
  * @public
  */
 
-module.exports = (clever_options, morgan_options) => morgan(formatLine(clever_options), morgan_options);
+if (process.env.NODE_ENV === "test") {
+  module.exports = (clever_options, morgan_options) => morgan(formatLine(clever_options), morgan_options);
+} else {
+  module.exports = (clever_options) => morgan(formatLine(clever_options), {stream: process.stderr});
+}
