@@ -146,8 +146,10 @@ var app = express();
 app.use(kayvee.middleware({"source":"my-app"));
 ```
 
-It also supports additional user configuration via an `options` object.
-It prints the values of the headers or the results of the handlers.
+Note that `source` is a required field, since it clarifies which application is emitting the logs.
+
+The middleware also supports further user configuration via the `options` object.
+It prints the values of `headers` or the results of `handlers`.
 If a value is `undefined`, the key will not be printed.
 
 - `headers`
