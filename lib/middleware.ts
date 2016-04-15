@@ -75,10 +75,8 @@ function getIp(req) {
 function getLogLevel(req, res) {
   const statusCode = res.statusCode;
   let result;
-  if (statusCode >= 500) {
+  if (statusCode >= 499) {
     result = kayveeLogger.Error;
-  } else if (statusCode >= 400) {
-    result = kayveeLogger.Warning;
   } else {
     result = kayveeLogger.Info;
   }
