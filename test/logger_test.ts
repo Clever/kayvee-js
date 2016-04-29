@@ -176,6 +176,36 @@ describe("logger_test", () => {
     });
   });
 
+  describe(".nomodifydata", () => {
+    before(() => {
+      logObj.setOutput(outputFunc);
+    });
+    it("does not modify data", () => {
+      const data = {
+        str: "modify",
+        obj: {
+          key: "value",
+        },
+        fun: "boo",
+      };
+      // not using deepClone since that's what we are
+      // somewhat testing
+      const dataCopy = {
+        str: "modify",
+        obj: {
+          key: "value",
+        },
+        fun: "boo",
+      };
+      const output = ['{"title":"testInfoWithData",',
+        '"str":"modify","obj":{"key":"value"},"fun":"boo",',
+        '"level":"info","source":"logger-tester"}'].join("");
+      logObj.infoD("testInfoWithData", data);
+      assert.deepEqual(data, dataCopy);
+      assert.equal(sample, output);
+    });
+  });
+
   describe(".hiddenlog", () => {
     describe(".logwarning", () => {
       beforeEach(() => logObj.setLogLevel(KayveeLogger.Warning));

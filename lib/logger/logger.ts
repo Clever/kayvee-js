@@ -1,5 +1,7 @@
-var _ = require("underscore");
+var _   = require("underscore");
+_.mixin(require("underscore.deep"));
 var kv  = require("../kayvee");
+
 
 var LEVELS = {
   Debug:    "debug",
@@ -99,48 +101,56 @@ class Logger {
   }
 
   debugD(title, data) {
-    data.title = title;
-    this.logWithLevel(LEVELS.Debug, data);
+    this._logWithLevel(LEVELS.Debug, {
+      title,
+    }, data);
   }
 
   infoD(title, data) {
-    data.title = title;
-    this.logWithLevel(LEVELS.Info, data);
+    this._logWithLevel(LEVELS.Info, {
+      title,
+    }, data);
   }
 
   warnD(title, data) {
-    data.title = title;
-    this.logWithLevel(LEVELS.Warning, data);
+    this._logWithLevel(LEVELS.Warning, {
+      title,
+    }, data);
   }
 
   errorD(title, data) {
-    data.title = title;
-    this.logWithLevel(LEVELS.Error, data);
+    this._logWithLevel(LEVELS.Error, {
+      title,
+    }, data);
   }
 
   criticalD(title, data) {
-    data.title = title;
-    this.logWithLevel(LEVELS.Critical, data);
+    this._logWithLevel(LEVELS.Critical, {
+      title,
+    }, data);
   }
 
   counterD(title, value, data) {
-    data.title = title;
-    data.value = value;
-    data.type = "counter";
-    this.logWithLevel(LEVELS.Info, data);
+    this._logWithLevel(LEVELS.Info, {
+      title,
+      value,
+      type: "counter",
+    }, data);
   }
 
   gaugeD(title, value, data) {
-    data.title = title;
-    data.value = value;
-    data.type = "gauge";
-    this.logWithLevel(LEVELS.Info, data);
+    this._logWithLevel(LEVELS.Info, {
+      title,
+      value,
+      type:  "gauge",
+    }, data);
   }
 
-  logWithLevel(logLvl, data) {
+  _logWithLevel(logLvl, metadata, userdata) {
     if (LOG_LEVEL_ENUM[logLvl] < LOG_LEVEL_ENUM[this.logLvl]) {
       return;
     }
+    const data = _.extend(metadata, _(userdata).deepClone());
     data.level = logLvl;
     _.defaults(data, this.globals);
     this.logWriter(this.formatter(data));
