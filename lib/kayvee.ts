@@ -1,4 +1,5 @@
 var _ = require("underscore");
+_.mixin(require("underscore.deep"));
 
 // Converts a map to a string space-delimited key=val pairs
 function format(data) {
@@ -7,7 +8,7 @@ function format(data) {
 
 // Similar to format, but takes additional reserved params to promote logging best-practices
 function formatLog(source = "", level = "", title = "", data = {}) {
-  let reallyData = data;
+  let reallyData = _.deepClone(data);
   if (!_.isObject(data)) {
     reallyData = {};
   }
