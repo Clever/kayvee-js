@@ -18,10 +18,10 @@ describe("kayvee", () => {
     });
     describe("with deploy_env", () => {
       before(() => {
-        process.env.DEPLOY_ENV = "testing";
+        process.env._DEPLOY_ENV = "testing";
       });
       after(() => {
-        delete process.env.DEPLOY_ENV;
+        delete process.env._DEPLOY_ENV;
       });
       _.each(tests.format, (spec) => {
         it(spec.title, () => {
