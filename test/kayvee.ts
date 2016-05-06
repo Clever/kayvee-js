@@ -7,11 +7,29 @@ var fs = require("fs");
 describe("kayvee", () => {
   const tests = JSON.parse(fs.readFileSync("test/tests.json"));
   describe(".format", () => {
-    _.each(tests.format, (spec) => {
-      it(spec.title, () => {
-        const actual = kv.format(spec.input.data);
-        const expected = spec.output;
-        assert.deepEqual(JSON.parse(actual), JSON.parse(expected));
+    describe("without deploy_env", () => {
+      _.each(tests.format, (spec) => {
+        it(spec.title, () => {
+          const actual = kv.format(spec.input.data);
+          const expected = spec.output;
+          assert.deepEqual(JSON.parse(actual), JSON.parse(expected));
+        });
+      });
+    });
+    describe("with deploy_env", () => {
+      before(() => {
+        process.env.DEPLOY_ENV = "testing";
+      });
+      after(() => {
+        delete process.env.DEPLOY_ENV;
+      });
+      _.each(tests.format, (spec) => {
+        it(spec.title, () => {
+          const actual = kv.format(spec.input.data);
+          const expected = spec.output;
+          assert.deepEqual(JSON.parse(actual), _.extend({deploy_env: "testing"},
+                                                        JSON.parse(expected)));
+        });
       });
     });
   });

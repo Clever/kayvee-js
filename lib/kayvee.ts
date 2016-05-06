@@ -3,6 +3,9 @@ _.mixin(require("underscore.deep"));
 
 // Converts a map to a string space-delimited key=val pairs
 function format(data) {
+  if (process.env.DEPLOY_ENV != null) {
+    return JSON.stringify(_.extend({deploy_env: process.env.DEPLOY_ENV}, data));
+  }
   return JSON.stringify(data);
 }
 
