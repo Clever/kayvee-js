@@ -4,7 +4,7 @@
  */
 
 var kayvee = require("../lib/kayvee");
-var kayveeLogger = require("../lib/logger/logger");
+var KayveeLogger = require("../lib/logger/logger");
 var morgan = require("morgan");
 var _ = require("underscore");
 
@@ -76,9 +76,9 @@ function getLogLevel(req, res) {
   const statusCode = res.statusCode;
   let result;
   if (statusCode >= 499) {
-    result = kayveeLogger.Error;
+    result = KayveeLogger.Error;
   } else {
-    result = kayveeLogger.Info;
+    result = KayveeLogger.Info;
   }
   return result;
 }
@@ -112,6 +112,55 @@ var defaultHandlers = [
   // Title
   () => ({title: "request-finished"}),
 ];
+
+const defaultContextHandlers = [];
+
+function handlerData(handlers, ...args) {
+  const data = {};
+  handlers.forEach((h) => {
+    try {
+      const handler_data = h(...args);
+      _.extend(data, handler_data);
+    } catch (e) {
+      // ignore invalid handler
+    }
+  });
+  return data;
+}
+
+class ContextLogger {
+  logger = null;
+  handlers = [];
+  args = [];
+
+  constructor(logger, handlers, ...args) {
+    this.logger = logger;
+    this.handlers = handlers;
+    this.args = args;
+  }
+
+  _contextualData(data) {
+    return _.extend(handlerData(this.handlers, ...this.args), data);
+  }
+}
+
+for (const func of KayveeLogger.LEVELS) {
+  ContextLogger.prototype[func] = function (title) {
+    this[`${func}D`](title, {});
+  };
+  ContextLogger.prototype[`${func}D`] = function (title, data) {
+    this.logger[`${func}D`](title, this._contextualData(data));
+  };
+}
+
+for (const func of KayveeLogger.METRICS) {
+  ContextLogger.prototype[func] = function (title, value) {
+    this[`${func}D`](title, value, {});
+  };
+  ContextLogger.prototype[`${func}D`] = function (title, value, data) {
+    this.logger[`${func}D`](title, value, this._contextualData(data));
+  };
+}
 
 /*
  * User configuration is passed via an `options` object.
@@ -167,18 +216,16 @@ var formatLine = (options_arg) => {
     base_handlers = base_handlers.concat([() => ({source: options.source})]);
 
     // Execute custom-handlers THEN base-handlers
-    var all_handlers = custom_handlers.concat(base_handlers);
-    all_handlers.forEach((h) => {
-      try {
-        var handler_data = h(req, res);
-        _.extend(data, handler_data);
-      } catch (e) {
-        // ignore invalid handler
-      }
-    });
+    const all_handlers = custom_handlers.concat(base_handlers);
+    _.extend(data, handlerData(all_handlers, req, res));
 
     return kayvee.format(data);
   };
+};
+
+const defaultContextLoggerOpts = {
+  enabled: true,
+  handlers: defaultContextHandlers,
 };
 
 /**
@@ -188,6 +235,19 @@ var formatLine = (options_arg) => {
 
 if (process.env.NODE_ENV === "test") {
   module.exports = (clever_options, morgan_options) => morgan(formatLine(clever_options), morgan_options);
+  module.exports.ContextLogger = ContextLogger;
 } else {
-  module.exports = (clever_options) => morgan(formatLine(clever_options), {stream: process.stderr});
+  module.exports = (clever_options, context_logger_options = defaultContextLoggerOpts) => {
+    // `source` is the one required field
+    if (!clever_options.source) {
+      throw new Error("Missing required config for 'source' in Kayvee middleware 'options'");
+    }
+    const logger = new KayveeLogger(clever_options.source);
+    return (req, res, next) => {
+      if (context_logger_options.enabled) {
+        req.log = new ContextLogger(logger, context_logger_options.handlers, req);
+      }
+      morgan(formatLine(clever_options), {stream: process.stderr})(req, res, next);
+    };
+  };
 }

@@ -159,3 +159,5 @@ class Logger {
 
 module.exports = Logger;
 _.extend(module.exports, LEVELS);
+module.exports.LEVELS = ["debug", "info", "warn", "error", "critical"];
+module.exports.METRICS = ["counter", "gauge"];
