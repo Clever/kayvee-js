@@ -1,10 +1,12 @@
 var _ = require("underscore");
 _.mixin(require("underscore.deep"));
 
+const deploy_env = process.env._DEPLOY_ENV;
+
 // Converts a map to a string space-delimited key=val pairs
 function format(data) {
-  if (process.env._DEPLOY_ENV != null) {
-    return JSON.stringify(_.extend({deploy_env: process.env._DEPLOY_ENV}, data));
+  if (deploy_env) {
+    return JSON.stringify(_.extend({deploy_env}, data));
   }
   return JSON.stringify(data);
 }
