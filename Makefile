@@ -8,7 +8,7 @@ build: clean
 test: lint tests.json $(TESTS)
 
 $(TESTS):
-	DEBUG=us:progress NODE_ENV=test node_modules/mocha/bin/mocha --require ts-node/register --timeout 60000 test/$@.ts
+	_DEPLOY_ENV=testing DEBUG=us:progress NODE_ENV=test node_modules/mocha/bin/mocha --require ts-node/register --timeout 60000 test/$@.ts
 
 clean:
 	rm -rf build
