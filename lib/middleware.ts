@@ -268,7 +268,7 @@ const defaultContextLoggerOpts = {
  */
 
 if (process.env.NODE_ENV === "test") {
-  module.exports = (clever_options, morgan_options = {}) => {
+  module.exports = (clever_options, morgan_options = {skip: null}) => {
     if (clever_options.ignore_dir) {
       morgan_options.skip = skip_path(clever_options.ignore_dir.directory, clever_options.ignore_dir.path);
     }
