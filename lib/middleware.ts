@@ -3,10 +3,44 @@
  * @private
  */
 
+var fs = require("fs");
+var path = require("path");
+
 var kayvee = require("../lib/kayvee");
 var KayveeLogger = require("../lib/logger/logger");
 var morgan = require("morgan");
 var _ = require("underscore");
+
+/**
+ * all relative files path in a directory
+ */
+
+function walkDirSync(dir, files = []) {
+  const list = fs.readdirSync(dir);
+  list.forEach((file) => {
+    const f = path.join(dir, file);
+    if (fs.statSync(path.join(dir, file)).isDirectory()) {
+      walkDirSync(f, files);
+    } else {
+      files.push(f);
+    }
+  });
+  return files.map((f) => path.relative(dir, f));
+}
+
+/**
+ * returns a middleware function that checks if path exists in dir.
+ *
+ * Files in the directory are prefixed by base_path and compared to
+ * req.path
+ */
+
+function skip_path(dir, base_path = "/") {
+  let files = walkDirSync(dir);
+  files = files.map((file) => path.join(base_path, file));
+  console.error(`KayveeMiddleware: Skipping successful requests for files in ${dir} at ${base_path}`);
+  return (req, res) => _(files).contains(req.path) && res.statusCode < 400;
+}
 
 /**
  * request path
@@ -234,7 +268,12 @@ const defaultContextLoggerOpts = {
  */
 
 if (process.env.NODE_ENV === "test") {
-  module.exports = (clever_options, morgan_options) => morgan(formatLine(clever_options), morgan_options);
+  module.exports = (clever_options, morgan_options) => {
+    if (clever_options.ignore_dir) {
+      morgan_options.skip = skip_path(clever_options.ignore_dir.directory, clever_options.ignore_dir.path);
+    }
+    return morgan(formatLine(clever_options), morgan_options);
+  };
   module.exports.ContextLogger = ContextLogger;
 } else {
   module.exports = (clever_options, context_logger_options = defaultContextLoggerOpts) => {
@@ -243,11 +282,19 @@ if (process.env.NODE_ENV === "test") {
       throw new Error("Missing required config for 'source' in Kayvee middleware 'options'");
     }
     const logger = new KayveeLogger(clever_options.source);
+    const morgan_options = {
+      stream: process.stderr,
+      skip: null,
+    };
+    if (clever_options.ignore_dir) {
+      morgan_options.skip = skip_path(clever_options.ignore_dir.directory, clever_options.ignore_dir.path);
+    }
+    const morgan_logger = morgan(formatLine(clever_options), morgan_options);
     return (req, res, next) => {
       if (context_logger_options.enabled) {
         req.log = new ContextLogger(logger, context_logger_options.handlers, req);
       }
-      morgan(formatLine(clever_options), {stream: process.stderr})(req, res, next);
+      morgan_logger(req, res, next);
     };
   };
 }
