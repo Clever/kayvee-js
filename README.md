@@ -158,6 +158,11 @@ If a value is `undefined`, the key will not be printed.
 - `handlers`
     - type: an array of functions that return dicts of key-val pairs to be added to the logger's output.
         These functions have the interface `(request, response) => { "key": "val" }`.
+- `ignore_dir`
+    - type: object containing the keys `directory` and `path`
+        - `directory` is the absolute file path of the directory that contains static files. This is the path passed to `express.static`
+        - `path` is the express mount point for these files. Defaults to `/`.
+        This will ignore all requests with `statusCode < 400` to `path`/`file/path/in/dir`
 
 For example, the below snippet causes the `X-Request-Id` request header and a param called `some_id` to be logged.
 

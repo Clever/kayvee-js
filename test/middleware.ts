@@ -63,6 +63,7 @@ function createServer(server_type, clever_options, morgan_options, fn) {
   } else if (server_type === "express") {
     var app = express();
     app.use(logger);
+    app.use(express.static(`${__dirname}/static`));
     app.get("*", (req, res) => {
       res.header("Content-Length", 12345);
       res.end();
@@ -373,12 +374,59 @@ _.each(["http", "express"], (serverType) => {
         ],
       };
 
-      var server = createServer(serverType, options, {stream}, (req, res, next) => {
+      var server = createServer(serverType, options, {stream, skip: null}, (req, res, next) => {
         next();
       });
 
       request(server)
       .get("/hello/world?a=1&b=2")
+      .expect(200, cb);
+    });
+    it("allows ignoring requests to files in a static directory", (done) => {
+      var cb = afterTest(2, (err, res, line) => {
+        if (err) { return done(err); }
+        var masked = line.replace(/response-time":\d+/, 'response-time":99999');
+        const expected = kayvee.format({
+          method: "GET",
+          path: "/hello/world",
+          params: "",
+          "response-size": 12345,
+          "response-time": 99999,
+          "status-code": 200,
+          ip: "::ffff:127.0.0.1",
+          via: "kayvee-middleware",
+          level: "info",
+          title: "request-finished",
+          source: "test-app",
+        });
+        assert.equal(masked, expected);
+        return done();
+      });
+
+      var stream = createLineStream((line) => {
+        cb(null, null, line);
+      });
+
+      var options = {
+        source: "test-app",
+        ignore_dir: {
+          directory: `${__dirname}/static`,
+          // path: "/", defaults to /
+        },
+      };
+
+      var server = createServer(serverType, options, {stream}, (req, res, next) => {
+        next();
+      });
+
+      // this line is never logged
+      request(server)
+      .get("/empty.css")
+      .expect(200);
+
+      // this one is logged
+      request(server)
+      .get("/hello/world")
       .expect(200, cb);
     });
   });
