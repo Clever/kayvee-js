@@ -3,12 +3,21 @@ _.mixin(require("underscore.deep"));
 
 const deploy_env = process.env._DEPLOY_ENV;
 
+// Encode errors to strings instead of toJSON()
+function replaceErrors(key, value) {
+  if (value instanceof Error) {
+    return value.toString();
+  }
+
+  return value;
+}
+
 // Converts a map to a string space-delimited key=val pairs
 function format(data) {
   if (deploy_env) {
-    return JSON.stringify(_.extend({deploy_env}, data));
+    return JSON.stringify(_.extend({deploy_env}, data), replaceErrors);
   }
-  return JSON.stringify(data);
+  return JSON.stringify(data, replaceErrors);
 }
 
 // Similar to format, but takes additional reserved params to promote logging best-practices

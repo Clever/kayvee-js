@@ -17,6 +17,17 @@ describe("kayvee", () => {
     });
   });
 
+  describe(".format with Errors", () => {
+    it("encodes Error objects", () => {
+      const actual = kv.format({err: Error("An Error Message")});
+      const expected = {
+        deploy_env: "testing",
+        err: "Error: An Error Message",
+      };
+      assert.deepEqual(JSON.parse(actual), expected);
+    });
+  });
+
   describe(".formatLog", () => {
     _.each(tests.formatLog, (spec) => {
       it(spec.title, () => {
