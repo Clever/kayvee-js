@@ -104,6 +104,7 @@ _.each(["http", "express"], (serverType) => {
           via: "kayvee-middleware",
           level: "info",
           title: "request-finished",
+          canary: false,
           source: "test-app",
         });
         assert.equal(masked, expected);
@@ -126,6 +127,47 @@ _.each(["http", "express"], (serverType) => {
       .expect(200, cb);
     });
 
+    it("should set canary flag if env var is present", (done) => {
+      var cb = afterTest(2, (err, res, line) => {
+        if (err) { return done(err); }
+        var masked = line.replace(/response-time":\d+/, 'response-time":99999');
+        const expected = kayvee.format({
+          method: "GET",
+          path: "/hello/world",
+          params: "?a=1&b=2",
+          "response-size": 12345,
+          "response-time": 99999,
+          "status-code": 200,
+          ip: "::ffff:127.0.0.1",
+          via: "kayvee-middleware",
+          level: "info",
+          title: "request-finished",
+          canary: true,
+          source: "test-app",
+        });
+        assert.equal(masked, expected);
+        delete process.env._CANARY;
+        return done();
+      });
+
+      process.env._CANARY = "1";
+      var stream = createLineStream((line) => {
+        cb(null, null, line);
+      });
+
+      var options = {source: "test-app"};
+
+      var server = createServer(serverType, options, {stream}, (req, res, next) => {
+        res.setHeader("some-header", "some-header-value");
+        next();
+      });
+
+      request(server)
+      .get("/hello/world?a=1&b=2")
+      .expect(200, cb);
+    });
+
+
     it("should allow logging user-specified request headers", (done) => {
       var cb = afterTest(2, (err, res, line) => {
         if (err) { return done(err); }
@@ -143,6 +185,7 @@ _.each(["http", "express"], (serverType) => {
           via: "kayvee-middleware",
           level: "info",
           title: "request-finished",
+          canary: false,
           source: "test-app",
         });
         assert.equal(masked, expected);
@@ -187,6 +230,7 @@ _.each(["http", "express"], (serverType) => {
           via: "kayvee-middleware",
           level: "info",
           title: "request-finished",
+          canary: false,
           source: "test-app",
         });
         assert.equal(masked, expected);
@@ -230,6 +274,7 @@ _.each(["http", "express"], (serverType) => {
           via: "kayvee-middleware",
           level: "info",
           title: "request-finished",
+          canary: false,
           source: "test-app",
         });
         assert.equal(masked, expected);
@@ -274,6 +319,7 @@ _.each(["http", "express"], (serverType) => {
           via: "kayvee-middleware",
           level: "info",
           title: "request-finished",
+          canary: false,
           source: "test-app",
         });
         assert.equal(masked, expected);
@@ -397,6 +443,7 @@ _.each(["http", "express"], (serverType) => {
           via: "kayvee-middleware",
           level: "info",
           title: "request-finished",
+          canary: false,
           source: "test-app",
         });
         assert.equal(masked, expected);
