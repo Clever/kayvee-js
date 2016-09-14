@@ -145,6 +145,7 @@ var defaultHandlers = [
   // -> Gets passed in among `options` during library initialization
   // Title
   () => ({title: "request-finished"}),
+  () => ({canary: process.env._CANARY === "1"}),
 ];
 
 const defaultContextHandlers = [];
