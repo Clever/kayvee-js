@@ -8,6 +8,8 @@
     "url": "git://github.com/Clever/kayvee-node"
   },
   "dependencies": {
+    "js-yaml": "^3.6.1",
+    "jsonschema": "^1.1.0",
     "morgan": "^1.7.0",
     "split": "^1.0.0",
     "supertest": "^1.2.0",

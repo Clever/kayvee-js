@@ -1,6 +1,7 @@
 var _   = require("underscore");
 _.mixin(require("underscore.deep"));
 var kv  = require("../kayvee");
+var router = require("../router");
 
 
 var LEVELS = {
@@ -25,6 +26,7 @@ class Logger {
   logLvl = null;
   globals = null;
   logWriter = null;
+  logRouter = null;
 
   constructor(source, logLvl = process.env.KAYVEE_LOG_LEVEL, formatter = kv.format, output = console.error) {
     this.formatter = formatter;
@@ -32,6 +34,11 @@ class Logger {
     this.globals = {};
     this.globals.source = source;
     this.logWriter = output;
+  }
+
+  setRoutingConfig(filename, cb) {
+    this.logRouter = new router.Router();
+    this.logRouter.loadConfig(filename, cb);
   }
 
   setConfig(source, logLvl, formatter, output) {
@@ -153,6 +160,9 @@ class Logger {
     const data = _.extend(metadata, _(userdata).deepClone());
     data.level = logLvl;
     _.defaults(data, this.globals);
+    if (this.logRouter != null) {
+      data._kvmeta = this.logRouter.route(data);
+    }
     this.logWriter(this.formatter(data));
   }
 }
