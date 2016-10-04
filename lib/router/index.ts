@@ -1,6 +1,6 @@
 var fs           = require("fs");
 var jsonschema   = require("jsonschema");
-var configSchema = require("./schema");
+var schemaDefs   = require("./schema_definitions");
 var yaml         = require("js-yaml");
 var _            = require("underscore");
 _.mixin(require("underscore.deep"));
@@ -44,7 +44,7 @@ function transformValidation(res, name) {
 // condition on the output.type property).
 function validateRoutes(routes) {
   const validator = new jsonschema.Validator();
-  validator.addSchema(configSchema, "/config");
+  validator.addSchema({ definitions: schemaDefs }, "/config");
   const results = _.mapObject(routes, (rule, name) => {
     // validate that the rule has the appropriate structure
     const structureVal = validator.validate(rule, {
@@ -60,7 +60,7 @@ function validateRoutes(routes) {
           "properties": {
             "type": {
               "type": "string",
-              "pattern": "^(metrics|alert|analytics|notification)$",
+              "enum": ["metrics", "alert", "analytics", "notification"],
             }
           }
         }
@@ -70,7 +70,7 @@ function validateRoutes(routes) {
       return transformValidation(structureVal, `Rule "${name}"`);
     }
     const matchersVal = transformValidation(
-      validator.validate(rule.matchers, { $ref: "/config#/ruleSchema/matchersSchema" }),
+      validator.validate(rule.matchers, { $ref: "/config#/definitions/matchers" }),
       `Rule "${name}" matchers`
     );
     const outputVal = transformValidation(
@@ -103,8 +103,12 @@ function parseConfig(fileString) {
   if (!validateRes.valid) {
     return _.assign(validateRes, {rules: []});
   }
-  const rules = _.mapObject(routes, (elem, name) => new Rule(name, elem.matchers, elem.output));
-  return { valid: true, rules: rules, errors: [] };
+  try {
+    const rules = _.mapObject(routes, (elem, name) => new Rule(name, elem.matchers, elem.output));
+    return { valid: true, rules: rules, errors: [] };
+  } catch (e) {
+    return { valid: false, rules: [], errors: [e] };
+  }
 }
 
 // makeMatcherObj constructs a "matcher" object where `field` is a (possibly)
@@ -138,7 +142,17 @@ class Rule {
       this.matcherSets.push(possibleValues.map((v) => makeMatcherObj(k, v)));
     }
 
-    this.output = substitute(output, "\\$", (k) => process.env[k] || "KEY_NOT_FOUND");
+    const envMissing = []
+    this.output = substitute(output, "\\$", (k) => {
+      const val = process.env[k];
+      if (val == null) {
+        envMissing.push(k);
+      }
+      return val;
+    });
+    if (envMissing.length > 0) {
+      throw new Error("Missing env var(s): " + envMissing.join(", "));
+    }
     this.output.rule = this.name;
   }
 
