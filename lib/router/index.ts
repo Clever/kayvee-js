@@ -10,15 +10,6 @@ const kvVersion = packageJson.version;
 const appName = process.env._APP_NAME || "UNSET";
 const teamName = process.env._TEAM_OWNER || "UNSET";
 
-// makeMatcherObj constructs a "matcher" object where `field` is a (possibly)
-// nested field name (i.e. "x.y.z"). The matcher object is formatted to work
-// with `_.isMatch` (i.e. {x: {y: {z: value}}})
-function makeMatcherObj(field, value) {
-  const obj = {};
-  obj[field] = value;
-  return _.deepFromFlat(obj);
-}
-
 // _doSubstitute performs a string substitution on `value`, which can be a
 // string or an array of strings. It finds instances matching the format
 // "X{name}", where X === indicator, and replaces them with `subber(name)`.
@@ -36,30 +27,33 @@ function substitute(obj, indicator, subber) {
   return _.mapObject(obj, (val) => _doSubstitute(val, indicator, subber));
 }
 
+function deepLookupPath(obj, path) {
+  if (path.length === 0 || obj[path[0]] === undefined) {
+    return undefined;
+  }
+  if (path.length > 1) {
+    return deepLookupPath(obj[path[0]], path.slice(1));
+  }
+  return obj[path[0]];
+}
+
+function deepLookup(obj, field) {
+  return deepLookupPath(obj, field.split("."));
+}
+
+function fieldMatches(obj, field, values) {
+  const val = deepLookup(obj, field);
+  return _.any(values, (poss) => val === poss);
+}
+
 class Rule {
   name = null;
+  matchers = null;
   output = null;
-
-  // array of arrays of matcher objects. a log line matches this rule if, for
-  // each internal array, matches one of the matcher objects. (matcher objects
-  // inside the internal arrays are ORed and each internal array is ANDed.)
-  // Ex: [ [matcher1, matcher2], [matcher3] ] =>
-  //            must match (matcher1 OR matcher2) AND (matcher3)
-  matcherSets = null;
 
   constructor(name, matchers, output) {
     this.name = name;
-
-    // transform matchers, an object formatted like {"x.y.z": ["this", "that"]}
-    // into this.matcherSets (format described above)
-    this.matcherSets = [];
-    for (const k in matchers) {
-      if (!matchers.hasOwnProperty(k)) {
-        continue;
-      }
-      const possibleValues = matchers[k];
-      this.matcherSets.push(possibleValues.map((v) => makeMatcherObj(k, v)));
-    }
+    this.matchers = matchers;
 
     const envMissing = [];
     this.output = substitute(output, "\\$", (k) => {
@@ -77,8 +71,8 @@ class Rule {
 
   // matches returns true if `msg` matches against this rule
   matches(msg) {
-    const anyMatch = (matcherSet) => _.any(matcherSet, (m) => _.isMatch(msg, m));
-    return _.all(this.matcherSets, anyMatch);
+    const matches = _.mapObject(this.matchers, (values, field) => fieldMatches(msg, field, values));
+    return _.all(matches);
   }
 
   // returns the output with kv substitutions performed
@@ -165,7 +159,8 @@ function parseConfig(fileString) {
     return _.assign(validateRes, {rules: []});
   }
   try {
-    const rules = _.mapObject(routes, (elem, name) => new Rule(name, elem.matchers, elem.output));
+    const rulesObj = _.mapObject(routes, (elem, name) => new Rule(name, elem.matchers, elem.output));
+    const rules = _.values(rulesObj);
     return {valid: true, rules, errors: []};
   } catch (e) {
     return {valid: false, rules: [], errors: [e]};
@@ -187,13 +182,21 @@ class Router {
       if (err) {
         return cb(err);
       }
-      const parsedRules = parseConfig(data);
-      if (!parsedRules.valid) {
-        return cb(parsedRules.errors);
+      try {
+        this._loadConfigString(data);
+        return cb(null);
+      } catch (e) {
+        return cb(e);
       }
-      this.rules = parsedRules.rules;
-      return cb(null);
     });
+  }
+
+  _loadConfigString(configStr) {
+    const parsedRules = parseConfig(configStr);
+    if (!parsedRules.valid) {
+      throw new Error(parsedRules.errors);
+    }
+    this.rules = parsedRules.rules;
   }
 
   // route matches the log line `msg` against all loaded rules and returns a
@@ -215,4 +218,5 @@ class Router {
 
 module.exports = {
   Router,
+  Rule,
 };
