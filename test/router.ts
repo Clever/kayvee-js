@@ -226,69 +226,63 @@ describe("router.Rule", () => {
   describe("matches", () => {
     it("works on simple cases", () => {
       const r = new router.Rule("test-rule", {title: ["hello", "hi"], foo: ["bar"]}, {});
-      const msg0 = {
+      assert(r.matches({
         title: "hello",
         foo:   "bar",
-      };
-      const msg1 = {
+      }));
+      assert(r.matches({
         title: "hi",
         foo:   "bar",
-      };
-      const msg2 = {
+      }));
+      assert(!r.matches({
         title: "hi",
         foo:   "fighters",
-      };
-      const msg3 = {
+      }));
+      assert(!r.matches({
         title: "howdy",
         foo:   "bar",
-      };
-      const msg4 = {
+      }));
+      assert(!r.matches({
         "missing-stuff": "indeed",
-      };
-      assert(r.matches(msg0));
-      assert(r.matches(msg1));
-      assert(!r.matches(msg2));
-      assert(!r.matches(msg3));
-      assert(!r.matches(msg4));
+      }));
     });
 
     it("works on nested messages", () => {
       const r = new router.Rule("test-rule", {"foo.bar": ["hello", "hi"]}, {});
-      const msg0 = {
+      assert(r.matches({
         title: "greeting",
         foo: {
           bar: "hello",
         },
-      };
-      const msg1 = {
+      }));
+      assert(r.matches({
         title: "greeting",
         foo: {
           bar: "hi",
         },
-      };
-      const msg2 = {
+      }));
+      assert(!r.matches({
         title: "greeting",
         foo: {
           bar: "howdy",
         },
-      };
-      const msg3 = {
+      }));
+      assert(!r.matches({
         title: "greeting",
         foo: {
           baz: "howdy",
         },
-      };
-      const msg4 = {
+      }));
+      assert(!r.matches({
         title: "greeting",
         boo: {
           bar: "howdy",
         },
-      };
-      assert(r.matches(msg0));
-      assert(r.matches(msg1));
-      assert(!r.matches(msg2));
-      assert(!r.matches(msg3));
-      assert(!r.matches(msg4));
+      }));
+      assert(!r.matches({
+        title: "greeting",
+        foo: "hi",
+      }));
     });
   });
 
