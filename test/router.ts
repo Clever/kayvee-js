@@ -159,7 +159,7 @@ routes:
   });
 
   describe("route", () => {
-    it("works", () => {
+    it("matches one or more rule and returns appropriate outputs", () => {
       const r = new router.Router([
         new router.Rule(
           "rule-one",
