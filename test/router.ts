@@ -60,12 +60,15 @@ routes:
       // Make sure the template works
       const conf = confTmpl("\"valid\"");
       const actual = new router.Router();
-      actual._loadConfigString(conf);
+      assert.doesNotThrow(() => actual._loadConfigString(conf));
 
-      for (const invalidVal of ["5", "true", "[]", "{}", "\"\""]) {
+      for (const invalidVal of ["5", "true", "[]", "{}"]) {
         const invalidConf = confTmpl(invalidVal);
-        assert.throws(() => actual._loadConfigString(invalidConf));
+        assert.throws(() => actual._loadConfigString(invalidConf),
+                      /^Error: Rule "non-string-values" matchers: instance.no-numbers\[0\] is not of a type\(s\) string$/);
       }
+      assert.throws(() => actual._loadConfigString(confTmpl("\"\"")),
+                    /^Error: Rule "non-string-values" matchers: instance.no-numbers\[0\] does not match pattern/);
       return;
     });
 
@@ -83,10 +86,11 @@ routes:
 
       const actual = new router.Router();
       const validConf = confTmpl("\"non-repeated\", \"name\"");
-      actual._loadConfigString(validConf);
+      assert.doesNotThrow(() => actual._loadConfigString(validConf));
 
       const invalidConf = confTmpl("\"repeated\", \"repeated\", \"name\"");
-      assert.throws(() => actual._loadConfigString(invalidConf));
+      assert.throws(() => actual._loadConfigString(invalidConf),
+                   /^Error: Rule "sloppy" matchers: instance.title contains duplicate item$/);
     });
 
     it("requires correct types in outputs", () => {
@@ -104,13 +108,15 @@ routes:
 
       const actual = new router.Router();
       const validConf = confTmpl("\"my-series\"", "[\"dim1\", \"dim2\"]");
-      actual._loadConfigString(validConf);
+      assert.doesNotThrow(() => actual._loadConfigString(validConf));
 
       const invalidConf0 = confTmpl("[\"my-series\"]", "[\"dim1\", \"dim2\"]");
-      assert.throws(() => actual._loadConfigString(invalidConf0));
+      assert.throws(() => actual._loadConfigString(invalidConf0),
+                   /^Error: Rule "wrong" output: instance.series is not of a type\(s\) string$/);
 
       const invalidConf1 = confTmpl("\"my-series\"", "\"dim1\"");
-      assert.throws(() => actual._loadConfigString(invalidConf1));
+      assert.throws(() => actual._loadConfigString(invalidConf1),
+                   /^Error: Rule "wrong" output: instance.dimensions is not of a type\(s\) array$/);
     });
 
     it("requires all keys in outputs", () => {
@@ -128,10 +134,11 @@ routes:
       const actual = new router.Router();
       const validConf = confTmpl(`
       series: "whatever"`);
-      actual._loadConfigString(validConf);
+      assert.doesNotThrow(() => actual._loadConfigString(validConf));
 
       const invalidConf = confTmpl("");
-      assert.throws(() => actual._loadConfigString(invalidConf));
+      assert.throws(() => actual._loadConfigString(invalidConf),
+                   /^Error: Rule "wrong" output: instance requires property "series"$/);
     });
 
     it("doesn't allow extra keys", () => {
@@ -149,12 +156,13 @@ routes:
       const actual = new router.Router();
       const validConf = confTmpl(`
       series: "whatever"`);
-      actual._loadConfigString(validConf);
+      assert.doesNotThrow(() => actual._loadConfigString(validConf));
 
       const invalidConf = confTmpl(`
       series: "whatever"
       something-else: "hi there"`);
-      assert.throws(() => actual._loadConfigString(invalidConf));
+      assert.throws(() => actual._loadConfigString(invalidConf),
+                   /^Error: Rule "wrong" output: instance additionalProperty "something-else" exists in instance when not allowed$/);
     });
   });
 
