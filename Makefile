@@ -4,6 +4,8 @@ TS_FILES := $(shell find . -name "*.ts" -not -path "./node_modules/*" -not -path
 
 build: clean
 	./node_modules/.bin/tsc --outDir build
+	cp ./lib/router/schema_definitions.json ./build/lib/router/
+	cp ./package.json ./build/
 
 test: lint tests.json $(TESTS)
 
