@@ -177,18 +177,9 @@ class Router {
   // loadConfig reads in the config located at `filename` and sets the routing
   // rules to what it finds there. It should be a YAML-formatted file with
   // routing rules placed under the `routes` key on the root object.
-  loadConfig(filename, cb) {
-    return fs.readFile(filename, "utf8", (err, data) => {
-      if (err) {
-        return cb(err);
-      }
-      try {
-        this._loadConfigString(data);
-        return cb(null);
-      } catch (e) {
-        return cb(e);
-      }
-    });
+  loadConfig(filename) {
+    const data = fs.readFileSync(filename, "utf8");
+    this._loadConfigString(data);
   }
 
   _loadConfigString(configStr) {
