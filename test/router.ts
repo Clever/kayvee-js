@@ -11,7 +11,7 @@ routes:
     matchers:
       title: ["authorize-app"]
     output:
-      type: "notification"
+      type: "notifications"
       channel: "#team"
       icon: ":rocket:"
       message: "authorized %{foo.bar} in \${SCHOOL}"
@@ -21,21 +21,21 @@ routes:
       foo.bar: ["multiple", "matches"]
       baz: ["whatever"]
     output:
-      type: "alert"
+      type: "alerts"
       series: "other-series"
       dimensions: ["baz"]
       stat_type: "gauge"
 `;
       const expected = [
         new router.Rule("rule-one", {title: ["authorize-app"]}, {
-          type: "notification",
+          type: "notifications",
           channel: "#team",
           icon: ":rocket:",
           message: "authorized %{foo.bar} in Hogwarts",
           user: "@fishman",
         }),
         new router.Rule("rule-two", {"foo.bar": ["multiple", "matches"], baz: ["whatever"]}, {
-          type: "alert",
+          type: "alerts",
           series: "other-series",
           dimensions: ["baz"],
           stat_type: "gauge",
@@ -100,7 +100,7 @@ routes:
     matchers:
       title: ["test"]
     output:
-      type: "alert"
+      type: "alerts"
       series: ${series}
       dimensions: ${dimensions}
       stat_type: "gauge"
@@ -126,7 +126,7 @@ routes:
     matchers:
       title: ["test"]
     output:
-      type: "alert"${v}
+      type: "alerts"${v}
       dimensions: ["dim1", "dim2"]
       stat_type: "gauge"
 `;
@@ -148,7 +148,7 @@ routes:
     matchers:
       title: ["test"]
     output:
-      type: "alert"${v}
+      type: "alerts"${v}
       dimensions: ["dim1", "dim2"]
       stat_type: "gauge"
 `;

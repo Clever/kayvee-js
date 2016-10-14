@@ -115,7 +115,7 @@ function validateRoutes(routes) {
           properties: {
             type: {
               type: "string",
-              enum: ["metrics", "alert", "analytics", "notification"],
+              enum: ["metrics", "alerts", "analytics", "notifications"],
             },
           },
         },
