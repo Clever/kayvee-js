@@ -1,4 +1,5 @@
 {
+  "description": "Last modified: 10/14/2016",
   "routes": {
     "type": "object",
     "minProperties": 1,
@@ -28,9 +29,9 @@
     "type": "object",
     "oneOf": [
       { "$ref": "#/definitions/metricsOutput" },
-      { "$ref": "#/definitions/alertOutput" },
+      { "$ref": "#/definitions/alertsOutput" },
       { "$ref": "#/definitions/analyticsOutput" },
-      { "$ref": "#/definitions/notificationOutput" }
+      { "$ref": "#/definitions/notificationsOutput" }
     ]
   },
   "metricsOutput": {
@@ -43,20 +44,20 @@
         "type": "string",
         "pattern": "^metrics$"
       },
-      "series": { "$ref": "#/definitions/substValue" },
+      "series": { "$ref": "#/definitions/envVarSubstValue" },
       "dimensions": { "$ref": "#/definitions/flatValueArr" }
     }
   },
-  "alertOutput": {
+  "alertsOutput": {
     "type": "object",
     "additionalProperties": false,
     "required": ["type", "series", "dimensions", "stat_type"],
     "properties": {
       "type": {
         "type": "string",
-        "pattern": "^alert$"
+        "pattern": "^alerts$"
       },
-      "series": { "$ref": "#/definitions/substValue" },
+      "series": { "$ref": "#/definitions/envVarSubstValue" },
       "dimensions": { "$ref": "#/definitions/flatValueArr" },
       "stat_type": {
         "type": "string",
@@ -73,22 +74,22 @@
         "type": "string",
         "pattern": "^analytics$"
       },
-      "series": { "$ref": "#/definitions/substValue" }
+      "series": { "$ref": "#/definitions/envVarSubstValue" }
     }
   },
-  "notificationOutput": {
+  "notificationsOutput": {
     "type": "object",
     "additionalProperties": false,
     "required": ["type", "channel", "icon", "message", "user"],
     "properties": {
       "type": {
         "type": "string",
-        "pattern": "^notification$"
+        "pattern": "^notifications$"
       },
-      "channel": { "$ref": "#/definitions/substValue" },
-      "icon": { "$ref": "#/definitions/substValue" },
+      "channel": { "$ref": "#/definitions/envVarSubstValue" },
+      "icon": { "$ref": "#/definitions/envVarSubstValue" },
       "message": { "$ref": "#/definitions/kvSubstValue" },
-      "user": { "$ref": "#/definitions/substValue" }
+      "user": { "$ref": "#/definitions/envVarSubstValue" }
     }
   },
   "flatValue": {
@@ -101,7 +102,7 @@
     "uniqueItems": true,
     "items": { "$ref": "#/definitions/flatValue" }
   },
-  "substValue": {
+  "envVarSubstValue": {
     "type": "string",
     "pattern": "^([^\\$%{}]|\\${[^%\\${}]+})+$"
   },
