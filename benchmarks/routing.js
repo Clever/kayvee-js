@@ -3,18 +3,20 @@ const kv = require("../");
 
 const suite = new Benchmark.Suite();
 
-let basicCorpus = require("./data/corpus-basic");
-let pathologicalCorpus = require("./data/corpus-pathological");
-let realisticCorpus = require("./data/corpus-realistic");
+const dataDir = __dirname + "/data/";
+
+let basicCorpus = require(dataDir + "corpus-basic");
+let pathologicalCorpus = require(dataDir + "corpus-pathological");
+let realisticCorpus = require(dataDir + "corpus-realistic");
 
 let noRouting = new kv.logger("perf", kv.logger.LEVELS.Debug, (noop) => "", (noop) => "");
 let basicRouting = new kv.logger("perf", kv.logger.LEVELS.Debug, (noop) => "", (noop) => "");
 let pathoRouting = new kv.logger("perf", kv.logger.LEVELS.Debug, (noop) => "", (noop) => "");
 let realRouting = new kv.logger("perf", kv.logger.LEVELS.Debug, (noop) => "", (noop) => "");
 
-basicRouting.setRoutingConfig("./data/kvconfig-basic.yml");
-pathoRouting.setRoutingConfig("./data/kvconfig-pathological.yml");
-realRouting.setRoutingConfig("./data/kvconfig-realistic.yml");
+basicRouting.setRoutingConfig(dataDir + "kvconfig-basic.yml");
+pathoRouting.setRoutingConfig(dataDir + "kvconfig-pathological.yml");
+realRouting.setRoutingConfig(dataDir + "kvconfig-realistic.yml");
 
 suite
 	// No routing
