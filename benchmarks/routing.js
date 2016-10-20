@@ -99,7 +99,7 @@ suite
 		console.log(String(event.target));
 	})
 	.on("complete", () => {
-		console.log("Fastest is " + suite.filter("fastest").map("name"));
+		console.log("Done!");
 	})
 	.run()
 ;
