@@ -33,3 +33,6 @@ node_modules
 build
 
 npm-debug.log
+
+benchmarks/data/*.json
+benchmarks/data/*.yml
