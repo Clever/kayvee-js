@@ -1,7 +1,4 @@
-env:
-- REPORT_CARD_GITHUB_STATUS_TOKEN=$$report_card_github_status_token
-- REPORT_CARD_GITHUB_REPO_TOKEN=$$report_card_github_repo_token
-image: clever/drone-node:5.7.0
+image: clever/drone-node:6.2.2
 notify:
   email:
     recipients:
@@ -13,14 +10,11 @@ notify:
     webhook_url: $$slack_webhook
 publish:
   npm:
-    email: $$npm_drone_email
-    password: $$npm_drone_password
-    username: $$npm_drone_username
-    registry: https://registry.npmjs.org
+    token: $$npm_token
     when:
       branch: master
+  report_card: {}
 script:
-- sudo pip install -q git+https://$REPORT_CARD_GITHUB_REPO_TOKEN@github.com/Clever/report-card.git; GITHUB_API_TOKEN=$REPORT_CARD_GITHUB_STATUS_TOKEN report-card --publish || true
 - npm install
 - npm test
 - make build
