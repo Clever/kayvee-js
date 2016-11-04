@@ -10,21 +10,31 @@ const kvVersion = packageJson.version;
 const appName = process.env._APP_NAME || "UNSET";
 const teamName = process.env._TEAM_OWNER || "UNSET";
 
-// _doSubstitute performs a string substitution on `value`, which can be a
-// string or an array of strings. It finds instances matching the format
-// "X{name}", where X === indicator, and replaces them with `subber(name)`.
-function _doSubstitute(value, indicator, subber) {
-  const re = new RegExp(`${indicator}\{(.*?)\}`, "g");
-  const replaceString = (s) => s.replace(re, (match, p1) => subber(p1));
-  if (_.isArray(value)) {
-    return _.map(value, replaceString);
-  }
-  return replaceString(value);
+const reEnvvarTokens = new RegExp("\\$\\{(.+?)\\}", "g");
+const reFieldTokens = new RegExp("%\\{(.+?)\\}", "g");
+
+function substituteEnvVars(obj, subber) {
+  return _.mapObject(obj, (val) => {
+    const replacer = (s) => s.replace(reEnvvarTokens, (__, p1) => subber(p1));
+
+    if (Array.isArray(val)) {
+      return val.map(replacer);
+    }
+
+    return replacer(val);
+  });
 }
 
-// substitute calls _doSubstitute on each property of `obj`.
-function substitute(obj, indicator, subber) {
-  return _.mapObject(obj, (val) => _doSubstitute(val, indicator, subber));
+function substituteFields(obj, subber) {
+  return _.mapObject(obj, (val) => {
+    const replacer = (s) => s.replace(reFieldTokens, (__, p1) => subber(p1));
+
+    if (Array.isArray(val)) {
+      return val.map(replacer);
+    }
+
+    return replacer(val);
+  });
 }
 
 function deepLookupPath(obj, path) {
@@ -56,13 +66,14 @@ class Rule {
     this.matchers = matchers;
 
     const envMissing = [];
-    this.output = substitute(output, "\\$", (k) => {
+    this.output = substituteEnvVars(output, (k) => {
       const val = process.env[k];
       if (val == null) {
         envMissing.push(k);
       }
       return val;
     });
+
     if (envMissing.length > 0) {
       throw new Error(`Missing env var(s): ${envMissing.join(", ")}`);
     }
@@ -78,7 +89,7 @@ class Rule {
   // returns the output with kv substitutions performed
   outputFor(msg) {
     const flatMsg = _.deepToFlat(msg);
-    return substitute(this.output, "%", (k) => flatMsg[k] || "KEY_NOT_FOUND");
+    return substituteFields(this.output, (k) => flatMsg[k] || "KEY_NOT_FOUND");
   }
 }
 
