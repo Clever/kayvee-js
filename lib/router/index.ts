@@ -3,7 +3,6 @@ var jsonschema   = require("jsonschema");
 var schemaDefs   = require("./schema_definitions");
 var yaml         = require("js-yaml");
 var _            = require("underscore");
-_.mixin(require("underscore.deep"));
 
 var packageJson = require("../../package.json");
 const kvVersion = packageJson.version;
@@ -37,23 +36,21 @@ function substituteFields(obj, subber) {
   });
 }
 
-function deepLookupPath(obj, path) {
-  if (path.length === 0 || obj[path[0]] === undefined) {
-    return undefined;
-  }
-  if (path.length > 1) {
-    return deepLookupPath(obj[path[0]], path.slice(1));
-  }
-  return obj[path[0]];
-}
+function deepKey(obj, key) {
+  const path = key.split(".");
 
-function deepLookup(obj, field) {
-  return deepLookupPath(obj, field.split("."));
+  let idx = 0;
+  let val = obj;
+  do {
+    val = val[path[idx++]];
+  } while (val && idx < path.length);
+
+  return val;
 }
 
 function fieldMatches(obj, field, values) {
-  const val = deepLookup(obj, field);
-  return _.any(values, (poss) => val === poss);
+  const val = (field.includes(".") ? deepKey(obj, field) : obj[field]);
+  return values.some(poss => val === poss);
 }
 
 class Rule {
@@ -82,14 +79,15 @@ class Rule {
 
   // matches returns true if `msg` matches against this rule
   matches(msg) {
-    const matches = _.mapObject(this.matchers, (values, field) => fieldMatches(msg, field, values));
+    const matches = _.map(this.matchers, (values, field) => fieldMatches(msg, field, values));
     return _.all(matches);
   }
 
   // returns the output with kv substitutions performed
   outputFor(msg) {
-    const flatMsg = _.deepToFlat(msg);
-    return substituteFields(this.output, (k) => flatMsg[k] || "KEY_NOT_FOUND");
+    return substituteFields(
+      this.output, (k) => (k.includes(".") ? deepKey(msg, k) : msg[k]) || "KEY_NOT_FOUND"
+    );
   }
 }
 
@@ -206,8 +204,8 @@ class Router {
   // matching. logger.ts will attach this to log lines under the `_kvmeta`
   // property.
   route(msg) {
-    const matched_rules = _.filter(this.rules, (r) => r.matches(msg));
-    const outputs = _.map(matched_rules, (r) => r.outputFor(msg));
+    const matched_rules = this.rules.filter(r => r.matches(msg));
+    const outputs = matched_rules.map(r => r.outputFor(msg));
     return {
       app: appName,
       team: teamName,
