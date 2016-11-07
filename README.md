@@ -180,3 +180,18 @@ var options = {
 };
 app.use(kayvee.middleware(options));
 ```
+
+You can also log with the request context using `req.log`. For example:
+
+```js
+myRouteHandler(req, res) {
+    doTheThing((err, data) => {
+        if (err) {
+            req.log.errorD("do_the_thing_error", {error: err.message});
+            res.send(500);
+        }
+        req.log.infoD("do_the_thing_success", {response: data});
+        res.send(200);
+    });
+}
+```
