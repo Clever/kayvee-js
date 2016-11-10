@@ -60,7 +60,16 @@ function deepKey(obj, key) {
 
 function fieldMatches(obj, field, values) {
   const val = (field.includes(".") ? deepKey(obj, field) : obj[field]);
-  return values.some(poss => val === poss);
+
+  if (!val) {
+    return false;
+  }
+
+  for (let i = 0; i < values.length; i++) {
+    if (values[i] === val) { return true; }
+  }
+
+  return false;
 }
 
 class Rule {
@@ -89,8 +98,11 @@ class Rule {
 
   // matches returns true if `msg` matches against this rule
   matches(msg) {
-    const matches = _.map(this.matchers, (values, field) => fieldMatches(msg, field, values));
-    return _.all(matches);
+    for (const field in this.matchers) {
+      if (!fieldMatches(msg, field, this.matchers[field])) { return false; }
+    }
+
+    return true;
   }
 
   // returns the output with kv substitutions performed
