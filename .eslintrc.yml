@@ -43,3 +43,5 @@ rules:
   key-spacing:
     - 2
     - mode: "minimum"
+
+  guard-for-in: 0
