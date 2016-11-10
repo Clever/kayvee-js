@@ -13,27 +13,37 @@ const reEnvvarTokens = new RegExp("\\$\\{(.+?)\\}", "g");
 const reFieldTokens = new RegExp("%\\{(.+?)\\}", "g");
 
 function substituteEnvVars(obj, subber) {
-  return _.mapObject(obj, (val) => {
-    const replacer = (s) => s.replace(reEnvvarTokens, (__, p1) => subber(p1));
+  const rtn = {};
+  const replacer = (s) => s.replace(reEnvvarTokens, (__, p1) => subber(p1));
+
+  for (const key in obj) {
+    const val = obj[key];
 
     if (Array.isArray(val)) {
-      return val.map(replacer);
+      rtn[key] = val.map(replacer);
+    } else {
+      rtn[key] = replacer(val);
     }
+  }
 
-    return replacer(val);
-  });
+  return rtn;
 }
 
 function substituteFields(obj, subber) {
-  return _.mapObject(obj, (val) => {
-    const replacer = (s) => s.replace(reFieldTokens, (__, p1) => subber(p1));
+  const rtn = {};
+  const replacer = (s) => s.replace(reFieldTokens, (__, p1) => subber(p1));
+
+  for (const key in obj) {
+    const val = obj[key];
 
     if (Array.isArray(val)) {
-      return val.map(replacer);
+      rtn[key] = val.map(replacer);
+    } else {
+      rtn[key] = replacer(val);
     }
+  }
 
-    return replacer(val);
-  });
+  return rtn;
 }
 
 function deepKey(obj, key) {
