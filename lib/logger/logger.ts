@@ -156,7 +156,7 @@ class Logger {
     if (LOG_LEVEL_ENUM[logLvl] < LOG_LEVEL_ENUM[this.logLvl]) {
       return;
     }
-    const data = _.extend(metadata, _(userdata).deepClone());
+    const data = _.extend(metadata, userdata);
     data.level = logLvl;
     _.defaults(data, this.globals);
     if (this.logRouter != null) {

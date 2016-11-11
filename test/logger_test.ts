@@ -1,7 +1,5 @@
 var KayveeLogger = require("../lib/logger/logger");
 var assert = require("assert");
-var _ = require("underscore");
-_.mixin = require("underscore.deep");
 
 let sample = "";
 function outputFunc(text) {
