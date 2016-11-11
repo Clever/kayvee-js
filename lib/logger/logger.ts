@@ -1,5 +1,4 @@
 var _   = require("underscore");
-_.mixin(require("underscore.deep"));
 var kv  = require("../kayvee");
 var router = require("../router");
 
