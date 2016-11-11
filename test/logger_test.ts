@@ -205,12 +205,21 @@ describe("logger_test", () => {
         },
         fun: "boo",
       };
-      const output = ['{"deploy_env":"testing","title":"testInfoWithData",',
-        '"str":"modify","obj":{"key":"value"},"fun":"boo",',
-        '"level":"info","source":"logger-tester"}'].join("");
       logObj.infoD("testInfoWithData", data);
       assert.deepEqual(data, dataCopy);
-      assert.equal(sample, output);
+
+      const output = {
+        deploy_env: "testing",
+        fun: "boo",
+        level: "info",
+        obj:  {
+          key: "value",
+        },
+        source: "logger-tester",
+        title: "testInfoWithData",
+        str: "modify",
+      };
+      assert.deepEqual(JSON.parse(sample), output);
     });
   });
 
