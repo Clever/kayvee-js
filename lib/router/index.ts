@@ -59,7 +59,7 @@ function deepKey(obj, key) {
 }
 
 function fieldMatches(obj, field, values) {
-  const val = (field.includes(".") ? deepKey(obj, field) : obj[field]);
+  const val = obj[field] || deepKey(obj, field);
 
   if (!val) {
     return false;
@@ -107,9 +107,7 @@ class Rule {
 
   // returns the output with kv substitutions performed
   outputFor(msg) {
-    return substituteFields(
-      this.output, (k) => (k.includes(".") ? deepKey(msg, k) : msg[k]) || "KEY_NOT_FOUND"
-    );
+    return substituteFields(this.output, k => msg[k] || deepKey(msg, k) || "KEY_NOT_FOUND");
   }
 }
 
