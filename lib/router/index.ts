@@ -226,8 +226,14 @@ class Router {
   // matching. logger.ts will attach this to log lines under the `_kvmeta`
   // property.
   route(msg) {
-    const matched_rules = this.rules.filter(r => r.matches(msg));
-    const outputs = matched_rules.map(r => r.outputFor(msg));
+    const outputs = [];
+    for (let i = 0; i < this.rules.length; i++) {
+      const rule = this.rules[i];
+      if (rule.matches(msg)) {
+        outputs.push(rule.outputFor(msg));
+      }
+    }
+
     return {
       app: appName,
       team: teamName,
