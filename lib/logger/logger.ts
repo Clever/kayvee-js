@@ -19,6 +19,8 @@ var LOG_LEVEL_ENUM = {
   critical: 4,
 };
 
+const assign = Object.assign || _.assign; // Use the faster Object.assign if possible
+
 // This is a port from kayvee-go/logger/logger.go
 class Logger {
   formatter = null;
@@ -156,7 +158,7 @@ class Logger {
     if (LOG_LEVEL_ENUM[logLvl] < LOG_LEVEL_ENUM[this.logLvl]) {
       return;
     }
-    const data = _.extend({level: logLvl}, this.globals, metadata, userdata);
+    const data = assign({level: logLvl}, this.globals, metadata, userdata);
     if (this.logRouter != null) {
       data._kvmeta = this.logRouter.route(data);
     }
