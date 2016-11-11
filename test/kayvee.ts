@@ -1,7 +1,6 @@
 var kv  = require("../lib/kayvee");
 var assert = require("assert");
 var _ = require("underscore");
-_.mixin = require("underscore.deep");
 var fs = require("fs");
 
 describe("kayvee", () => {
