@@ -12,6 +12,8 @@ const teamName = process.env._TEAM_OWNER || "UNSET";
 const reEnvvarTokens = new RegExp("\\$\\{(.+?)\\}", "g");
 const reFieldTokens = new RegExp("%\\{(.+?)\\}", "g");
 
+// For performance reason this code is intentionally redundant and not-inlined.
+// Removing redundancy and inlining this function some how makes performance worst.
 function substituteEnvVars(obj, subber) {
   const rtn = {};
   const replacer = (s) => s.replace(reEnvvarTokens, (__, p1) => subber(p1));
@@ -20,24 +22,11 @@ function substituteEnvVars(obj, subber) {
     const val = obj[key];
 
     if (Array.isArray(val)) {
-      rtn[key] = val.map(replacer);
-    } else {
-      rtn[key] = replacer(val);
-    }
-  }
-
-  return rtn;
-}
-
-function substituteFields(obj, subber) {
-  const rtn = {};
-  const replacer = (s) => s.replace(reFieldTokens, (__, p1) => subber(p1));
-
-  for (const key in obj) {
-    const val = obj[key];
-
-    if (Array.isArray(val)) {
-      rtn[key] = val.map(replacer);
+      const updatedVals = Array(val.length);
+      for (let i = 0; i < val.length; i++) {
+        updatedVals[i] = replacer(val[i]);
+      }
+      rtn[key] = updatedVals;
     } else {
       rtn[key] = replacer(val);
     }
@@ -107,7 +96,25 @@ class Rule {
 
   // returns the output with kv substitutions performed
   outputFor(msg) {
-    return substituteFields(this.output, k => msg[k] || deepKey(msg, k) || "KEY_NOT_FOUND");
+    const rtn = {};
+    const subst = (__, k) => msg[k] || deepKey(msg, k) || "KEY_NOT_FOUND";
+    const replacer = (s) => s.replace(reFieldTokens, subst);
+
+    for (const key in this.output) {
+      const val = this.output[key];
+
+      if (Array.isArray(val)) {
+        const updatedVals = Array(val.length);
+        for (let i = 0; i < val.length; i++) {
+          updatedVals[i] = replacer(val[i]);
+        }
+        rtn[key] = updatedVals;
+      } else {
+        rtn[key] = replacer(val);
+      }
+    }
+
+    return rtn;
   }
 }
 
