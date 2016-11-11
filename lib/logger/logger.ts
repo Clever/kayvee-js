@@ -156,9 +156,7 @@ class Logger {
     if (LOG_LEVEL_ENUM[logLvl] < LOG_LEVEL_ENUM[this.logLvl]) {
       return;
     }
-    const data = _.extend(metadata, userdata);
-    data.level = logLvl;
-    _.defaults(data, this.globals);
+    const data = _.extend({level: logLvl}, this.globals, metadata, userdata);
     if (this.logRouter != null) {
       data._kvmeta = this.logRouter.route(data);
     }
