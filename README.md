@@ -42,6 +42,75 @@ console.error(kayvee.formatLog("test_source", kayvee.INFO, "title", {"foo" : 1, 
 # {"foo":1,"bar":"baz","source":"test_source","level":"info","title":"title"}
 ```
 
+## Example: Kayvee Log Routing
+
+Log routing is a mechanism for defining where log lines should go once they've entered Clever's logging pipeline.   Routes are defined in a yaml file called kvconfig.yml.  Here's an example of a log routing rule that sends a slack message:
+
+```js
+// main.js
+const kv = require("../kayvee-js");
+kv.setGlobalRouting("./kvconfig.yml");
+
+const log = new kv.logger("myApp");
+
+module.exports = (cb) => {
+    // Simple debugging
+    log.debug("Service has started");
+
+    // Make a query and log its length
+    let query_start = Date.now();
+    log.gauge("QueryTime", Date.now() - query_start);
+
+    // Do something async
+    setImmediate(() => {
+        // Output structured data
+        log.infoD("DataResults", {"key": "value"}); // Sends slack message
+
+        // You can use the M alias for your key value pairs
+        log.infoD("DataResults", {"shorter": "line"});
+
+        cb(null);
+    });
+};
+```
+
+```yml
+# kvconfig.yml
+routes:
+  key-val:
+    matchers:
+      title: [ "DataResults", "QueryResults" ]
+      key: [ "value" ]
+    output:
+      type: "notifications"
+      channel: "#distribution"
+      icon: ":rocket:"
+      message: "%{key}"
+      user: "Flight Tracker"
+```
+
+### Testings
+
+```js
+// main-test.js
+const assert = require("assert");
+
+const kv = require("../kayvee-js");
+
+const main = require("./main");
+
+kv.mockRouting(kvdone => { // Don't nest kv.mockRouting calls!!
+    main(err => {
+        assert.ifError(err);
+
+        let ruleCounts = kvdone();
+        assert.equal(ruleCounts["key-val"], 1);
+    });
+});
+```
+
+For more information on log routing see https://clever.atlassian.net/wiki/display/ENG/Log+Routing
+
 ## Testing
 
 Run `make test` to execute the tests
