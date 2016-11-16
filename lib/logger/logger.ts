@@ -176,6 +176,36 @@ class Logger {
 
 module.exports = Logger;
 module.exports.setGlobalRouting = setGlobalRouting;
+module.exports.mockRouting = (cb) => {
+  const _logWithLevel = Logger.prototype._logWithLevel;
+  const ruleCounts = {};
+
+  Logger.prototype._logWithLevel = (logLvl, metadata, userdata) => {
+    const formatter = this.formatter;
+    const logWriter = this.logWriter;
+
+    this.formatter = msg => msg;
+    this.logWriter = (msg) => {
+      if (!msg._kvmeta) { return; }
+
+      msg._kvmeta.routes.forEach(route => {
+        ruleCounts[route.rule] = 1 + (ruleCounts[route.rule] || 0);
+      });
+    };
+
+    _logWithLevel.call(this, logLvl, metadata, userdata);
+
+    this.formatter = formatter;
+    this.logWriter = logWriter;
+  };
+
+  const done = () => {
+    Logger.prototype._logWithLevel = _logWithLevel;
+    return ruleCounts;
+  };
+
+  cb(done);
+};
 _.extend(module.exports, LEVELS);
 module.exports.LEVELS = ["debug", "info", "warn", "error", "critical"];
 module.exports.METRICS = ["counter", "gauge"];
