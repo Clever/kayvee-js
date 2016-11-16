@@ -165,7 +165,7 @@ class Logger {
       return;
     }
     const data = assign({level: logLvl}, this.globals, metadata, userdata);
-    if (this.logRouter != null) {
+    if (this.logRouter) {
       data._kvmeta = this.logRouter.route(data);
     } else if (globalRouter) {
       data._kvmeta = globalRouter.route(data);
