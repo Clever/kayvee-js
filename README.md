@@ -66,7 +66,7 @@ module.exports = (cb) => {
         // Output structured data
         log.infoD("DataResults", {"key": "value"}); // Sends slack message
 
-        // You can use the M alias for your key value pairs
+        // You can use an object to send arbitrary key value pairs
         log.infoD("DataResults", {"shorter": "line"});
 
         cb(null);
