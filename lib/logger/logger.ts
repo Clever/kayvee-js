@@ -177,11 +177,12 @@ class Logger {
 module.exports = Logger;
 module.exports.setGlobalRouting = setGlobalRouting;
 module.exports.mockRouting = (cb) => {
-  if((Logger.prototype._logWithLevel as any).isMocked) {
+  const _logWithLevel: any = Logger.prototype._logWithLevel;
+
+  if (_logWithLevel.isMocked) {
     throw Error("Nested kv.mockRouting calls are not supported");
   }
 
-  const _logWithLevel = Logger.prototype._logWithLevel;
   const ruleCounts = {};
 
   Logger.prototype._logWithLevel = (logLvl, metadata, userdata) => {
@@ -202,7 +203,9 @@ module.exports.mockRouting = (cb) => {
     this.formatter = formatter;
     this.logWriter = logWriter;
   };
-  (Logger.prototype._logWithLevel as any).isMocked = true;
+
+  const stfuTypeScript: any = Logger.prototype._logWithLevel;
+  stfuTypeScript.isMocked = true;
 
   const done = () => {
     Logger.prototype._logWithLevel = _logWithLevel;
