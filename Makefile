@@ -7,7 +7,7 @@ build: clean
 	cp ./lib/router/schema_definitions.json ./build/lib/router/
 	cp ./package.json ./build/
 
-test: lint tests.json $(TESTS)
+test: lint test/tests.json $(TESTS)
 
 $(TESTS):
 	_DEPLOY_ENV=testing DEBUG=us:progress NODE_ENV=test node_modules/mocha/bin/mocha --require ts-node/register --timeout 60000 test/$@.ts
@@ -34,5 +34,5 @@ lint:
 	./node_modules/.bin/tslint $(TS_FILES)
 	./node_modules/.bin/eslint $(TS_FILES)
 
-tests.json:
+test/tests.json:
 	wget https://raw.githubusercontent.com/Clever/kayvee/master/tests.json -O test/tests.json
