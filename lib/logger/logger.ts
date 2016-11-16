@@ -21,6 +21,13 @@ var LOG_LEVEL_ENUM = {
 
 const assign = Object.assign || _.assign; // Use the faster Object.assign if possible
 
+let globalRouter;
+
+function setGlobalRouting(filename) {
+  globalRouter = new router.Router();
+  globalRouter.loadConfig(filename);
+}
+
 // This is a port from kayvee-go/logger/logger.go
 class Logger {
   formatter = null;
@@ -37,9 +44,8 @@ class Logger {
     this.logWriter = output;
   }
 
-  setRoutingConfig(filename, cb) {
-    this.logRouter = new router.Router();
-    this.logRouter.loadConfig(filename, cb);
+  setRouter(r) {
+    this.logRouter = r;
   }
 
   setConfig(source, logLvl, formatter, output) {
@@ -159,14 +165,55 @@ class Logger {
       return;
     }
     const data = assign({level: logLvl}, this.globals, metadata, userdata);
-    if (this.logRouter != null) {
+    if (this.logRouter) {
       data._kvmeta = this.logRouter.route(data);
+    } else if (globalRouter) {
+      data._kvmeta = globalRouter.route(data);
     }
     this.logWriter(this.formatter(data));
   }
 }
 
 module.exports = Logger;
+module.exports.setGlobalRouting = setGlobalRouting;
+module.exports.mockRouting = (cb) => {
+  const _logWithLevel: any = Logger.prototype._logWithLevel;
+
+  if (_logWithLevel.isMocked) {
+    throw Error("Nested kv.mockRouting calls are not supported");
+  }
+
+  const ruleCounts = {};
+
+  Logger.prototype._logWithLevel = (logLvl, metadata, userdata) => {
+    const formatter = this.formatter;
+    const logWriter = this.logWriter;
+
+    this.formatter = msg => msg;
+    this.logWriter = (msg) => {
+      if (!msg._kvmeta) { return; }
+
+      msg._kvmeta.routes.forEach(route => {
+        ruleCounts[route.rule] = 1 + (ruleCounts[route.rule] || 0);
+      });
+    };
+
+    _logWithLevel.call(this, logLvl, metadata, userdata);
+
+    this.formatter = formatter;
+    this.logWriter = logWriter;
+  };
+
+  const stfuTypeScript: any = Logger.prototype._logWithLevel;
+  stfuTypeScript.isMocked = true;
+
+  const done = () => {
+    Logger.prototype._logWithLevel = _logWithLevel;
+    return ruleCounts;
+  };
+
+  cb(done);
+};
 _.extend(module.exports, LEVELS);
 module.exports.LEVELS = ["debug", "info", "warn", "error", "critical"];
 module.exports.METRICS = ["counter", "gauge"];
