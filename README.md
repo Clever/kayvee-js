@@ -57,17 +57,13 @@ module.exports = (cb) => {
     // Simple debugging
     log.debug("Service has started");
 
-    // Make a query and log its length
-    let query_start = Date.now();
-    log.gauge("QueryTime", Date.now() - query_start);
-
     // Do something async
     setImmediate(() => {
         // Output structured data
         log.infoD("DataResults", {"key": "value"}); // Sends slack message
 
         // You can use an object to send arbitrary key value pairs
-        log.infoD("DataResults", {"shorter": "line"});
+        log.infoD("DataResults", {"shorter": "line"}); // will NOT send a slack message
 
         cb(null);
     });
@@ -89,7 +85,10 @@ routes:
       user: "Flight Tracker"
 ```
 
-### Testings
+### Testing
+
+To ensure that your log-routing rules are correct, use `mockRouting` to temporarily mock out kayvee.  The mock kayvee will record which rules and how often they were matched.
+
 
 ```js
 // main-test.js
