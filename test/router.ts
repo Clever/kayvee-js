@@ -64,11 +64,9 @@ routes:
 
       for (const invalidVal of ["5", "true", "[]", "{}"]) {
         const invalidConf = confTmpl(invalidVal);
-        assert.throws(() => actual._loadConfigString(invalidConf),
-                      /^Error: Rule "non-string-values" matchers: instance.no-numbers\[0\] is not of a type\(s\) string$/);
+        assert.throws(() => actual._loadConfigString(invalidConf));
       }
-      assert.throws(() => actual._loadConfigString(confTmpl("\"\"")),
-                    /^Error: Rule "non-string-values" matchers: instance.no-numbers\[0\] does not match pattern/);
+      assert.throws(() => actual._loadConfigString(confTmpl("\"\"")));
       return;
     });
 
@@ -89,8 +87,7 @@ routes:
       assert.doesNotThrow(() => actual._loadConfigString(validConf));
 
       const invalidConf = confTmpl("\"repeated\", \"repeated\", \"name\"");
-      assert.throws(() => actual._loadConfigString(invalidConf),
-                   /^Error: Rule "sloppy" matchers: instance.title contains duplicate item$/);
+      assert.throws(() => actual._loadConfigString(invalidConf));
     });
 
     it("requires correct types in outputs", () => {
@@ -111,12 +108,10 @@ routes:
       assert.doesNotThrow(() => actual._loadConfigString(validConf));
 
       const invalidConf0 = confTmpl("[\"my-series\"]", "[\"dim1\", \"dim2\"]");
-      assert.throws(() => actual._loadConfigString(invalidConf0),
-                   /^Error: Rule "wrong" output: instance.series is not of a type\(s\) string$/);
+      assert.throws(() => actual._loadConfigString(invalidConf0));
 
       const invalidConf1 = confTmpl("\"my-series\"", "\"dim1\"");
-      assert.throws(() => actual._loadConfigString(invalidConf1),
-                   /^Error: Rule "wrong" output: instance.dimensions is not of a type\(s\) array$/);
+      assert.throws(() => actual._loadConfigString(invalidConf1));
     });
 
     it("requires all keys in outputs", () => {
@@ -137,8 +132,7 @@ routes:
       assert.doesNotThrow(() => actual._loadConfigString(validConf));
 
       const invalidConf = confTmpl("");
-      assert.throws(() => actual._loadConfigString(invalidConf),
-                   /^Error: Rule "wrong" output: instance requires property "series"$/);
+      assert.throws(() => actual._loadConfigString(invalidConf));
     });
 
     it("doesn't allow extra keys", () => {
@@ -161,8 +155,105 @@ routes:
       const invalidConf = confTmpl(`
       series: "whatever"
       something-else: "hi there"`);
-      assert.throws(() => actual._loadConfigString(invalidConf),
-                   /^Error: Rule "wrong" output: instance additionalProperty "something-else" exists in instance when not allowed$/);
+      assert.throws(() => actual._loadConfigString(invalidConf));
+    });
+
+    it("errors on type-os", () => {
+      const actual = new router.Router();
+      let config;
+
+      config = `
+route: # Shouldn't routes (plural)
+  non-string-values:
+    matchers:
+      errors: [ "type-o" ]
+    output:
+      type: "analytics"
+      series: "fun"
+`;
+      assert.throws(() => actual._loadConfigString(config));
+
+      config = `
+routes:
+  non-string-values:
+    matcher: # Shouldn't matches (plural)
+      errors: [ "type-o" ]
+    output:
+      type: "analytics"
+      series: "fun"
+`;
+      assert.throws(() => actual._loadConfigString(config));
+
+      config = `
+routes:
+  $non-string-values: # Invalid rule name
+    matchers:
+      errors: [ "type-o" ]
+    output:
+      type: "analytics"
+      series: "fun"
+`;
+      assert.throws(() => actual._loadConfigString(config));
+
+      config = `
+routes:
+  $non-string-values: # Invalid rule name
+    matchers:
+      errors: [ "type-o" ]
+    outputs: # Should be output (signular)
+      type: "analytics"
+      series: "fun"
+`;
+      assert.throws(() => actual._loadConfigString(config));
+    });
+
+    it("errors on type-os", () => {
+      const actual = new router.Router();
+      let config;
+
+      config = `
+route: # Shouldn't routes (plural)
+  non-string-values:
+    matchers:
+      errors: [ "type-o" ]
+    output:
+      type: "analytics"
+      series: "fun"
+`;
+      assert.throws(() => actual._loadConfigString(config));
+
+      config = `
+routes:
+  non-string-values:
+    matcher: # Shouldn't matches (plural)
+      errors: [ "type-o" ]
+    output:
+      type: "analytics"
+      series: "fun"
+`;
+      assert.throws(() => actual._loadConfigString(config));
+
+      config = `
+routes:
+  $non-string-values: # Invalid rule name
+    matchers:
+      errors: [ "type-o" ]
+    output:
+      type: "analytics"
+      series: "fun"
+`;
+      assert.throws(() => actual._loadConfigString(config));
+
+      config = `
+routes:
+  $non-string-values: # Invalid rule name
+    matchers:
+      errors: [ "type-o" ]
+    outputs: # Should be output (signular)
+      type: "analytics"
+      series: "fun"
+`;
+      assert.throws(() => actual._loadConfigString(config));
     });
   });
 

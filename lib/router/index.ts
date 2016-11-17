@@ -1,6 +1,6 @@
 var fs           = require("fs");
 var jsonschema   = require("jsonschema");
-var schemaDefs   = require("./schema_definitions");
+var schema       = require("./schema_definitions");
 var yaml         = require("js-yaml");
 var _            = require("underscore");
 
@@ -118,65 +118,20 @@ class Rule {
   }
 }
 
-// transformValidation transforms a result from jsonschema.validate to prefix
-// all errors with `name`.
-function transformValidation(res, name) {
-  return {
-    valid: res.valid,
-    errors: res.errors.map((err) => `${name}: ${err.stack}`),
-  };
-}
-
-// validateRoutes ensures that `routes` matches the config schema. We have this
+// validateKVConfig ensures that `routes` matches the config schema. We have this
 // function instead of just doing a plain jsonschema.validate in order to get
 // better error messages for the "output" object (by default jsonschema would
 // just tell you that the output block doesn't match any of the known output
 // formats, but won't tell you what's wrong because it doesn't let you
 // condition on the output.type property).
-function validateRoutes(routes) {
+function validateKVConfig(config) {
   const validator = new jsonschema.Validator();
-  validator.addSchema({definitions: schemaDefs}, "/config");
-  const results = _.mapObject(routes, (rule, name) => {
-    // validate that the rule has the appropriate structure
-    const structureVal = validator.validate(rule, {
-      type: "object",
-      additionalProperties: false,
-      required: ["matchers", "output"],
-      properties: {
-        matchers: {
-          type: "object",
-        },
-        output: {
-          type: "object",
-          properties: {
-            type: {
-              type: "string",
-              enum: ["metrics", "alerts", "analytics", "notifications"],
-            },
-          },
-        },
-      },
-    });
-    if (!structureVal.valid) {
-      return transformValidation(structureVal, `Rule "${name}"`);
-    }
-    const matchersVal = transformValidation(
-      validator.validate(rule.matchers, {$ref: "/config#/definitions/matchers"}),
-      `Rule "${name}" matchers`
-    );
-    const outputVal = transformValidation(
-      validator.validate(rule.output, {$ref: `/config#/definitions/${rule.output.type}Output`}),
-      `Rule "${name}" output`
-    );
-    return {
-      valid: matchersVal.valid && outputVal.valid,
-      errors: matchersVal.errors.concat(outputVal.errors),
-    };
-  });
-  return _.reduce(results, (acc, res) => ({
-    valid: acc.valid && res.valid,
-    errors: acc.errors.concat(res.errors),
-  }));
+  const results = validator.validate(config, schema);
+
+  return {
+    valid: results.valid,
+    errors: results.errors.map((err) => err.stack),
+  };
 }
 
 // parseConfig parses and validates the configuration passed as a string. It
@@ -184,18 +139,20 @@ function validateRoutes(routes) {
 // it was successfully parsed, rules is an array of rules, and errors is an
 // array of errors.
 function parseConfig(fileString) {
-  let routes;
+  let config;
   try {
-    routes = yaml.safeLoad(fileString).routes;
+    config = yaml.safeLoad(fileString);
   } catch (e) {
     return {valid: false, rules: [], errors: [e]};
   }
-  const validateRes = validateRoutes(routes);
+  const validateRes = validateKVConfig(config);
   if (!validateRes.valid) {
     return _.assign(validateRes, {rules: []});
   }
   try {
-    const rulesObj = _.mapObject(routes, (elem, name) => new Rule(name, elem.matchers, elem.output));
+    const rulesObj = _.mapObject(
+      config.routes, (elem, name) => new Rule(name, elem.matchers, elem.output)
+    );
     const rules = _.values(rulesObj);
     return {valid: true, rules, errors: []};
   } catch (e) {
