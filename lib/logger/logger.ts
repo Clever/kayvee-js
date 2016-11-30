@@ -1,6 +1,6 @@
 var _   = require("underscore");
-_.mixin(require("underscore.deep"));
 var kv  = require("../kayvee");
+var router = require("../router");
 
 
 var LEVELS = {
@@ -19,12 +19,22 @@ var LOG_LEVEL_ENUM = {
   critical: 4,
 };
 
+const assign = Object.assign || _.assign; // Use the faster Object.assign if possible
+
+let globalRouter;
+
+function setGlobalRouting(filename) {
+  globalRouter = new router.Router();
+  globalRouter.loadConfig(filename);
+}
+
 // This is a port from kayvee-go/logger/logger.go
 class Logger {
   formatter = null;
   logLvl = null;
   globals = null;
   logWriter = null;
+  logRouter = null;
 
   constructor(source, logLvl = process.env.KAYVEE_LOG_LEVEL, formatter = kv.format, output = console.error) {
     this.formatter = formatter;
@@ -32,6 +42,10 @@ class Logger {
     this.globals = {};
     this.globals.source = source;
     this.logWriter = output;
+  }
+
+  setRouter(r) {
+    this.logRouter = r;
   }
 
   setConfig(source, logLvl, formatter, output) {
@@ -150,14 +164,56 @@ class Logger {
     if (LOG_LEVEL_ENUM[logLvl] < LOG_LEVEL_ENUM[this.logLvl]) {
       return;
     }
-    const data = _.extend(metadata, _(userdata).deepClone());
-    data.level = logLvl;
-    _.defaults(data, this.globals);
+    const data = assign({level: logLvl}, this.globals, metadata, userdata);
+    if (this.logRouter) {
+      data._kvmeta = this.logRouter.route(data);
+    } else if (globalRouter) {
+      data._kvmeta = globalRouter.route(data);
+    }
     this.logWriter(this.formatter(data));
   }
 }
 
 module.exports = Logger;
+module.exports.setGlobalRouting = setGlobalRouting;
+module.exports.mockRouting = (cb) => {
+  const _logWithLevel: any = Logger.prototype._logWithLevel;
+
+  if (_logWithLevel.isMocked) {
+    throw Error("Nested kv.mockRouting calls are not supported");
+  }
+
+  const ruleCounts = {};
+
+  Logger.prototype._logWithLevel = (logLvl, metadata, userdata) => {
+    const formatter = this.formatter;
+    const logWriter = this.logWriter;
+
+    this.formatter = msg => msg;
+    this.logWriter = (msg) => {
+      if (!msg._kvmeta) { return; }
+
+      msg._kvmeta.routes.forEach(route => {
+        ruleCounts[route.rule] = 1 + (ruleCounts[route.rule] || 0);
+      });
+    };
+
+    _logWithLevel.call(this, logLvl, metadata, userdata);
+
+    this.formatter = formatter;
+    this.logWriter = logWriter;
+  };
+
+  const stfuTypeScript: any = Logger.prototype._logWithLevel;
+  stfuTypeScript.isMocked = true;
+
+  const done = () => {
+    Logger.prototype._logWithLevel = _logWithLevel;
+    return ruleCounts;
+  };
+
+  cb(done);
+};
 _.extend(module.exports, LEVELS);
 module.exports.LEVELS = ["debug", "info", "warn", "error", "critical"];
 module.exports.METRICS = ["counter", "gauge"];

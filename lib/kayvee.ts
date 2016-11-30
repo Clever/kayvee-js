@@ -1,5 +1,4 @@
 var _ = require("underscore");
-_.mixin(require("underscore.deep"));
 
 const deploy_env = process.env._DEPLOY_ENV;
 
@@ -22,14 +21,14 @@ function format(data) {
 
 // Similar to format, but takes additional reserved params to promote logging best-practices
 function formatLog(source = "", level = "", title = "", data = {}) {
-  let reallyData = _.deepClone(data);
+  let info = data;
   if (!_.isObject(data)) {
-    reallyData = {};
+    info = {};
   }
   const reserved = {source, level, title};
 
   // reserved keys overwrite other keys in data
-  return format(_.extend(reallyData, reserved));
+  return format(_.extend({}, info, reserved));
 }
 
 module.exports = {

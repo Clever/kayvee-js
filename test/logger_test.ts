@@ -1,7 +1,5 @@
 var KayveeLogger = require("../lib/logger/logger");
 var assert = require("assert");
-var _ = require("underscore");
-_.mixin = require("underscore.deep");
 
 let sample = "";
 function outputFunc(text) {
@@ -151,6 +149,20 @@ describe("logger_test", () => {
         " \"key2\": \"val2\"}";
       assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
     });
+    it("test counterD function with overrides", () => {
+      logObj.counterD("testlogcounter", 2, {key1: "val1", key2: "val2", value: 18});
+      const expected = {
+        deploy_env: "testing",
+        source: "logger-tester",
+        level: KayveeLogger.Info,
+        title: "testlogcounter",
+        type: "counter",
+        value: 18,
+        key1: "val1",
+        key2: "val2",
+      };
+      assert.deepEqual(JSON.parse(sample), expected);
+    });
   });
 
   describe(".gauge", () => {
@@ -165,6 +177,20 @@ describe("logger_test", () => {
       const expected = `{"deploy_env": "testing", "source": "logger-tester",
 "level": "${KayveeLogger.Info}", "title": "testloggauge", "type": "gauge", "value": 4, "key1": "val1", "key2": "val2"}`;
       assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
+    });
+    it("test gaugeD function with overrids", () => {
+      logObj.gaugeD("testloggauge", 4, {key1: "val1", key2: "val2", value: 18});
+      const expected = {
+        deploy_env: "testing",
+        source: "logger-tester",
+        level: KayveeLogger.Info,
+        title: "testloggauge",
+        type: "gauge",
+        value: 18,
+        key1: "val1",
+        key2: "val2",
+      };
+      assert.deepEqual(JSON.parse(sample), expected);
     });
   });
 
@@ -205,12 +231,21 @@ describe("logger_test", () => {
         },
         fun: "boo",
       };
-      const output = ['{"deploy_env":"testing","title":"testInfoWithData",',
-        '"str":"modify","obj":{"key":"value"},"fun":"boo",',
-        '"level":"info","source":"logger-tester"}'].join("");
       logObj.infoD("testInfoWithData", data);
       assert.deepEqual(data, dataCopy);
-      assert.equal(sample, output);
+
+      const output = {
+        deploy_env: "testing",
+        fun: "boo",
+        level: "info",
+        obj:  {
+          key: "value",
+        },
+        source: "logger-tester",
+        title: "testInfoWithData",
+        str: "modify",
+      };
+      assert.deepEqual(JSON.parse(sample), output);
     });
   });
 
@@ -265,6 +300,19 @@ describe("logger_test", () => {
       logObj.setFormatter(testFormatter);
       logObj.warn("testlogwarning");
       assert.deepEqual(JSON.parse(sample), "This is a test");
+    });
+  });
+
+  describe("global overrides", () => {
+    it("what data has source prop", () => {
+      logObj.warnD("global-override", {source: "overrided"});
+      const output = {
+        deploy_env: "testing",
+        title: "global-override",
+        source: "overrided",
+        level: "warning",
+      };
+      assert.deepEqual(JSON.parse(sample), output);
     });
   });
 

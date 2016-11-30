@@ -12,7 +12,7 @@ Initialization:
 ```js
 var kayvee = require("kayvee");
 
-var log = new kayvee.Logger("logger-source");
+var log = new kayvee.logger("logger-source");
 ```
 
 Use it to write metrics:
@@ -42,12 +42,81 @@ console.error(kayvee.formatLog("test_source", kayvee.INFO, "title", {"foo" : 1, 
 # {"foo":1,"bar":"baz","source":"test_source","level":"info","title":"title"}
 ```
 
+## Example: Kayvee Log Routing
+
+Log routing is a mechanism for defining where log lines should go once they've entered Clever's logging pipeline.   Routes are defined in a yaml file called kvconfig.yml.  Here's an example of a log routing rule that sends a slack message:
+
+```js
+// main.js
+const kv = require("../kayvee-js");
+kv.setGlobalRouting("./kvconfig.yml");
+
+const log = new kv.logger("myApp");
+
+module.exports = (cb) => {
+    // Simple debugging
+    log.debug("Service has started");
+
+    // Do something async
+    setImmediate(() => {
+        // Output structured data
+        log.infoD("DataResults", {"key": "value"}); // Sends slack message
+
+        // You can use an object to send arbitrary key value pairs
+        log.infoD("DataResults", {"shorter": "line"}); // will NOT send a slack message
+
+        cb(null);
+    });
+};
+```
+
+```yml
+# kvconfig.yml
+routes:
+  key-val:
+    matchers:
+      title: [ "DataResults", "QueryResults" ]
+      key: [ "value" ]
+    output:
+      type: "notifications"
+      channel: "#distribution"
+      icon: ":rocket:"
+      message: "%{key}"
+      user: "Flight Tracker"
+```
+
+### Testing
+
+To ensure that your log-routing rules are correct, use `mockRouting` to temporarily mock out kayvee.  The mock kayvee will record which rules and how often they were matched.
+
+
+```js
+// main-test.js
+const assert = require("assert");
+
+const kv = require("../kayvee-js");
+
+const main = require("./main");
+
+kv.mockRouting(kvdone => { // Don't nest kv.mockRouting calls!!
+    main(err => {
+        assert.ifError(err);
+
+        let ruleCounts = kvdone();
+        assert.equal(ruleCounts["key-val"], 1);
+    });
+});
+```
+
+For more information on log routing see https://clever.atlassian.net/wiki/display/ENG/Log+Routing
+
 ## Testing
 
 Run `make test` to execute the tests
 
 ## Change log
 
+- v3.0.0 - Introduced log-routing
 - v2.4.0 - Add middleware.
 - v2.3.0 - Convert CoffeeScript to ES6 / Typescript.
 - v2.0.0 - Implement `logger` functionality along with support for `gauge` and `counter` metrics
@@ -175,7 +244,7 @@ var options = {
     source: "my-app",
     headers: ["x-request-id"],
     handlers: [
-        (request, response) => {"some_id": request.params.some_id});
+        (req, res) => { return {"some_id": req.params.some_id}; }
     ],
 };
 app.use(kayvee.middleware(options));
