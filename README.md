@@ -12,7 +12,7 @@ Initialization:
 ```js
 var kayvee = require("kayvee");
 
-var log = new kayvee.Logger("logger-source");
+var log = new kayvee.logger("logger-source");
 ```
 
 Use it to write metrics:
@@ -243,7 +243,7 @@ var options = {
     source: "my-app",
     headers: ["x-request-id"],
     handlers: [
-        (request, response) => {"some_id": request.params.some_id});
+        (req, res) => { return {"some_id": req.params.some_id}; }
     ],
 };
 app.use(kayvee.middleware(options));
