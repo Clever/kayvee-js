@@ -6,7 +6,6 @@ var _            = require("underscore");
 
 var packageJson = require("../../package.json");
 const kvVersion = packageJson.version;
-const appName = process.env._APP_NAME || "UNSET";
 const teamName = process.env._TEAM_OWNER || "UNSET";
 
 const reEnvvarTokens = new RegExp("\\$\\{(.+?)\\}", "g");
@@ -197,7 +196,6 @@ class Router {
     }
 
     return {
-      app: appName,
       team: teamName,
       kv_version: kvVersion,
       kv_language: "js",
