@@ -163,8 +163,8 @@ routes:
       let config;
 
       config = `
-route: # Shouldn't routes (plural)
-  non-string-values:
+route: # Should be routes (plural)
+  string-values:
     matchers:
       errors: [ "type-o" ]
     output:
@@ -175,8 +175,8 @@ route: # Shouldn't routes (plural)
 
       config = `
 routes:
-  non-string-values:
-    matcher: # Shouldn't matches (plural)
+  string-values:
+    matcher: # Should be matchers (plural)
       errors: [ "type-o" ]
     output:
       type: "analytics"
@@ -186,18 +186,7 @@ routes:
 
       config = `
 routes:
-  $non-string-values: # Invalid rule name
-    matchers:
-      errors: [ "type-o" ]
-    output:
-      type: "analytics"
-      series: "fun"
-`;
-      assert.throws(() => actual._loadConfigString(config));
-
-      config = `
-routes:
-  $non-string-values: # Invalid rule name
+  string-values:
     matchers:
       errors: [ "type-o" ]
     outputs: # Should be output (signular)
@@ -205,15 +194,10 @@ routes:
       series: "fun"
 `;
       assert.throws(() => actual._loadConfigString(config));
-    });
-
-    it("errors on type-os", () => {
-      const actual = new router.Router();
-      let config;
 
       config = `
-route: # Shouldn't routes (plural)
-  non-string-values:
+routes:
+  $invalid-string-values: # Invalid rule name
     matchers:
       errors: [ "type-o" ]
     output:
@@ -224,33 +208,11 @@ route: # Shouldn't routes (plural)
 
       config = `
 routes:
-  non-string-values:
-    matcher: # Shouldn't matches (plural)
-      errors: [ "type-o" ]
-    output:
-      type: "analytics"
-      series: "fun"
-`;
-      assert.throws(() => actual._loadConfigString(config));
-
-      config = `
-routes:
-  $non-string-values: # Invalid rule name
+  string-values:
     matchers:
       errors: [ "type-o" ]
     output:
-      type: "analytics"
-      series: "fun"
-`;
-      assert.throws(() => actual._loadConfigString(config));
-
-      config = `
-routes:
-  $non-string-values: # Invalid rule name
-    matchers:
-      errors: [ "type-o" ]
-    outputs: # Should be output (signular)
-      type: "analytics"
+      type: "analytic" # Should be analytics (plural)p
       series: "fun"
 `;
       assert.throws(() => actual._loadConfigString(config));
