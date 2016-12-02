@@ -49,8 +49,12 @@ function deepKey(obj, key) {
 function fieldMatches(obj, field, values) {
   const val = obj[field] || deepKey(obj, field);
 
-  if (!val) {
+  if (val == null) {
     return false;
+  }
+
+  if (values[0] === "*") {
+    return true;
   }
 
   for (let i = 0; i < values.length; i++) {
@@ -81,6 +85,17 @@ class Rule {
     if (envMissing.length > 0) {
       throw new Error(`Missing env var(s): ${envMissing.join(", ")}`);
     }
+
+    Object.keys(matchers).forEach((field) => {
+      const fieldVals = matchers[field];
+      if (fieldVals.indexOf("*") !== -1 && fieldVals.length > 1) {
+        throw new Error(
+          `Invalid matcher values in ${name}.${field}.\n` +
+          "Wildcard matcher can't co-exist with other matchers."
+        );
+      }
+    });
+
     this.output.rule = this.name;
   }
 

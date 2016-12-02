@@ -216,6 +216,17 @@ routes:
       series: "fun"
 `;
       assert.throws(() => actual._loadConfigString(config));
+
+      config = `
+routes:
+  string-values:
+    matchers:
+      errors: [ "*", "type-o" ] # A wildcard cannot exist with other matchers
+    output:
+      type: "analytics"
+      series: "fun"
+`;
+      assert.throws(() => actual._loadConfigString(config));
     });
   });
 
@@ -343,6 +354,38 @@ describe("router.Rule", () => {
       assert(!r.matches({
         title: "greeting",
         foo: "hi",
+      }));
+    });
+    it("wild card matching", () => {
+      const r = new router.Rule("test-rule", {any: ["*"]}, {});
+      assert(r.matches({
+        any: "",
+      }));
+      assert(r.matches({
+        any: false,
+      }));
+      assert(r.matches({
+        any: 5,
+      }));
+      assert(r.matches({
+        any: "hello",
+      }));
+      assert(r.matches({
+        any: {
+          bar: "hi",
+        },
+      }));
+      assert(!r.matches({
+        any: null,
+      }));
+      assert(!r.matches({
+        any: undefined,
+      }));
+      assert(!r.matches({
+        title: "greeting",
+        foo: {
+          bar: "howdy",
+        },
       }));
     });
   });
