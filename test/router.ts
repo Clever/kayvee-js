@@ -388,6 +388,28 @@ describe("router.Rule", () => {
         },
       }));
     });
+    it("bool matching", () => {
+      const r = new router.Rule("test-rule", {bull: [true]}, {});
+      assert(r.matches({
+        bull: true,
+      }));
+      assert(r.matches({
+        any: false,
+        bull: true,
+      }));
+      assert(!r.matches({
+        bull: false,
+      }));
+      assert(!r.matches({
+        bull: "false",
+      }));
+      assert(!r.matches({
+        title: "greeting",
+        foo: {
+          bar: "howdy",
+        },
+      }));
+    });
   });
 
   describe("outputFor", () => {
