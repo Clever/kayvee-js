@@ -359,9 +359,6 @@ describe("router.Rule", () => {
     it("wild card matching", () => {
       const r = new router.Rule("test-rule", {any: ["*"]}, {});
       assert(r.matches({
-        any: "",
-      }));
-      assert(r.matches({
         any: false,
       }));
       assert(r.matches({
@@ -374,6 +371,9 @@ describe("router.Rule", () => {
         any: {
           bar: "hi",
         },
+      }));
+      assert(!r.matches({
+        any: "",
       }));
       assert(!r.matches({
         any: null,

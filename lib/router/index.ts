@@ -49,7 +49,7 @@ function deepKey(obj, key) {
 function fieldMatches(obj, field, values) {
   const val = obj[field] || deepKey(obj, field);
 
-  if (val == null) {
+  if (val == null || val === "") {
     return false;
   }
 
