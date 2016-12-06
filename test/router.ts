@@ -163,8 +163,8 @@ routes:
       let config;
 
       config = `
-route: # Shouldn't routes (plural)
-  non-string-values:
+route: # Should be routes (plural)
+  string-values:
     matchers:
       errors: [ "type-o" ]
     output:
@@ -175,8 +175,8 @@ route: # Shouldn't routes (plural)
 
       config = `
 routes:
-  non-string-values:
-    matcher: # Shouldn't matches (plural)
+  string-values:
+    matcher: # Should be matchers (plural)
       errors: [ "type-o" ]
     output:
       type: "analytics"
@@ -186,18 +186,7 @@ routes:
 
       config = `
 routes:
-  $non-string-values: # Invalid rule name
-    matchers:
-      errors: [ "type-o" ]
-    output:
-      type: "analytics"
-      series: "fun"
-`;
-      assert.throws(() => actual._loadConfigString(config));
-
-      config = `
-routes:
-  $non-string-values: # Invalid rule name
+  string-values:
     matchers:
       errors: [ "type-o" ]
     outputs: # Should be output (signular)
@@ -205,15 +194,10 @@ routes:
       series: "fun"
 `;
       assert.throws(() => actual._loadConfigString(config));
-    });
-
-    it("errors on type-os", () => {
-      const actual = new router.Router();
-      let config;
 
       config = `
-route: # Shouldn't routes (plural)
-  non-string-values:
+routes:
+  $invalid-string-values: # Invalid rule name
     matchers:
       errors: [ "type-o" ]
     output:
@@ -224,32 +208,21 @@ route: # Shouldn't routes (plural)
 
       config = `
 routes:
-  non-string-values:
-    matcher: # Shouldn't matches (plural)
+  string-values:
+    matchers:
       errors: [ "type-o" ]
     output:
-      type: "analytics"
+      type: "analytic" # Should be analytics (plural)p
       series: "fun"
 `;
       assert.throws(() => actual._loadConfigString(config));
 
       config = `
 routes:
-  $non-string-values: # Invalid rule name
+  string-values:
     matchers:
-      errors: [ "type-o" ]
+      errors: [ "*", "type-o" ] # A wildcard cannot exist with other matchers
     output:
-      type: "analytics"
-      series: "fun"
-`;
-      assert.throws(() => actual._loadConfigString(config));
-
-      config = `
-routes:
-  $non-string-values: # Invalid rule name
-    matchers:
-      errors: [ "type-o" ]
-    outputs: # Should be output (signular)
       type: "analytics"
       series: "fun"
 `;
@@ -381,6 +354,60 @@ describe("router.Rule", () => {
       assert(!r.matches({
         title: "greeting",
         foo: "hi",
+      }));
+    });
+    it("wild card matching", () => {
+      const r = new router.Rule("test-rule", {any: ["*"]}, {});
+      assert(r.matches({
+        any: false,
+      }));
+      assert(r.matches({
+        any: 5,
+      }));
+      assert(r.matches({
+        any: "hello",
+      }));
+      assert(r.matches({
+        any: {
+          bar: "hi",
+        },
+      }));
+      assert(!r.matches({
+        any: "",
+      }));
+      assert(!r.matches({
+        any: null,
+      }));
+      assert(!r.matches({
+        any: undefined,
+      }));
+      assert(!r.matches({
+        title: "greeting",
+        foo: {
+          bar: "howdy",
+        },
+      }));
+    });
+    it("bool matching", () => {
+      const r = new router.Rule("test-rule", {bull: [true]}, {});
+      assert(r.matches({
+        bull: true,
+      }));
+      assert(r.matches({
+        any: false,
+        bull: true,
+      }));
+      assert(!r.matches({
+        bull: false,
+      }));
+      assert(!r.matches({
+        bull: "false",
+      }));
+      assert(!r.matches({
+        title: "greeting",
+        foo: {
+          bar: "howdy",
+        },
       }));
     });
   });
