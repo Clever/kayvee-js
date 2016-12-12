@@ -100,6 +100,7 @@ routes:
       type: "alerts"
       series: ${series}
       dimensions: ${dimensions}
+      value: "hihi"
       stat_type: "gauge"
 `;
 
@@ -142,9 +143,9 @@ routes:
     matchers:
       title: ["test"]
     output:
-      type: "alerts"${v}
+      type: "metrics"${v}
       dimensions: ["dim1", "dim2"]
-      stat_type: "gauge"
+      value: "hihi"
 `;
 
       const actual = new router.Router();
