@@ -116,6 +116,8 @@ Run `make test` to execute the tests
 
 ## Change log
 
+- v3.2.0 - Exposed support for overriding the value field on metrics and alerts outputs
+- v3.1.0 - Added support for matching on booleans and a wildcard ("*")
 - v3.0.0 - Introduced log-routing
 - v2.4.0 - Add middleware.
 - v2.3.0 - Convert CoffeeScript to ES6 / Typescript.
