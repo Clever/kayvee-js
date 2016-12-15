@@ -1,0 +1,7 @@
+routes:
+  all-kv_middleware:
+    matchers:
+      via: [ "kayvee-middleware" ]
+    output:
+      type: "analytics"
+      series: "requests.everything"
