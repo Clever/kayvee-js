@@ -116,6 +116,7 @@ Run `make test` to execute the tests
 
 ## Change log
 
+- v3.3.0 - Middleware log lines are now routable
 - v3.2.0 - Exposed support for overriding the value field on metrics and alerts outputs
 - v3.1.0 - Added support for matching on booleans and a wildcard ("*")
 - v3.0.0 - Introduced log-routing
