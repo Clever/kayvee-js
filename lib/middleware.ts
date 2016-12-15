@@ -229,9 +229,11 @@ var formatLine = (options_arg) => {
     throw (Error("Missing required config for 'source' in Kayvee middleware 'options'"));
   }
 
+  const router = KayveeLogger.getGlobalRouter();
+
   return (tokens, req, res) => {
     // Build a dict of data to log
-    var data = {};
+    var data = {_kvmeta: undefined}; // Adding _kvmeta here to make typescript compile happy
 
     // Add user-configured request headers
     var custom_headers = options.headers || [];
@@ -253,6 +255,10 @@ var formatLine = (options_arg) => {
     // Execute custom-handlers THEN base-handlers
     const all_handlers = custom_handlers.concat(base_handlers);
     _.extend(data, handlerData(all_handlers, req, res));
+
+    if (router) {
+      data._kvmeta = router.route(data);
+    }
 
     return kayvee.format(data);
   };

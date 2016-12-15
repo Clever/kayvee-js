@@ -28,6 +28,10 @@ function setGlobalRouting(filename) {
   globalRouter.loadConfig(filename);
 }
 
+function getGlobalRouter() {
+  return globalRouter;
+}
+
 // This is a port from kayvee-go/logger/logger.go
 class Logger {
   formatter = null;
@@ -176,6 +180,7 @@ class Logger {
 
 module.exports = Logger;
 module.exports.setGlobalRouting = setGlobalRouting;
+module.exports.getGlobalRouter = getGlobalRouter;
 module.exports.mockRouting = (cb) => {
   const _logWithLevel: any = Logger.prototype._logWithLevel;
 

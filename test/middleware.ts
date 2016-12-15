@@ -1,11 +1,14 @@
 var assert = require("assert");
 var express = require("express");
 var http = require("http");
+var path = require("path");
 var request = require("supertest");
 var split = require("split");
 var _ = require("underscore");
-var kayvee = require("../lib/kayvee");
+var kayee_logger = require("../lib/logger/logger");
 var kv_middleware = require("../lib/middleware");
+
+kayee_logger.setGlobalRouting(path.join(__dirname, "/kvconfig.yml"));
 
 /*
  * Helpers copied from expressjs/morgan
@@ -92,8 +95,7 @@ _.each(["http", "express"], (serverType) => {
     it("should pass default fields", (done) => {
       var cb = afterTest(2, (err, res, line) => {
         if (err) { return done(err); }
-        var masked = line.replace(/response-time":\d+/, 'response-time":99999');
-        const expected = kayvee.format({
+        const expected = {
           method: "GET",
           path: "/hello/world",
           params: "?a=1&b=2",
@@ -105,9 +107,23 @@ _.each(["http", "express"], (serverType) => {
           level: "info",
           title: "request-finished",
           canary: false,
+          deploy_env: "testing",
           source: "test-app",
-        });
-        assert.equal(masked, expected);
+          _kvmeta: {
+            team: "UNSET",
+            kv_version: "X.X.X",
+            kv_language: "js",
+            routes: [
+              {type: "analytics", series: "requests.everything", rule: "all-kv_middleware"},
+            ],
+          },
+        };
+
+        var actual = JSON.parse(line);
+        actual["response-time"] = 99999;     // Masking the two fields that
+        actual._kvmeta.kv_version = "X.X.X"; // are expected to change
+
+        assert.deepEqual(actual, expected);
         return done();
       });
 
@@ -130,8 +146,7 @@ _.each(["http", "express"], (serverType) => {
     it("should set canary flag if env var is present", (done) => {
       var cb = afterTest(2, (err, res, line) => {
         if (err) { return done(err); }
-        var masked = line.replace(/response-time":\d+/, 'response-time":99999');
-        const expected = kayvee.format({
+        const expected = {
           method: "GET",
           path: "/hello/world",
           params: "?a=1&b=2",
@@ -143,9 +158,22 @@ _.each(["http", "express"], (serverType) => {
           level: "info",
           title: "request-finished",
           canary: true,
+          deploy_env: "testing",
           source: "test-app",
-        });
-        assert.equal(masked, expected);
+          _kvmeta: {
+            team: "UNSET",
+            kv_version: "X.X.X",
+            kv_language: "js",
+            routes: [
+              {type: "analytics", series: "requests.everything", rule: "all-kv_middleware"},
+            ],
+          },
+        };
+        var actual = JSON.parse(line);
+        actual["response-time"] = 99999;     // Masking the two fields that
+        actual._kvmeta.kv_version = "X.X.X"; // are expected to change
+
+        assert.deepEqual(actual, expected);
         delete process.env._CANARY;
         return done();
       });
@@ -171,8 +199,7 @@ _.each(["http", "express"], (serverType) => {
     it("should allow logging user-specified request headers", (done) => {
       var cb = afterTest(2, (err, res, line) => {
         if (err) { return done(err); }
-        var masked = line.replace(/response-time":\d+/, 'response-time":99999');
-        const expected = kayvee.format({
+        const expected = {
           "some-header": "some-header-value",
           "another-header": "another-header-value",
           method: "GET",
@@ -186,9 +213,22 @@ _.each(["http", "express"], (serverType) => {
           level: "info",
           title: "request-finished",
           canary: false,
+          deploy_env: "testing",
           source: "test-app",
-        });
-        assert.equal(masked, expected);
+          _kvmeta: {
+            team: "UNSET",
+            kv_version: "X.X.X",
+            kv_language: "js",
+            routes: [
+              {type: "analytics", series: "requests.everything", rule: "all-kv_middleware"},
+            ],
+          },
+        };
+        var actual = JSON.parse(line);
+        actual["response-time"] = 99999;     // Masking the two fields that
+        actual._kvmeta.kv_version = "X.X.X"; // are expected to change
+
+        assert.deepEqual(actual, expected);
         return done();
       });
 
@@ -215,8 +255,7 @@ _.each(["http", "express"], (serverType) => {
     it("should allow logging from user-specified handlers", (done) => {
       var cb = afterTest(2, (err, res, line) => {
         if (err) { return done(err); }
-        var masked = line.replace(/response-time":\d+/, 'response-time":99999');
-        const expected = kayvee.format({
+        const expected = {
           global: 1,
           global2: 2,
           url: "/hello/world?a=1&b=2",
@@ -231,9 +270,22 @@ _.each(["http", "express"], (serverType) => {
           level: "info",
           title: "request-finished",
           canary: false,
+          deploy_env: "testing",
           source: "test-app",
-        });
-        assert.equal(masked, expected);
+          _kvmeta: {
+            team: "UNSET",
+            kv_version: "X.X.X",
+            kv_language: "js",
+            routes: [
+              {type: "analytics", series: "requests.everything", rule: "all-kv_middleware"},
+            ],
+          },
+        };
+        var actual = JSON.parse(line);
+        actual["response-time"] = 99999;     // Masking the two fields that
+        actual._kvmeta.kv_version = "X.X.X"; // are expected to change
+
+        assert.deepEqual(actual, expected);
         return done();
       });
 
@@ -262,8 +314,7 @@ _.each(["http", "express"], (serverType) => {
     it("should not log null or undefined values", (done) => {
       var cb = afterTest(2, (err, res, line) => {
         if (err) { return done(err); }
-        var masked = line.replace(/response-time":\d+/, 'response-time":99999');
-        const expected = kayvee.format({
+        const expected = {
           method: "GET",
           path: "/hello/world",
           params: "?a=1&b=2",
@@ -275,9 +326,22 @@ _.each(["http", "express"], (serverType) => {
           level: "info",
           title: "request-finished",
           canary: false,
+          deploy_env: "testing",
           source: "test-app",
-        });
-        assert.equal(masked, expected);
+          _kvmeta: {
+            team: "UNSET",
+            kv_version: "X.X.X",
+            kv_language: "js",
+            routes: [
+              {type: "analytics", series: "requests.everything", rule: "all-kv_middleware"},
+            ],
+          },
+        };
+        var actual = JSON.parse(line);
+        actual["response-time"] = 99999;     // Masking the two fields that
+        actual._kvmeta.kv_version = "X.X.X"; // are expected to change
+
+        assert.deepEqual(actual, expected);
         return done();
       });
 
@@ -306,8 +370,7 @@ _.each(["http", "express"], (serverType) => {
     it("should keep processing if there are broken user-specified handlers", (done) => {
       var cb = afterTest(2, (err, res, line) => {
         if (err) { return done(err); }
-        var masked = line.replace(/response-time":\d+/, 'response-time":99999');
-        const expected = kayvee.format({
+        const expected = {
           global: 1,
           method: "GET",
           path: "/hello/world",
@@ -320,9 +383,22 @@ _.each(["http", "express"], (serverType) => {
           level: "info",
           title: "request-finished",
           canary: false,
+          deploy_env: "testing",
           source: "test-app",
-        });
-        assert.equal(masked, expected);
+          _kvmeta: {
+            team: "UNSET",
+            kv_version: "X.X.X",
+            kv_language: "js",
+            routes: [
+              {type: "analytics", series: "requests.everything", rule: "all-kv_middleware"},
+            ],
+          },
+        };
+        var actual = JSON.parse(line);
+        actual["response-time"] = 99999;     // Masking the two fields that
+        actual._kvmeta.kv_version = "X.X.X"; // are expected to change
+
+        assert.deepEqual(actual, expected);
         return done();
       });
 
@@ -352,13 +428,23 @@ _.each(["http", "express"], (serverType) => {
     it("should allow the user to override `base_handlers`", (done) => {
       var cb = afterTest(2, (err, res, line) => {
         if (err) { return done(err); }
-        var masked = line.replace(/response-time":\d+/, 'response-time":99999');
-        const expected = kayvee.format({
+        const expected = {
           global: 1,
           base: 1,
+          deploy_env: "testing",
           source: "test-app",
-        });
-        assert.equal(masked, expected);
+          _kvmeta: {
+            team: "UNSET",
+            kv_version: "X.X.X",
+            kv_language: "js",
+            routes: [],
+          },
+        };
+
+        var actual = JSON.parse(line);
+        actual._kvmeta.kv_version = "X.X.X"; // Masking field that is expected to change
+
+        assert.deepEqual(actual, expected);
         return done();
       });
 
@@ -388,13 +474,23 @@ _.each(["http", "express"], (serverType) => {
     it("should be robust to handlers that return non Objects", (done) => {
       var cb = afterTest(2, (err, res, line) => {
         if (err) { return done(err); }
-        var masked = line.replace(/response-time":\d+/, 'response-time":99999');
-        const expected = kayvee.format({
+        const expected = {
           global: 1,
           base: 1,
           source: "test-app",
-        });
-        assert.equal(masked, expected);
+          deploy_env: "testing",
+          _kvmeta: {
+            team: "UNSET",
+            kv_version: "X.X.X",
+            kv_language: "js",
+            routes: [],
+          },
+        };
+
+        var actual = JSON.parse(line);
+        actual._kvmeta.kv_version = "X.X.X"; // Masking field that is expected to change
+
+        assert.deepEqual(actual, expected);
         return done();
       });
 
@@ -431,8 +527,7 @@ _.each(["http", "express"], (serverType) => {
     it("allows ignoring requests to files in a static directory", (done) => {
       var cb = afterTest(2, (err, res, line) => {
         if (err) { return done(err); }
-        var masked = line.replace(/response-time":\d+/, 'response-time":99999');
-        const expected = kayvee.format({
+        const expected = {
           method: "GET",
           path: "/hello/world",
           params: "",
@@ -444,9 +539,22 @@ _.each(["http", "express"], (serverType) => {
           level: "info",
           title: "request-finished",
           canary: false,
+          deploy_env: "testing",
           source: "test-app",
-        });
-        assert.equal(masked, expected);
+          _kvmeta: {
+            team: "UNSET",
+            kv_version: "X.X.X",
+            kv_language: "js",
+            routes: [
+              {type: "analytics", series: "requests.everything", rule: "all-kv_middleware"},
+            ],
+          },
+        };
+        var actual = JSON.parse(line);
+        actual["response-time"] = 99999;     // Masking the two fields that
+        actual._kvmeta.kv_version = "X.X.X"; // are expected to change
+
+        assert.deepEqual(actual, expected);
         return done();
       });
 
