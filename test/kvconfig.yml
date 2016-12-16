@@ -5,3 +5,9 @@ routes:
     output:
       type: "analytics"
       series: "requests.everything"
+  rule-two:
+    matchers:
+      title: [ "foo-title" ]
+    output:
+      type: "analytics"
+      series: "requests.everything"

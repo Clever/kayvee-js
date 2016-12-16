@@ -188,7 +188,7 @@ module.exports.mockRouting = (cb) => {
     throw Error("Nested kv.mockRouting calls are not supported");
   }
 
-  const ruleCounts = {};
+  const ruleMatches = {};
 
   Logger.prototype._logWithLevel = (logLvl, metadata, userdata) => {
     const formatter = this.formatter;
@@ -199,7 +199,7 @@ module.exports.mockRouting = (cb) => {
       if (!msg._kvmeta) { return; }
 
       msg._kvmeta.routes.forEach(route => {
-        ruleCounts[route.rule] = 1 + (ruleCounts[route.rule] || 0);
+        ruleMatches[route.rule] = (ruleMatches[route.rule] || []).concat(msg);
       });
     };
 
@@ -214,7 +214,7 @@ module.exports.mockRouting = (cb) => {
 
   const done = () => {
     Logger.prototype._logWithLevel = _logWithLevel;
-    return ruleCounts;
+    return ruleMatches;
   };
 
   cb(done);
