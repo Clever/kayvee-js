@@ -199,7 +199,7 @@ module.exports.mockRouting = (cb) => {
       if (!msg._kvmeta) { return; }
 
       msg._kvmeta.routes.forEach(route => {
-        ruleMatches[route.rule] = (ruleMatches[route.rule] || []).concat(msg);
+        ruleMatches[route.rule] = (ruleMatches[route.rule] || []).concat(route);
       });
     };
 

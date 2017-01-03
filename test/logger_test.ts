@@ -360,23 +360,12 @@ describe("mockRouting", () => {
       assert.equal(ruleMatches["rule-two"].length, 1);
 
       // matched log should look like so
-      const expectedLog = {
-        title: "foo-title",
-        level: "info",
-        _kvmeta: {
-          team: "UNSET",
-          kv_version: "3.3.0",
-          kv_language: "js",
-          routes: [
-            {
-              type: "analytics",
-              series: "requests.everything",
-              rule: "rule-two",
-            },
-          ],
-        },
+      const expectedRule = {
+        type: "analytics",
+        series: "requests.everything",
+        rule: "rule-two",
       };
-      assert.deepEqual(ruleMatches["rule-two"][0], expectedLog);
+      assert.deepEqual(ruleMatches["rule-two"][0], expectedRule);
     });
   });
 });
