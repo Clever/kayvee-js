@@ -102,8 +102,8 @@ kv.mockRouting(kvdone => { // Don't nest kv.mockRouting calls!!
     main(err => {
         assert.ifError(err);
 
-        let ruleCounts = kvdone();
-        assert.equal(ruleCounts["key-val"], 1);
+        let ruleMatches = kvdone();
+        assert.equal(ruleMatches["key-val"].length, 1);
     });
 });
 ```

@@ -347,3 +347,25 @@ describe("logger_test", () => {
     });
   });
 });
+
+describe("mockRouting", () => {
+  it("can override routing from setGlobalRouting, and captures routed logs", () => {
+    KayveeLogger.mockRouting(kvdone => {
+      KayveeLogger.setGlobalRouting("test/kvconfig.yml");
+      const logObj = new KayveeLogger("test-source");
+      logObj.info("foo-title");
+      const ruleMatches = kvdone();
+
+      // should match one log
+      assert.equal(ruleMatches["rule-two"].length, 1);
+
+      // matched log should look like so
+      const expectedRule = {
+        type: "analytics",
+        series: "requests.everything",
+        rule: "rule-two",
+      };
+      assert.deepEqual(ruleMatches["rule-two"][0], expectedRule);
+    });
+  });
+});
