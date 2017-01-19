@@ -96,6 +96,10 @@ class Rule {
       }
     });
 
+    if (this.output.type === "alerts" || this.output.type === "metrics") {
+      this.output.value_field = this.output.value_field || "value";
+    }
+
     this.output.rule = this.name;
   }
 
