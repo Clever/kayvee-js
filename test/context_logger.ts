@@ -6,14 +6,18 @@ var KayveeLogger = require("../lib/logger/logger");
 
 describe("ContextLogger", () => {
   const fake_req = {key1: "val1"};
-  const fake_handler = (req) => ({log_key1: req.key1, key2: "val2"});
+  const fake_handler = req => ({log_key1: req.key1, key2: "val2"});
 
   for (const level of KayveeLogger.LEVELS) {
     it(`correctly adds context to ${level} calls`, () => {
       const spy = sinon.spy();
       const stub_logger = {};
       stub_logger[`${level}D`] = spy;
-      const log = new middleware.ContextLogger(stub_logger, [fake_handler], fake_req);
+      const log = new middleware.ContextLogger(
+        stub_logger,
+        [fake_handler],
+        fake_req
+      );
       log[level]("test_title");
       const expected_context = {log_key1: "val1", key2: "val2"};
       assert(spy.calledWithExactly("test_title", expected_context));
@@ -24,7 +28,11 @@ describe("ContextLogger", () => {
       const spy = sinon.spy();
       const stub_logger = {};
       stub_logger[`${level}D`] = spy;
-      const log = new middleware.ContextLogger(stub_logger, [fake_handler], fake_req);
+      const log = new middleware.ContextLogger(
+        stub_logger,
+        [fake_handler],
+        fake_req
+      );
       log[`${level}D`]("test_title", {key2: "new_value", key3: "val3"});
       const expected_data = {
         log_key1: "val1",
@@ -41,7 +49,11 @@ describe("ContextLogger", () => {
       const spy = sinon.spy();
       const stub_logger = {};
       stub_logger[`${metric}D`] = spy;
-      const log = new middleware.ContextLogger(stub_logger, [fake_handler], fake_req);
+      const log = new middleware.ContextLogger(
+        stub_logger,
+        [fake_handler],
+        fake_req
+      );
       log[metric]("test_title", 3);
       const expected_context = {log_key1: "val1", key2: "val2"};
       assert(spy.calledWithExactly("test_title", 3, expected_context));
@@ -52,7 +64,11 @@ describe("ContextLogger", () => {
       const spy = sinon.spy();
       const stub_logger = {};
       stub_logger[`${metric}D`] = spy;
-      const log = new middleware.ContextLogger(stub_logger, [fake_handler], fake_req);
+      const log = new middleware.ContextLogger(
+        stub_logger,
+        [fake_handler],
+        fake_req
+      );
       log[`${metric}D`]("test_title", 3, {key2: "new_value", key3: "val3"});
       const expected_data = {
         log_key1: "val1",

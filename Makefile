@@ -34,13 +34,13 @@ benchmark-data:
 lint:
 	./node_modules/.bin/tslint $(TS_FILES)
 	./node_modules/.bin/eslint $(TS_FILES)
-	./node_modules/.bin/eslint $(JS_FILES)
+	# ./node_modules/.bin/eslint $(JS_FILES)
 
 format:
 	./node_modules/.bin/prettier --bracket-spacing false --write $(TS_FILES)
 	./node_modules/.bin/prettier --bracket-spacing false --write $(JS_FILES)
 	./node_modules/.bin/eslint --fix $(TS_FILES)
-	./node_modules/.bin/eslint --fix $(JS_FILES)
+	# ./node_modules/.bin/eslint --fix $(JS_FILES)
 
 test/tests.json:
 	wget https://raw.githubusercontent.com/Clever/kayvee/master/tests.json -O test/tests.json

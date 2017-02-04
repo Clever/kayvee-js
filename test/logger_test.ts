@@ -18,8 +18,13 @@ describe("logger_test", () => {
 
   describe(".constructor", () => {
     it("passing in parameters to constructor", () => {
-      const formatter = (data) => `${data.level}.${data.source}.${data.title}`;
-      logObj = new KayveeLogger("logger-test", KayveeLogger.Info, formatter, outputFunc);
+      const formatter = data => `${data.level}.${data.source}.${data.title}`;
+      logObj = new KayveeLogger(
+        "logger-test",
+        KayveeLogger.Info,
+        formatter,
+        outputFunc
+      );
       logObj.debug("testlogdebug");
       let expected = "";
       assert.equal(sample, expected);
@@ -146,11 +151,15 @@ describe("logger_test", () => {
       logObj.counterD("testlogcounter", 2, {key1: "val1", key2: "val2"});
       const expected = `{"deploy_env": "testing", "source": "logger-tester",
 "level": "${KayveeLogger.Info}", "title": "testlogcounter","type": "counter", "value": 2,"key1": "val1",` +
-        " \"key2\": \"val2\"}";
+        ' "key2": "val2"}';
       assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
     });
     it("test counterD function with overrides", () => {
-      logObj.counterD("testlogcounter", 2, {key1: "val1", key2: "val2", value: 18});
+      logObj.counterD("testlogcounter", 2, {
+        key1: "val1",
+        key2: "val2",
+        value: 18,
+      });
       const expected = {
         deploy_env: "testing",
         source: "logger-tester",
@@ -199,7 +208,7 @@ describe("logger_test", () => {
       logObj.info("testloginfo");
       const infoLog = sample;
       let output2 = "";
-      const outputFunc2 = (text) => {
+      const outputFunc2 = text => {
         output2 = text;
         return output2;
       };
@@ -238,7 +247,7 @@ describe("logger_test", () => {
         deploy_env: "testing",
         fun: "boo",
         level: "info",
-        obj:  {
+        obj: {
           key: "value",
         },
         source: "logger-tester",
@@ -296,7 +305,7 @@ describe("logger_test", () => {
 
   describe(".diffformat", () => {
     it("use a different formatter than KV", () => {
-      const testFormatter = () => "\"This is a test\"";
+      const testFormatter = () => '"This is a test"';
       logObj.setFormatter(testFormatter);
       logObj.warn("testlogwarning");
       assert.deepEqual(JSON.parse(sample), "This is a test");
@@ -331,7 +340,7 @@ describe("logger_test", () => {
 
     it("log to different output buffer", () => {
       let output2 = "";
-      const outputFunc2 = (text) => {
+      const outputFunc2 = text => {
         output2 = text;
         return output2;
       };
@@ -349,23 +358,26 @@ describe("logger_test", () => {
 });
 
 describe("mockRouting", () => {
-  it("can override routing from setGlobalRouting, and captures routed logs", () => {
-    KayveeLogger.mockRouting(kvdone => {
-      KayveeLogger.setGlobalRouting("test/kvconfig.yml");
-      const logObj = new KayveeLogger("test-source");
-      logObj.info("foo-title");
-      const ruleMatches = kvdone();
+  it(
+    "can override routing from setGlobalRouting, and captures routed logs",
+    () => {
+      KayveeLogger.mockRouting(kvdone => {
+        KayveeLogger.setGlobalRouting("test/kvconfig.yml");
+        const logObj = new KayveeLogger("test-source");
+        logObj.info("foo-title");
+        const ruleMatches = kvdone();
 
-      // should match one log
-      assert.equal(ruleMatches["rule-two"].length, 1);
+        // should match one log
+        assert.equal(ruleMatches["rule-two"].length, 1);
 
-      // matched log should look like so
-      const expectedRule = {
-        type: "analytics",
-        series: "requests.everything",
-        rule: "rule-two",
-      };
-      assert.deepEqual(ruleMatches["rule-two"][0], expectedRule);
-    });
-  });
+        // matched log should look like so
+        const expectedRule = {
+          type: "analytics",
+          series: "requests.everything",
+          rule: "rule-two",
+        };
+        assert.deepEqual(ruleMatches["rule-two"][0], expectedRule);
+      });
+    }
+  );
 });

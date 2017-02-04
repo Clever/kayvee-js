@@ -1,21 +1,20 @@
-var _   = require("underscore");
-var kv  = require("../kayvee");
+var _ = require("underscore");
+var kv = require("../kayvee");
 var router = require("../router");
 
-
 var LEVELS = {
-  Debug:    "debug",
-  Info:     "info",
-  Warning:  "warning",
-  Error:    "error",
+  Debug: "debug",
+  Info: "info",
+  Warning: "warning",
+  Error: "error",
   Critical: "critical",
 };
 
 var LOG_LEVEL_ENUM = {
-  debug:    0,
-  info:     1,
-  warning:  2,
-  error:    3,
+  debug: 0,
+  info: 1,
+  warning: 2,
+  error: 3,
   critical: 4,
 };
 
@@ -40,7 +39,12 @@ class Logger {
   logWriter = null;
   logRouter = null;
 
-  constructor(source, logLvl = process.env.KAYVEE_LOG_LEVEL, formatter = kv.format, output = console.error) {
+  constructor(
+    source,
+    logLvl = process.env.KAYVEE_LOG_LEVEL,
+    formatter = kv.format,
+    output = console.error
+  ) {
     this.formatter = formatter;
     this.logLvl = this._validateLogLvl(logLvl);
     this.globals = {};
@@ -119,49 +123,77 @@ class Logger {
   }
 
   debugD(title, data) {
-    this._logWithLevel(LEVELS.Debug, {
-      title,
-    }, data);
+    this._logWithLevel(
+      LEVELS.Debug,
+      {
+        title,
+      },
+      data
+    );
   }
 
   infoD(title, data) {
-    this._logWithLevel(LEVELS.Info, {
-      title,
-    }, data);
+    this._logWithLevel(
+      LEVELS.Info,
+      {
+        title,
+      },
+      data
+    );
   }
 
   warnD(title, data) {
-    this._logWithLevel(LEVELS.Warning, {
-      title,
-    }, data);
+    this._logWithLevel(
+      LEVELS.Warning,
+      {
+        title,
+      },
+      data
+    );
   }
 
   errorD(title, data) {
-    this._logWithLevel(LEVELS.Error, {
-      title,
-    }, data);
+    this._logWithLevel(
+      LEVELS.Error,
+      {
+        title,
+      },
+      data
+    );
   }
 
   criticalD(title, data) {
-    this._logWithLevel(LEVELS.Critical, {
-      title,
-    }, data);
+    this._logWithLevel(
+      LEVELS.Critical,
+      {
+        title,
+      },
+      data
+    );
   }
 
   counterD(title, value, data) {
-    this._logWithLevel(LEVELS.Info, {
-      title,
-      value,
-      type: "counter",
-    }, data);
+    this._logWithLevel(
+      LEVELS.Info,
+      {
+        title,
+        value,
+        type: "counter",
+      },
+      data
+    );
   }
 
   gaugeD(title, value, data) {
-    this._logWithLevel(LEVELS.Info, {
-      title,
-      value,
-      type:  "gauge",
-    }, data);
+    this._logWithLevel(
+      LEVELS.Info,
+      {
+        title,
+        value,
+        type: "gauge",
+      },
+      data
+    );
   }
 
   _logWithLevel(logLvl, metadata, userdata) {
@@ -181,7 +213,7 @@ class Logger {
 module.exports = Logger;
 module.exports.setGlobalRouting = setGlobalRouting;
 module.exports.getGlobalRouter = getGlobalRouter;
-module.exports.mockRouting = (cb) => {
+module.exports.mockRouting = cb => {
   const _logWithLevel: any = Logger.prototype._logWithLevel;
 
   if (_logWithLevel.isMocked) {
@@ -195,8 +227,10 @@ module.exports.mockRouting = (cb) => {
     const logWriter = this.logWriter;
 
     this.formatter = msg => msg;
-    this.logWriter = (msg) => {
-      if (!msg._kvmeta) { return; }
+    this.logWriter = msg => {
+      if (!msg._kvmeta) {
+        return;
+      }
 
       msg._kvmeta.routes.forEach(route => {
         ruleMatches[route.rule] = (ruleMatches[route.rule] || []).concat(route);

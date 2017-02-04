@@ -17,7 +17,7 @@ var _ = require("underscore");
 
 function walkDirSync(dir, files = []) {
   const list = fs.readdirSync(dir);
-  list.forEach((file) => {
+  list.forEach(file => {
     const f = path.join(dir, file);
     if (fs.statSync(path.join(dir, file)).isDirectory()) {
       walkDirSync(f, files);
@@ -25,7 +25,7 @@ function walkDirSync(dir, files = []) {
       files.push(f);
     }
   });
-  return files.map((f) => path.relative(dir, f));
+  return files.map(f => path.relative(dir, f));
 }
 
 /**
@@ -37,8 +37,10 @@ function walkDirSync(dir, files = []) {
 
 function skip_path(dir, base_path = "/") {
   let files = walkDirSync(dir);
-  files = files.map((file) => path.join(base_path, file));
-  console.error(`KayveeMiddleware: Skipping successful requests for files in ${dir} at ${base_path}`);
+  files = files.map(file => path.join(base_path, file));
+  console.error(
+    `KayveeMiddleware: Skipping successful requests for files in ${dir} at ${base_path}`
+  );
   return (req, res) => _(files).contains(req.path) && res.statusCode < 400;
 }
 
@@ -88,8 +90,8 @@ function getResponseTimeNs(req, res) {
   }
 
   // calculate diff
-  var ns = (res._startAt[0] - req._startAt[0]) * 1e9
-    + (res._startAt[1] - req._startAt[1]);
+  var ns = (res._startAt[0] - req._startAt[0]) * 1e9 +
+    (res._startAt[1] - req._startAt[1]);
   return ns;
 }
 
@@ -122,11 +124,11 @@ function getLogLevel(req, res) {
  */
 var defaultHandlers = [
   // Request method
-  (req) => ({method: req.method}),
+  req => ({method: req.method}),
   // Path (URL without query params)
-  (req) => ({path: getBaseUrl(req)}),
+  req => ({path: getBaseUrl(req)}),
   // Query params
-  (req) => ({params: getQueryParams(req)}),
+  req => ({params: getQueryParams(req)}),
   // Response size
   (req, res) => ({"response-size": getResponseSize(res)}),
   // Response time (ns)
@@ -134,10 +136,9 @@ var defaultHandlers = [
   // Status code
   (req, res) => ({"status-code": res.statusCode}),
   // Ip address
-  (req) => ({ip: getIp(req)}),
+  req => ({ip: getIp(req)}),
   // Via -- what library/code produced this log?
   () => ({via: "kayvee-middleware"}),
-
   // Kayvee's reserved fields
   // Log level
   (req, res) => ({level: getLogLevel(req, res)}),
@@ -152,7 +153,7 @@ const defaultContextHandlers = [];
 
 function handlerData(handlers, ...args) {
   const data = {};
-  handlers.forEach((h) => {
+  handlers.forEach(h => {
     try {
       const handler_data = h(...args);
       _.extend(data, handler_data);
@@ -221,12 +222,14 @@ for (const func of KayveeLogger.METRICS) {
  *
  */
 
-var formatLine = (options_arg) => {
+var formatLine = options_arg => {
   var options = options_arg || {};
 
   // `source` is the one required field
   if (!options.source) {
-    throw (Error("Missing required config for 'source' in Kayvee middleware 'options'"));
+    throw Error(
+      "Missing required config for 'source' in Kayvee middleware 'options'"
+    );
   }
 
   const router = KayveeLogger.getGlobalRouter();
@@ -238,7 +241,7 @@ var formatLine = (options_arg) => {
     // Add user-configured request headers
     var custom_headers = options.headers || [];
     var header_data = {};
-    custom_headers.forEach((h) => {
+    custom_headers.forEach(h => {
       // Header field names are case insensitive, so let's be consistent
       var lc = h.toLowerCase();
       header_data[lc] = req.headers[lc];
@@ -277,16 +280,24 @@ const defaultContextLoggerOpts = {
 if (process.env.NODE_ENV === "test") {
   module.exports = (clever_options, morgan_options = {skip: null}) => {
     if (clever_options.ignore_dir) {
-      morgan_options.skip = skip_path(clever_options.ignore_dir.directory, clever_options.ignore_dir.path);
+      morgan_options.skip = skip_path(
+        clever_options.ignore_dir.directory,
+        clever_options.ignore_dir.path
+      );
     }
     return morgan(formatLine(clever_options), morgan_options);
   };
   module.exports.ContextLogger = ContextLogger;
 } else {
-  module.exports = (clever_options, context_logger_options = defaultContextLoggerOpts) => {
+  module.exports = (
+    clever_options,
+    context_logger_options = defaultContextLoggerOpts
+  ) => {
     // `source` is the one required field
     if (!clever_options.source) {
-      throw new Error("Missing required config for 'source' in Kayvee middleware 'options'");
+      throw new Error(
+        "Missing required config for 'source' in Kayvee middleware 'options'"
+      );
     }
     const logger = new KayveeLogger(clever_options.source);
     const morgan_options = {
@@ -294,12 +305,19 @@ if (process.env.NODE_ENV === "test") {
       skip: null,
     };
     if (clever_options.ignore_dir) {
-      morgan_options.skip = skip_path(clever_options.ignore_dir.directory, clever_options.ignore_dir.path);
+      morgan_options.skip = skip_path(
+        clever_options.ignore_dir.directory,
+        clever_options.ignore_dir.path
+      );
     }
     const morgan_logger = morgan(formatLine(clever_options), morgan_options);
     return (req, res, next) => {
       if (context_logger_options.enabled) {
-        req.log = new ContextLogger(logger, context_logger_options.handlers, req);
+        req.log = new ContextLogger(
+          logger,
+          context_logger_options.handlers,
+          req
+        );
       }
       morgan_logger(req, res, next);
     };
