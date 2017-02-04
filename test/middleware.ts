@@ -49,7 +49,7 @@ function createServer(server_type, clever_options, morgan_options, fn) {
   var server = null;
   if (server_type === "http") {
     server = http.createServer((req, res) => {
-      logger(req, res, (err) => {
+      logger(req, res, err => {
         // allow req, res alterations
         middle(req, res, () => {
           if (err) {
@@ -59,7 +59,7 @@ function createServer(server_type, clever_options, morgan_options, fn) {
 
           res.setHeader("X-Sent", "true");
           res.setHeader("Content-Length", 12345);
-          res.end((req.connection && req.connection.remoteAddress) || "-");
+          res.end(req.connection && req.connection.remoteAddress || "-");
         });
       });
     });
@@ -74,27 +74,36 @@ function createServer(server_type, clever_options, morgan_options, fn) {
 
     server = app;
   } else {
-    throw (new Error(`unknown server type: ${server_type}`));
+    throw new Error(`unknown server type: ${server_type}`);
   }
 
   return server;
 }
 
-_.each(["http", "express"], (serverType) => {
+_.each(["http", "express"], serverType => {
   describe(`middleware for *${serverType}* server`, () => {
-    it("should throw error on intialization if `source` not set in `options`", (done) => {
-      var options = {};
-      var erroringServer = () => createServer(serverType, options, null, (req, res, next) => {
-        res.setHeader("some-header", "some-header-value");
-        next();
-      });
-      assert.throws(erroringServer, Error, "Expected an error to be thrown");
-      return done();
-    });
+    it(
+      "should throw error on intialization if `source` not set in `options`",
+      done => {
+        var options = {};
+        var erroringServer = () => createServer(serverType, options, null, (
+          req,
+          res,
+          next
+        ) => {
+          res.setHeader("some-header", "some-header-value");
+          next();
+        });
+        assert.throws(erroringServer, Error, "Expected an error to be thrown");
+        return done();
+      }
+    );
 
-    it("should pass default fields", (done) => {
+    it("should pass default fields", done => {
       var cb = afterTest(2, (err, res, line) => {
-        if (err) { return done(err); }
+        if (err) {
+          return done(err);
+        }
         const expected = {
           method: "GET",
           path: "/hello/world",
@@ -114,38 +123,46 @@ _.each(["http", "express"], (serverType) => {
             kv_version: "X.X.X",
             kv_language: "js",
             routes: [
-              {type: "analytics", series: "requests.everything", rule: "all-kv_middleware"},
+              {
+                type: "analytics",
+                series: "requests.everything",
+                rule: "all-kv_middleware",
+              },
             ],
           },
         };
 
         var actual = JSON.parse(line);
-        actual["response-time"] = 99999;     // Masking the two fields that
+        actual["response-time"] = 99999; // Masking the two fields that
         actual._kvmeta.kv_version = "X.X.X"; // are expected to change
 
         assert.deepEqual(actual, expected);
         return done();
       });
 
-      var stream = createLineStream((line) => {
+      var stream = createLineStream(line => {
         cb(null, null, line);
       });
 
       var options = {source: "test-app"};
 
-      var server = createServer(serverType, options, {stream}, (req, res, next) => {
+      var server = createServer(serverType, options, {stream}, (
+        req,
+        res,
+        next
+      ) => {
         res.setHeader("some-header", "some-header-value");
         next();
       });
 
-      request(server)
-      .get("/hello/world?a=1&b=2")
-      .expect(200, cb);
+      request(server).get("/hello/world?a=1&b=2").expect(200, cb);
     });
 
-    it("should set canary flag if env var is present", (done) => {
+    it("should set canary flag if env var is present", done => {
       var cb = afterTest(2, (err, res, line) => {
-        if (err) { return done(err); }
+        if (err) {
+          return done(err);
+        }
         const expected = {
           method: "GET",
           path: "/hello/world",
@@ -165,12 +182,16 @@ _.each(["http", "express"], (serverType) => {
             kv_version: "X.X.X",
             kv_language: "js",
             routes: [
-              {type: "analytics", series: "requests.everything", rule: "all-kv_middleware"},
+              {
+                type: "analytics",
+                series: "requests.everything",
+                rule: "all-kv_middleware",
+              },
             ],
           },
         };
         var actual = JSON.parse(line);
-        actual["response-time"] = 99999;     // Masking the two fields that
+        actual["response-time"] = 99999; // Masking the two fields that
         actual._kvmeta.kv_version = "X.X.X"; // are expected to change
 
         assert.deepEqual(actual, expected);
@@ -179,26 +200,29 @@ _.each(["http", "express"], (serverType) => {
       });
 
       process.env._CANARY = "1";
-      var stream = createLineStream((line) => {
+      var stream = createLineStream(line => {
         cb(null, null, line);
       });
 
       var options = {source: "test-app"};
 
-      var server = createServer(serverType, options, {stream}, (req, res, next) => {
+      var server = createServer(serverType, options, {stream}, (
+        req,
+        res,
+        next
+      ) => {
         res.setHeader("some-header", "some-header-value");
         next();
       });
 
-      request(server)
-      .get("/hello/world?a=1&b=2")
-      .expect(200, cb);
+      request(server).get("/hello/world?a=1&b=2").expect(200, cb);
     });
 
-
-    it("should allow logging user-specified request headers", (done) => {
+    it("should allow logging user-specified request headers", done => {
       var cb = afterTest(2, (err, res, line) => {
-        if (err) { return done(err); }
+        if (err) {
+          return done(err);
+        }
         const expected = {
           "some-header": "some-header-value",
           "another-header": "another-header-value",
@@ -220,19 +244,23 @@ _.each(["http", "express"], (serverType) => {
             kv_version: "X.X.X",
             kv_language: "js",
             routes: [
-              {type: "analytics", series: "requests.everything", rule: "all-kv_middleware"},
+              {
+                type: "analytics",
+                series: "requests.everything",
+                rule: "all-kv_middleware",
+              },
             ],
           },
         };
         var actual = JSON.parse(line);
-        actual["response-time"] = 99999;     // Masking the two fields that
+        actual["response-time"] = 99999; // Masking the two fields that
         actual._kvmeta.kv_version = "X.X.X"; // are expected to change
 
         assert.deepEqual(actual, expected);
         return done();
       });
 
-      var stream = createLineStream((line) => {
+      var stream = createLineStream(line => {
         cb(null, null, line);
       });
 
@@ -241,20 +269,26 @@ _.each(["http", "express"], (serverType) => {
         headers: ["some-header", "another-header"],
       };
 
-      var server = createServer(serverType, options, {stream}, (req, res, next) => {
+      var server = createServer(serverType, options, {stream}, (
+        req,
+        res,
+        next
+      ) => {
         next();
       });
 
       request(server)
-      .get("/hello/world?a=1&b=2")
-      .set("some-header", "some-header-value")
-      .set("another-header", "another-header-value")
-      .expect(200, cb);
+        .get("/hello/world?a=1&b=2")
+        .set("some-header", "some-header-value")
+        .set("another-header", "another-header-value")
+        .expect(200, cb);
     });
 
-    it("should allow logging from user-specified handlers", (done) => {
+    it("should allow logging from user-specified handlers", done => {
       var cb = afterTest(2, (err, res, line) => {
-        if (err) { return done(err); }
+        if (err) {
+          return done(err);
+        }
         const expected = {
           global: 1,
           global2: 2,
@@ -277,19 +311,23 @@ _.each(["http", "express"], (serverType) => {
             kv_version: "X.X.X",
             kv_language: "js",
             routes: [
-              {type: "analytics", series: "requests.everything", rule: "all-kv_middleware"},
+              {
+                type: "analytics",
+                series: "requests.everything",
+                rule: "all-kv_middleware",
+              },
             ],
           },
         };
         var actual = JSON.parse(line);
-        actual["response-time"] = 99999;     // Masking the two fields that
+        actual["response-time"] = 99999; // Masking the two fields that
         actual._kvmeta.kv_version = "X.X.X"; // are expected to change
 
         assert.deepEqual(actual, expected);
         return done();
       });
 
-      var stream = createLineStream((line) => {
+      var stream = createLineStream(line => {
         cb(null, null, line);
       });
 
@@ -298,22 +336,26 @@ _.each(["http", "express"], (serverType) => {
         handlers: [
           () => ({global: 1}),
           () => ({global2: 2}),
-          (req) => ({url: req.url}),
+          req => ({url: req.url}),
         ],
       };
 
-      var server = createServer(serverType, options, {stream}, (req, res, next) => {
+      var server = createServer(serverType, options, {stream}, (
+        req,
+        res,
+        next
+      ) => {
         next();
       });
 
-      request(server)
-      .get("/hello/world?a=1&b=2")
-      .expect(200, cb);
+      request(server).get("/hello/world?a=1&b=2").expect(200, cb);
     });
 
-    it("should not log null or undefined values", (done) => {
+    it("should not log null or undefined values", done => {
       var cb = afterTest(2, (err, res, line) => {
-        if (err) { return done(err); }
+        if (err) {
+          return done(err);
+        }
         const expected = {
           method: "GET",
           path: "/hello/world",
@@ -333,19 +375,23 @@ _.each(["http", "express"], (serverType) => {
             kv_version: "X.X.X",
             kv_language: "js",
             routes: [
-              {type: "analytics", series: "requests.everything", rule: "all-kv_middleware"},
+              {
+                type: "analytics",
+                series: "requests.everything",
+                rule: "all-kv_middleware",
+              },
             ],
           },
         };
         var actual = JSON.parse(line);
-        actual["response-time"] = 99999;     // Masking the two fields that
+        actual["response-time"] = 99999; // Masking the two fields that
         actual._kvmeta.kv_version = "X.X.X"; // are expected to change
 
         assert.deepEqual(actual, expected);
         return done();
       });
 
-      var stream = createLineStream((line) => {
+      var stream = createLineStream(line => {
         cb(null, null, line);
       });
 
@@ -353,81 +399,96 @@ _.each(["http", "express"], (serverType) => {
         source: "test-app",
         // These values should not be logged
         headers: ["this-header-dne"],
-        handlers: [
-          () => ({undef: undefined}),
-        ],
+        handlers: [() => ({undef: undefined})],
       };
 
-      var server = createServer(serverType, options, {stream}, (req, res, next) => {
+      var server = createServer(serverType, options, {stream}, (
+        req,
+        res,
+        next
+      ) => {
         next();
       });
 
-      request(server)
-      .get("/hello/world?a=1&b=2")
-      .expect(200, cb);
+      request(server).get("/hello/world?a=1&b=2").expect(200, cb);
     });
 
-    it("should keep processing if there are broken user-specified handlers", (done) => {
-      var cb = afterTest(2, (err, res, line) => {
-        if (err) { return done(err); }
-        const expected = {
-          global: 1,
-          method: "GET",
-          path: "/hello/world",
-          params: "?a=1&b=2",
-          "response-size": 12345,
-          "response-time": 99999,
-          "status-code": 200,
-          ip: "::ffff:127.0.0.1",
-          via: "kayvee-middleware",
-          level: "info",
-          title: "request-finished",
-          canary: false,
-          deploy_env: "testing",
+    it(
+      "should keep processing if there are broken user-specified handlers",
+      done => {
+        var cb = afterTest(2, (err, res, line) => {
+          if (err) {
+            return done(err);
+          }
+          const expected = {
+            global: 1,
+            method: "GET",
+            path: "/hello/world",
+            params: "?a=1&b=2",
+            "response-size": 12345,
+            "response-time": 99999,
+            "status-code": 200,
+            ip: "::ffff:127.0.0.1",
+            via: "kayvee-middleware",
+            level: "info",
+            title: "request-finished",
+            canary: false,
+            deploy_env: "testing",
+            source: "test-app",
+            _kvmeta: {
+              team: "UNSET",
+              kv_version: "X.X.X",
+              kv_language: "js",
+              routes: [
+                {
+                  type: "analytics",
+                  series: "requests.everything",
+                  rule: "all-kv_middleware",
+                },
+              ],
+            },
+          };
+          var actual = JSON.parse(line);
+          actual["response-time"] = 99999; // Masking the two fields that
+          actual._kvmeta.kv_version = "X.X.X"; // are expected to change
+
+          assert.deepEqual(actual, expected);
+          return done();
+        });
+
+        var stream = createLineStream(line => {
+          cb(null, null, line);
+        });
+
+        var options = {
           source: "test-app",
-          _kvmeta: {
-            team: "UNSET",
-            kv_version: "X.X.X",
-            kv_language: "js",
-            routes: [
-              {type: "analytics", series: "requests.everything", rule: "all-kv_middleware"},
-            ],
-          },
+          handlers: [
+            // This handler should be ignored, because it has an error
+            () => {
+              throw new Error("handler that throws an error");
+            },
+            // This handler should still work
+            () => ({global: 1}),
+          ],
         };
-        var actual = JSON.parse(line);
-        actual["response-time"] = 99999;     // Masking the two fields that
-        actual._kvmeta.kv_version = "X.X.X"; // are expected to change
 
-        assert.deepEqual(actual, expected);
-        return done();
-      });
+        var server = createServer(serverType, options, {stream}, (
+          req,
+          res,
+          next
+        ) => {
+          next();
+        });
 
-      var stream = createLineStream((line) => {
-        cb(null, null, line);
-      });
+        request(server).get("/hello/world?a=1&b=2").expect(200, cb);
+      }
+    );
 
-      var options = {
-        source: "test-app",
-        handlers: [
-          // This handler should be ignored, because it has an error
-          () => { throw (new Error("handler that throws an error")); },
-          // This handler should still work
-          () => ({global: 1}),
-        ],
-      };
-
-      var server = createServer(serverType, options, {stream}, (req, res, next) => {
-        next();
-      });
-
-      request(server)
-      .get("/hello/world?a=1&b=2")
-      .expect(200, cb);
-    });
-
-    it("should allow the user to override `base_handlers`", (done) => {
+    it("should allow the user to override `base_handlers`", done => {
       var cb = afterTest(2, (err, res, line) => {
-        if (err) { return done(err); }
+        if (err) {
+          return done(err);
+        }
         const expected = {
           global: 1,
           base: 1,
@@ -448,32 +509,32 @@ _.each(["http", "express"], (serverType) => {
         return done();
       });
 
-      var stream = createLineStream((line) => {
+      var stream = createLineStream(line => {
         cb(null, null, line);
       });
 
       var options = {
         source: "test-app",
-        base_handlers: [
-          () => ({base: 1}),
-        ],
-        handlers: [
-          () => ({global: 1}),
-        ],
+        base_handlers: [() => ({base: 1})],
+        handlers: [() => ({global: 1})],
       };
 
-      var server = createServer(serverType, options, {stream}, (req, res, next) => {
+      var server = createServer(serverType, options, {stream}, (
+        req,
+        res,
+        next
+      ) => {
         next();
       });
 
-      request(server)
-      .get("/hello/world?a=1&b=2")
-      .expect(200, cb);
+      request(server).get("/hello/world?a=1&b=2").expect(200, cb);
     });
 
-    it("should be robust to handlers that return non Objects", (done) => {
+    it("should be robust to handlers that return non Objects", done => {
       var cb = afterTest(2, (err, res, line) => {
-        if (err) { return done(err); }
+        if (err) {
+          return done(err);
+        }
         const expected = {
           global: 1,
           base: 1,
@@ -494,39 +555,43 @@ _.each(["http", "express"], (serverType) => {
         return done();
       });
 
-      var stream = createLineStream((line) => {
+      var stream = createLineStream(line => {
         cb(null, null, line);
       });
 
       var options = {
         source: "test-app",
         base_handlers: [
-          () => (1),
-          () => ("a"),
-          () => ([]),
+          () => 1,
+          () => "a",
+          () => [],
           () => ({}),
           () => ({base: 1}),
         ],
         handlers: [
-          () => (1),
-          () => ("a"),
-          () => ([]),
+          () => 1,
+          () => "a",
+          () => [],
           () => ({}),
           () => ({global: 1}),
         ],
       };
 
-      var server = createServer(serverType, options, {stream, skip: null}, (req, res, next) => {
+      var server = createServer(serverType, options, {stream, skip: null}, (
+        req,
+        res,
+        next
+      ) => {
         next();
       });
 
-      request(server)
-      .get("/hello/world?a=1&b=2")
-      .expect(200, cb);
+      request(server).get("/hello/world?a=1&b=2").expect(200, cb);
     });
-    it("allows ignoring requests to files in a static directory", (done) => {
+    it("allows ignoring requests to files in a static directory", done => {
       var cb = afterTest(2, (err, res, line) => {
-        if (err) { return done(err); }
+        if (err) {
+          return done(err);
+        }
         const expected = {
           method: "GET",
           path: "/hello/world",
@@ -546,43 +611,49 @@ _.each(["http", "express"], (serverType) => {
             kv_version: "X.X.X",
             kv_language: "js",
             routes: [
-              {type: "analytics", series: "requests.everything", rule: "all-kv_middleware"},
+              {
+                type: "analytics",
+                series: "requests.everything",
+                rule: "all-kv_middleware",
+              },
             ],
           },
         };
         var actual = JSON.parse(line);
-        actual["response-time"] = 99999;     // Masking the two fields that
+        actual["response-time"] = 99999; // Masking the two fields that
         actual._kvmeta.kv_version = "X.X.X"; // are expected to change
 
         assert.deepEqual(actual, expected);
         return done();
       });
 
-      var stream = createLineStream((line) => {
+      var stream = createLineStream(line => {
         cb(null, null, line);
       });
 
       var options = {
         source: "test-app",
         ignore_dir: {
-          directory: `${__dirname}/static`,
+          directory: (
+            `${__dirname}/static`
+          ),
           // path: "/", defaults to /
         },
       };
 
-      var server = createServer(serverType, options, {stream}, (req, res, next) => {
+      var server = createServer(serverType, options, {stream}, (
+        req,
+        res,
+        next
+      ) => {
         next();
       });
 
       // this line is never logged
-      request(server)
-      .get("/empty.css")
-      .expect(200);
+      request(server).get("/empty.css").expect(200);
 
       // this one is logged
-      request(server)
-      .get("/hello/world")
-      .expect(200, cb);
+      request(server).get("/hello/world").expect(200, cb);
     });
   });
 });

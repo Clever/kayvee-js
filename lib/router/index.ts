@@ -1,8 +1,8 @@
-var fs           = require("fs");
-var jsonschema   = require("jsonschema");
-var schema       = require("./schema_definitions");
-var yaml         = require("js-yaml");
-var _            = require("underscore");
+var fs = require("fs");
+var jsonschema = require("jsonschema");
+var schema = require("./schema_definitions");
+var yaml = require("js-yaml");
+var _ = require("underscore");
 
 var packageJson = require("../../package.json");
 const kvVersion = packageJson.version;
@@ -15,7 +15,7 @@ const reFieldTokens = new RegExp("%\\{(.+?)\\}", "g");
 // Removing redundancy and inlining this function some how makes performance worst.
 function substituteEnvVars(obj, subber) {
   const rtn = {};
-  const replacer = (s) => s.replace(reEnvvarTokens, (__, p1) => subber(p1));
+  const replacer = s => s.replace(reEnvvarTokens, (__, p1) => subber(p1));
 
   for (const key in obj) {
     const val = obj[key];
@@ -58,7 +58,9 @@ function fieldMatches(obj, field, values) {
   }
 
   for (let i = 0; i < values.length; i++) {
-    if (values[i] === val) { return true; }
+    if (values[i] === val) {
+      return true;
+    }
   }
 
   return false;
@@ -74,7 +76,7 @@ class Rule {
     this.matchers = matchers;
 
     const envMissing = [];
-    this.output = substituteEnvVars(output, (k) => {
+    this.output = substituteEnvVars(output, k => {
       const val = process.env[k];
       if (val == null) {
         envMissing.push(k);
@@ -86,12 +88,12 @@ class Rule {
       throw new Error(`Missing env var(s): ${envMissing.join(", ")}`);
     }
 
-    Object.keys(matchers).forEach((field) => {
+    Object.keys(matchers).forEach(field => {
       const fieldVals = matchers[field];
       if (fieldVals.indexOf("*") !== -1 && fieldVals.length > 1) {
         throw new Error(
           `Invalid matcher values in ${name}.${field}.\n` +
-          "Wildcard matcher can't co-exist with other matchers."
+            "Wildcard matcher can't co-exist with other matchers."
         );
       }
     });
@@ -106,7 +108,9 @@ class Rule {
   // matches returns true if `msg` matches against this rule
   matches(msg) {
     for (const field in this.matchers) {
-      if (!fieldMatches(msg, field, this.matchers[field])) { return false; }
+      if (!fieldMatches(msg, field, this.matchers[field])) {
+        return false;
+      }
     }
 
     return true;
@@ -116,7 +120,7 @@ class Rule {
   outputFor(msg) {
     const rtn = {};
     const subst = (__, k) => msg[k] || deepKey(msg, k) || "KEY_NOT_FOUND";
-    const replacer = (s) => s.replace(reFieldTokens, subst);
+    const replacer = s => s.replace(reFieldTokens, subst);
 
     for (const key in this.output) {
       const val = this.output[key];
@@ -148,7 +152,7 @@ function validateKVConfig(config) {
 
   return {
     valid: results.valid,
-    errors: results.errors.map((err) => err.stack),
+    errors: results.errors.map(err => err.stack),
   };
 }
 
@@ -169,7 +173,8 @@ function parseConfig(fileString) {
   }
   try {
     const rulesObj = _.mapObject(
-      config.routes, (elem, name) => new Rule(name, elem.matchers, elem.output)
+      config.routes,
+      (elem, name) => new Rule(name, elem.matchers, elem.output)
     );
     const rules = _.values(rulesObj);
     return {valid: true, rules, errors: []};
