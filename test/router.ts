@@ -35,6 +35,15 @@ routes:
       dimensions: ["baz"]
       stat_type: "gauge"
       value_field: "hello"
+  rule-four:
+    matchers:
+      foo.bar: ["multiple", "matches"]
+      baz: ["whatever"]
+    output:
+      type: "alerts"
+      series: "other-series"
+      dimensions: []
+      stat_type: "gauge"
 `;
       const expected = [
         new router.Rule("rule-one", {title: ["authorize-app"]}, {
@@ -57,6 +66,13 @@ routes:
           dimensions: ["baz"],
           stat_type: "gauge",
           value_field: "hello",
+        }),
+        new router.Rule("rule-four", {"foo.bar": ["multiple", "matches"], baz: ["whatever"]}, {
+          type: "alerts",
+          series: "other-series",
+          dimensions: [],
+          stat_type: "gauge",
+          value_field: "value",
         }),
       ];
       const actual = new router.Router();
