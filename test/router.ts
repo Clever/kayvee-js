@@ -44,6 +44,15 @@ routes:
       series: "other-series"
       dimensions: []
       stat_type: "gauge"
+  rule-five:
+    matchers:
+      foo.bar: [true]
+      baz: [false]
+    output:
+      type: "alerts"
+      series: "other-series"
+      dimensions: []
+      stat_type: "gauge"
 `;
       const expected = [
         new router.Rule("rule-one", {title: ["authorize-app"]}, {
@@ -74,6 +83,13 @@ routes:
           stat_type: "gauge",
           value_field: "value",
         }),
+        new router.Rule("rule-five", {"foo.bar": [true], baz: [false]}, {
+          type: "alerts",
+          series: "other-series",
+          dimensions: [],
+          stat_type: "gauge",
+          value_field: "value",
+        }),
       ];
       const actual = new router.Router();
       actual._loadConfigString(conf);
@@ -96,7 +112,7 @@ routes:
       const actual = new router.Router();
       assert.doesNotThrow(() => actual._loadConfigString(conf));
 
-      for (const invalidVal of ["5", "true", "[]", "{}"]) {
+      for (const invalidVal of ["5", "[]", "{}"]) {
         const invalidConf = confTmpl(invalidVal);
         assert.throws(() => actual._loadConfigString(invalidConf));
       }
