@@ -169,11 +169,17 @@ class Logger {
       return;
     }
     const data = assign({level: logLvl}, this.globals, metadata, userdata);
+
+    let routes = {};
     if (this.logRouter) {
-      data._kvmeta = this.logRouter.route(data);
+      routes = this.logRouter.route(data);
     } else if (globalRouter) {
-      data._kvmeta = globalRouter.route(data);
+      routes = globalRouter.route(data);
     }
+    if (Object.keys(routes).length > 0) {
+      data._kvmeta = routes;
+    }
+
     this.logWriter(this.formatter(data));
   }
 }
