@@ -12,7 +12,7 @@ routes:
       title: ["authorize-app"]
     output:
       type: "notifications"
-      channel: "#team"
+      channel: "%{foo.bar}"
       icon: ":rocket:"
       message: "authorized %{foo.bar} in \${SCHOOL}"
       user: "@fishman"
@@ -57,7 +57,7 @@ routes:
       const expected = [
         new router.Rule("rule-one", {title: ["authorize-app"]}, {
           type: "notifications",
-          channel: "#team",
+          channel: "%{foo.bar}",
           icon: ":rocket:",
           message: "authorized %{foo.bar} in Hogwarts",
           user: "@fishman",
