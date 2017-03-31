@@ -46,6 +46,10 @@ class Logger {
     this.globals = {};
     this.globals.source = source;
     this.logWriter = output;
+
+    if (process.env._DEPLOY_ENV) {
+      this.globals.deploy_env = process.env._DEPLOY_ENV;
+    }
   }
 
   setRouter(r) {
