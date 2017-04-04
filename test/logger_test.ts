@@ -350,9 +350,9 @@ describe("logger_test", () => {
 
 describe("mockRouting", () => {
   it("can override routing from setGlobalRouting, and captures routed logs", () => {
+    const logObj = new KayveeLogger("test-source");
     KayveeLogger.mockRouting(kvdone => {
       KayveeLogger.setGlobalRouting("test/kvconfig.yml");
-      const logObj = new KayveeLogger("test-source");
       logObj.info("foo-title");
       const ruleMatches = kvdone();
 

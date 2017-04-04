@@ -194,7 +194,7 @@ module.exports.mockRouting = (cb) => {
 
   const ruleMatches = {};
 
-  Logger.prototype._logWithLevel = (logLvl, metadata, userdata) => {
+  Logger.prototype._logWithLevel = function (logLvl, metadata, userdata) {
     const formatter = this.formatter;
     const logWriter = this.logWriter;
 
