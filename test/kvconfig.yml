@@ -8,6 +8,7 @@ routes:
   rule-two:
     matchers:
       title: [ "foo-title" ]
+      deploy_env: [ "testing" ]
     output:
       type: "analytics"
       series: "requests.everything"
