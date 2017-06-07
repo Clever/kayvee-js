@@ -95,6 +95,7 @@ To ensure that your log-routing rules are correct, use `mockRouting` to temporar
 const assert = require("assert");
 
 const kv = require("../kayvee-js");
+kv.setGlobalRouting("./kvconfig.yml");
 
 const main = require("./main");
 
