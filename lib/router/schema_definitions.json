@@ -1,5 +1,5 @@
 {
-  "description": "Last modified: 02/08/2017",
+  "description": "Last modified: 06/25/2017",
   "required": ["routes"],
   "properties": {
     "routes": { "$ref": "#/definitions/routes" }
@@ -36,7 +36,8 @@
         { "$ref": "#/definitions/metricsOutput" },
         { "$ref": "#/definitions/alertsOutput" },
         { "$ref": "#/definitions/analyticsOutput" },
-        { "$ref": "#/definitions/notificationsOutput" }
+        { "$ref": "#/definitions/notificationsOutput" },
+        { "$ref": "#/definitions/visualizationsOutput" }
       ]
     },
     "metricsOutput": {
@@ -123,6 +124,18 @@
         "icon": { "$ref": "#/definitions/envVarSubstValue" },
         "message": { "$ref": "#/definitions/kvSubstValue" },
         "user": { "$ref": "#/definitions/envVarSubstValue" }
+      }
+    },
+    "visualizationsOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "topic"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "pattern": "^visualizations$"
+        },
+        "topic": { "$ref": "#/definitions/kvSubstValue" }
       }
     },
     "flatValue": {
