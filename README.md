@@ -216,7 +216,7 @@ The middleware can be added most simply via
 var kayvee = require('kayvee');
 
 var app = express();
-app.use(kayvee.middleware({"source":"my-app"));
+app.use(kayvee.middleware({"source":"my-app"}));
 ```
 
 Note that `source` is a required field, since it clarifies which application is emitting the logs.
