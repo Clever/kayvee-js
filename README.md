@@ -109,7 +109,7 @@ kv.mockRouting(kvdone => { // Don't nest kv.mockRouting calls!!
 });
 ```
 
-For more information on log routing see https://clever.atlassian.net/wiki/display/ENG/Log+Routing
+For more information on log routing see https://clever.atlassian.net/wiki/spaces/ENG/pages/90570917/Application+Log+Routing
 
 ## Testing
 
