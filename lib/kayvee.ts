@@ -1,6 +1,7 @@
 var _ = require("underscore");
 
 const deploy_env = process.env._DEPLOY_ENV;
+const workflow_id = process.env._EXECUTION_NAME;
 
 // Encode errors to strings instead of toJSON()
 function replaceErrors(key, value) {
@@ -13,8 +14,8 @@ function replaceErrors(key, value) {
 
 // Converts a map to a string space-delimited key=val pairs
 function format(data) {
-  if (deploy_env) {
-    return JSON.stringify(_.extend({deploy_env}, data), replaceErrors);
+  if (deploy_env || workflow_id) {
+    return JSON.stringify(_.extend({deploy_env, workflow_id}, data), replaceErrors);
   }
   return JSON.stringify(data, replaceErrors);
 }

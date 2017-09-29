@@ -50,6 +50,9 @@ class Logger {
     if (process.env._DEPLOY_ENV) {
       this.globals.deploy_env = process.env._DEPLOY_ENV;
     }
+    if (process.env._EXECUTION_NAME) {
+      this.globals.workflow_id = process.env._EXECUTION_NAME;
+    }
   }
 
   setRouter(r) {
