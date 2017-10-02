@@ -108,7 +108,7 @@ _.each(["http", "express"], (serverType) => {
           title: "request-finished",
           canary: false,
           deploy_env: "testing",
-          workflow_id: "abc",
+          wf_id: "abc",
           source: "test-app",
           _kvmeta: {
             team: "UNSET",
@@ -160,7 +160,7 @@ _.each(["http", "express"], (serverType) => {
           title: "request-finished",
           canary: true,
           deploy_env: "testing",
-          workflow_id: "abc",
+          wf_id: "abc",
           source: "test-app",
           _kvmeta: {
             team: "UNSET",
@@ -216,7 +216,7 @@ _.each(["http", "express"], (serverType) => {
           title: "request-finished",
           canary: false,
           deploy_env: "testing",
-          workflow_id: "abc",
+          wf_id: "abc",
           source: "test-app",
           _kvmeta: {
             team: "UNSET",
@@ -274,7 +274,7 @@ _.each(["http", "express"], (serverType) => {
           title: "request-finished",
           canary: false,
           deploy_env: "testing",
-          workflow_id: "abc",
+          wf_id: "abc",
           source: "test-app",
           _kvmeta: {
             team: "UNSET",
@@ -331,7 +331,7 @@ _.each(["http", "express"], (serverType) => {
           title: "request-finished",
           canary: false,
           deploy_env: "testing",
-          workflow_id: "abc",
+          wf_id: "abc",
           source: "test-app",
           _kvmeta: {
             team: "UNSET",
@@ -389,7 +389,7 @@ _.each(["http", "express"], (serverType) => {
           title: "request-finished",
           canary: false,
           deploy_env: "testing",
-          workflow_id: "abc",
+          wf_id: "abc",
           source: "test-app",
           _kvmeta: {
             team: "UNSET",
@@ -438,7 +438,7 @@ _.each(["http", "express"], (serverType) => {
           global: 1,
           base: 1,
           deploy_env: "testing",
-          workflow_id: "abc",
+          wf_id: "abc",
           source: "test-app",
           _kvmeta: {
             team: "UNSET",
@@ -486,7 +486,7 @@ _.each(["http", "express"], (serverType) => {
           base: 1,
           source: "test-app",
           deploy_env: "testing",
-          workflow_id: "abc",
+          wf_id: "abc",
           _kvmeta: {
             team: "UNSET",
             kv_version: "X.X.X",
@@ -548,7 +548,7 @@ _.each(["http", "express"], (serverType) => {
           title: "request-finished",
           canary: false,
           deploy_env: "testing",
-          workflow_id: "abc",
+          wf_id: "abc",
           source: "test-app",
           _kvmeta: {
             team: "UNSET",

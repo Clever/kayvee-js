@@ -51,7 +51,7 @@ class Logger {
       this.globals.deploy_env = process.env._DEPLOY_ENV;
     }
     if (process.env._EXECUTION_NAME) {
-      this.globals.workflow_id = process.env._EXECUTION_NAME;
+      this.globals.wf_id = process.env._EXECUTION_NAME;
     }
   }
 

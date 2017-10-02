@@ -10,7 +10,7 @@ describe("kayvee", () => {
       it(spec.title, () => {
         const actual = kv.format(spec.input.data);
         const expected = spec.output;
-        assert.deepEqual(JSON.parse(actual), _.extend({deploy_env: "testing", workflow_id: "abc"},
+        assert.deepEqual(JSON.parse(actual), _.extend({deploy_env: "testing", wf_id: "abc"},
                                                       JSON.parse(expected)));
       });
     });
@@ -21,7 +21,7 @@ describe("kayvee", () => {
       const actual = kv.format({err: Error("An Error Message")});
       const expected = {
         deploy_env: "testing",
-        workflow_id: "abc",
+        wf_id: "abc",
         err: "Error: An Error Message",
       };
       assert.deepEqual(JSON.parse(actual), expected);
@@ -33,7 +33,7 @@ describe("kayvee", () => {
       it(spec.title, () => {
         const actual = kv.formatLog(spec.input.source, spec.input.level, spec.input.title, spec.input.data);
         const expected = spec.output;
-        assert.deepEqual(JSON.parse(actual), _.extend({deploy_env: "testing", workflow_id: "abc"},
+        assert.deepEqual(JSON.parse(actual), _.extend({deploy_env: "testing", wf_id: "abc"},
                                                       JSON.parse(expected)));
       });
     });

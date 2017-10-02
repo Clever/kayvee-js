@@ -15,7 +15,11 @@ function replaceErrors(key, value) {
 // Converts a map to a string space-delimited key=val pairs
 function format(data) {
   if (deploy_env || workflow_id) {
-    return JSON.stringify(_.extend({deploy_env, workflow_id}, data), replaceErrors);
+    const extras: any = {};
+    if (deploy_env) { extras.deploy_env = deploy_env; }
+    if (workflow_id) { extras.wf_id = workflow_id; }
+
+    return JSON.stringify(_.extend(extras, data), replaceErrors);
   }
   return JSON.stringify(data, replaceErrors);
 }

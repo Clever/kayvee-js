@@ -56,12 +56,12 @@ describe("logger_test", () => {
       // Invalid log levels will default to debug
       logObj.setLogLevel("invalidloglevel");
       logObj.debug("testlogdebug");
-      let expected = `{"deploy_env": "testing", "workflow_id": "abc", "source": "logger-tester", "level": "${KayveeLogger.Debug}", "title": "testlogdebug"}`;
+      let expected = `{"deploy_env": "testing", "wf_id": "abc", "source": "logger-tester", "level": "${KayveeLogger.Debug}", "title": "testlogdebug"}`;
       assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
 
       logObj.setLogLevel("sometest");
       logObj.info("testloginfo");
-      expected = `{"deploy_env": "testing", "workflow_id": "abc", "source": "logger-tester", "level": "${KayveeLogger.Info}", "title": "testloginfo"}`;
+      expected = `{"deploy_env": "testing", "wf_id": "abc", "source": "logger-tester", "level": "${KayveeLogger.Info}", "title": "testloginfo"}`;
       assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
     });
   });
@@ -69,12 +69,12 @@ describe("logger_test", () => {
     it("test debug function", () => {
       logObj.debug("testlogdebug");
       const expected =
-        `{"deploy_env": "testing", "workflow_id": "abc", "source": "logger-tester", "level": "${KayveeLogger.Debug}", "title": "testlogdebug"}`;
+        `{"deploy_env": "testing", "wf_id": "abc", "source": "logger-tester", "level": "${KayveeLogger.Debug}", "title": "testlogdebug"}`;
       assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
     });
     it("test debugD function", () => {
       logObj.debugD("testlogdebug", {key1: "val1", key2: "val2"});
-      const expected = `{"deploy_env": "testing", "workflow_id": "abc", "source": "logger-tester",
+      const expected = `{"deploy_env": "testing", "wf_id": "abc", "source": "logger-tester",
 "level": "${KayveeLogger.Debug}", "title": "testlogdebug","key1": "val1", "key2": "val2"}`;
       assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
     });
@@ -83,12 +83,12 @@ describe("logger_test", () => {
   describe(".info", () => {
     it("test info function", () => {
       logObj.info("testloginfo");
-      const expected = `{"deploy_env": "testing", "workflow_id": "abc", "source": "logger-tester", "level": "${KayveeLogger.Info}", "title": "testloginfo"}`;
+      const expected = `{"deploy_env": "testing", "wf_id": "abc", "source": "logger-tester", "level": "${KayveeLogger.Info}", "title": "testloginfo"}`;
       assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
     });
     it("test infoD function", () => {
       logObj.infoD("testloginfo", {key1: "val1", key2: "val2"});
-      const expected = `{"deploy_env": "testing", "workflow_id": "abc", "source": "logger-tester",
+      const expected = `{"deploy_env": "testing", "wf_id": "abc", "source": "logger-tester",
 "level": "${KayveeLogger.Info}", "title": "testloginfo","key1": "val1", "key2": "val2"}`;
       assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
     });
@@ -98,12 +98,12 @@ describe("logger_test", () => {
     it("test warn function", () => {
       logObj.warn("testlogwarning");
       const expected =
-        `{"deploy_env": "testing", "workflow_id": "abc", "source": "logger-tester", "level": "${KayveeLogger.Warning}", "title": "testlogwarning"}`;
+        `{"deploy_env": "testing", "wf_id": "abc", "source": "logger-tester", "level": "${KayveeLogger.Warning}", "title": "testlogwarning"}`;
       assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
     });
     it("test warnD function", () => {
       logObj.warnD("testlogwarning", {key1: "val1", key2: "val2"});
-      const expected = `{"deploy_env": "testing", "workflow_id": "abc", "source": "logger-tester",
+      const expected = `{"deploy_env": "testing", "wf_id": "abc", "source": "logger-tester",
 "level": "${KayveeLogger.Warning}", "title": "testlogwarning","key1": "val1", "key2": "val2"}`;
       assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
     });
@@ -113,12 +113,12 @@ describe("logger_test", () => {
     it("test error function", () => {
       logObj.error("testlogerror");
       const expected =
-        `{"deploy_env": "testing", "workflow_id": "abc", "source": "logger-tester", "level": "${KayveeLogger.Error}", "title": "testlogerror"}`;
+        `{"deploy_env": "testing", "wf_id": "abc", "source": "logger-tester", "level": "${KayveeLogger.Error}", "title": "testlogerror"}`;
       assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
     });
     it("test errorD function", () => {
       logObj.errorD("testlogerror", {key1: "val1", key2: "val2"});
-      const expected = `{"deploy_env": "testing", "workflow_id": "abc", "source": "logger-tester",
+      const expected = `{"deploy_env": "testing", "wf_id": "abc", "source": "logger-tester",
 "level": "${KayveeLogger.Error}", "title": "testlogerror","key1": "val1", "key2": "val2"}`;
       assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
     });
@@ -128,12 +128,12 @@ describe("logger_test", () => {
     it("test critical function", () => {
       logObj.critical("testlogcritical");
       const expected =
-        `{"deploy_env": "testing", "workflow_id": "abc", "source": "logger-tester", "level": "${KayveeLogger.Critical}", "title": "testlogcritical"}`;
+        `{"deploy_env": "testing", "wf_id": "abc", "source": "logger-tester", "level": "${KayveeLogger.Critical}", "title": "testlogcritical"}`;
       assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
     });
     it("test criticalD function", () => {
       logObj.criticalD("testlogcritical", {key1: "val1", key2: "val2"});
-      const expected = `{"deploy_env": "testing", "workflow_id": "abc", "source": "logger-tester",
+      const expected = `{"deploy_env": "testing", "wf_id": "abc", "source": "logger-tester",
 "level": "${KayveeLogger.Critical}", "title": "testlogcritical","key1": "val1", "key2": "val2"}`;
       assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
     });
@@ -142,13 +142,13 @@ describe("logger_test", () => {
   describe(".counter", () => {
     it("test counter function", () => {
       logObj.counter("testlogcounter");
-      const expected = `{"deploy_env": "testing", "workflow_id": "abc", "source": "logger-tester",
+      const expected = `{"deploy_env": "testing", "wf_id": "abc", "source": "logger-tester",
 "level": "${KayveeLogger.Info}", "title": "testlogcounter", "type": "counter", "value": 1}`;
       assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
     });
     it("test counterD function", () => {
       logObj.counterD("testlogcounter", 2, {key1: "val1", key2: "val2"});
-      const expected = `{"deploy_env": "testing", "workflow_id": "abc", "source": "logger-tester",
+      const expected = `{"deploy_env": "testing", "wf_id": "abc", "source": "logger-tester",
 "level": "${KayveeLogger.Info}", "title": "testlogcounter","type": "counter", "value": 2,"key1": "val1",` +
         " \"key2\": \"val2\"}";
       assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
@@ -157,7 +157,7 @@ describe("logger_test", () => {
       logObj.counterD("testlogcounter", 2, {key1: "val1", key2: "val2", value: 18});
       const expected = {
         deploy_env: "testing",
-        workflow_id: "abc",
+        wf_id: "abc",
         source: "logger-tester",
         level: KayveeLogger.Info,
         title: "testlogcounter",
@@ -173,13 +173,13 @@ describe("logger_test", () => {
   describe(".gauge", () => {
     it("test gauge function", () => {
       logObj.gauge("testloggauge", 0);
-      const expected = `{"deploy_env": "testing", "workflow_id": "abc", "source": "logger-tester",
+      const expected = `{"deploy_env": "testing", "wf_id": "abc", "source": "logger-tester",
 "level": "${KayveeLogger.Info}", "title": "testloggauge", "type": "gauge", "value": 0}`;
       assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
     });
     it("test gaugeD function", () => {
       logObj.gaugeD("testloggauge", 4, {key1: "val1", key2: "val2"});
-      const expected = `{"deploy_env": "testing", "workflow_id": "abc", "source": "logger-tester",
+      const expected = `{"deploy_env": "testing", "wf_id": "abc", "source": "logger-tester",
 "level": "${KayveeLogger.Info}", "title": "testloggauge", "type": "gauge", "value": 4, "key1": "val1", "key2": "val2"}`;
       assert.deepEqual(JSON.parse(sample), JSON.parse(expected));
     });
@@ -187,7 +187,7 @@ describe("logger_test", () => {
       logObj.gaugeD("testloggauge", 4, {key1: "val1", key2: "val2", value: 18});
       const expected = {
         deploy_env: "testing",
-        workflow_id: "abc",
+        wf_id: "abc",
         source: "logger-tester",
         level: KayveeLogger.Info,
         title: "testloggauge",
@@ -242,7 +242,7 @@ describe("logger_test", () => {
 
       const output = {
         deploy_env: "testing",
-        workflow_id: "abc",
+        wf_id: "abc",
         fun: "boo",
         level: "info",
         obj:  {
@@ -315,7 +315,7 @@ describe("logger_test", () => {
       logObj.warnD("global-override", {source: "overrided"});
       const output = {
         deploy_env: "testing",
-        workflow_id: "abc",
+        wf_id: "abc",
         title: "global-override",
         source: "overrided",
         level: "warning",
@@ -348,11 +348,11 @@ describe("logger_test", () => {
       logObj2.info("testloginfo");
 
       const loggerExpected =
-        `{"deploy_env": "testing", "workflow_id": "abc", "source": "logger-tester", "level": "${KayveeLogger.Warning}", "title": "testlogwarning"}`;
+        `{"deploy_env": "testing", "wf_id": "abc", "source": "logger-tester", "level": "${KayveeLogger.Warning}", "title": "testlogwarning"}`;
       assert.deepEqual(JSON.parse(sample), JSON.parse(loggerExpected));
 
       const logger2Expected =
-        `{"deploy_env": "testing", "workflow_id": "abc", "source": "logger-tester2", "level": "${KayveeLogger.Info}", "title": "testloginfo"}`;
+        `{"deploy_env": "testing", "wf_id": "abc", "source": "logger-tester2", "level": "${KayveeLogger.Info}", "title": "testloginfo"}`;
       assert.deepEqual(JSON.parse(output2), JSON.parse(logger2Expected));
     });
   });
