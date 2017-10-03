@@ -10,7 +10,8 @@ build: clean
 test: lint test/tests.json $(TESTS)
 
 $(TESTS):
-	_DEPLOY_ENV=testing DEBUG=us:progress NODE_ENV=test node_modules/mocha/bin/mocha --require ts-node/register --timeout 60000 test/$@.ts
+	_DEPLOY_ENV=testing _EXECUTION_NAME=abc DEBUG=us:progress NODE_ENV=test \
+	node_modules/mocha/bin/mocha --require ts-node/register --timeout 60000 test/$@.ts
 
 benchmarks: build benchmark-data
 	node benchmarks/routing.js
