@@ -4,6 +4,7 @@ var router = require("../router");
 
 
 var LEVELS = {
+  Trace:    "trace",
   Debug:    "debug",
   Info:     "info",
   Warning:  "warning",
@@ -12,11 +13,12 @@ var LEVELS = {
 };
 
 var LOG_LEVEL_ENUM = {
-  debug:    0,
-  info:     1,
-  warning:  2,
-  error:    3,
-  critical: 4,
+  trace:    0,
+  debug:    1,
+  info:     2,
+  warning:  3,
+  error:    4,
+  critical: 5,
 };
 
 const assign = Object.assign || _.assign; // Use the faster Object.assign if possible
@@ -97,6 +99,10 @@ class Logger {
     return this.logWriter;
   }
 
+  trace(title) {
+    this.traceD(title, {});
+  }
+
   debug(title) {
     this.debugD(title, {});
   }
@@ -123,6 +129,12 @@ class Logger {
 
   gauge(title, value) {
     this.gaugeD(title, value, {});
+  }
+
+  traceD(title, data) {
+    this._logWithLevel(LEVELS.Trace, {
+      title,
+    }, data);
   }
 
   debugD(title, data) {
@@ -227,5 +239,5 @@ module.exports.mockRouting = (cb) => {
   cb(done);
 };
 _.extend(module.exports, LEVELS);
-module.exports.LEVELS = ["debug", "info", "warn", "error", "critical"];
+module.exports.LEVELS = ["trace", "debug", "info", "warn", "error", "critical"];
 module.exports.METRICS = ["counter", "gauge"];
