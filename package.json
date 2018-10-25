@@ -5,7 +5,7 @@
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/Clever/kayvee-node"
+    "url": "git://github.com/Clever/kayvee-js"
   },
   "dependencies": {
     "js-yaml": "^3.6.1",
@@ -36,7 +36,7 @@
   "author": "Clever <tech-notify@clever.com>",
   "license": "BSD-2-Clause",
   "bugs": {
-    "url": "https://github.com/Clever/kayvee-node/issues"
+    "url": "https://github.com/Clever/kayvee-js/issues"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
