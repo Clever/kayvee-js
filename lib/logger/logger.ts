@@ -55,6 +55,15 @@ class Logger {
     if (process.env._EXECUTION_NAME) {
       this.globals.wf_id = process.env._EXECUTION_NAME;
     }
+    if (process.env._POD_ID) {
+      this.globals["pod-id"] = process.env._POD_ID;
+    }
+    if (process.env._POD_REGION) {
+      this.globals["pod-region"] = process.env._POD_REGION;
+    }
+    if (process.env._POD_ACCOUNT) {
+      this.globals["pod-account"] = process.env._POD_ACCOUNT;
+    }
   }
 
   setRouter(r) {
