@@ -58,6 +58,9 @@ class Logger {
     if (process.env._POD_ID) {
       this.globals["pod-id"] = process.env._POD_ID;
     }
+    if (process.env._POD_SHORTNAME) {
+      this.globals["pod-shortname"] = process.env._POD_SHORTNAME;
+    }
     if (process.env._POD_REGION) {
       this.globals["pod-region"] = process.env._POD_REGION;
     }
