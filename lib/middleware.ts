@@ -145,7 +145,9 @@ var defaultHandlers = [
   // -> Gets passed in among `options` during library initialization
   // Title
   () => ({title: "request-finished"}),
-  () => ({canary: process.env._CANARY === "1"}),
+  // During the transition to pods, let's keep the canary field accurate
+  // whether it's in the canary pod or a canary container in homepod
+  () => ({canary: (process.env._CANARY === "1") || (process.env._POD_SHORTNAME.includes("-canary"))}),
 ];
 
 const defaultContextHandlers = [];

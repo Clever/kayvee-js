@@ -64,6 +64,9 @@ class Logger {
     if (process.env._POD_ACCOUNT) {
       this.globals["pod-account"] = process.env._POD_ACCOUNT;
     }
+    if (process.env._POD_SHORTNAME) {
+      this.globals["pod-shortname"] = process.env._POD_SHORTNAME;
+    }
   }
 
   setRouter(r) {

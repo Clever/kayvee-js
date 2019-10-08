@@ -5,6 +5,7 @@ const workflow_id = process.env._EXECUTION_NAME;
 const pod_id = process.env._POD_ID;
 const pod_region = process.env._POD_REGION;
 const pod_account = process.env._POD_ACCOUNT;
+const pod_shortname = process.env._POD_SHORTNAME;
 
 // Encode errors to strings instead of toJSON()
 function replaceErrors(key, value) {
@@ -24,6 +25,7 @@ function format(data) {
     if (pod_id) { extras["pod-id"] = pod_id; }
     if (pod_region) { extras["pod-region"] = pod_region; }
     if (pod_account) { extras["pod-account"] = pod_account; }
+    if (pod_shortname) { extras["pod-shortname"] = pod_shortname; }
 
     return JSON.stringify(_.extend(extras, data), replaceErrors);
   }
