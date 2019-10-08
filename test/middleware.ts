@@ -591,7 +591,7 @@ _.each(["http", "express"], (serverType) => {
         const expected = {
           method: "GET",
           path: "/hello/world",
-          params: "",
+          params: null,
           "response-size": 12345,
           "response-time": 99999,
           "status-code": 200,
