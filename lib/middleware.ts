@@ -117,6 +117,13 @@ function getLogLevel(req, res) {
   return result;
 }
 
+/**
+ * Get canary status
+ */
+function isCanary() {
+  return (process.env._CANARY === "1") || ("_POD_SHORTNAME" in process.env && process.env._POD_SHORTNAME.includes("-canary"));
+}
+
 /*
  * Default handlers
  */
@@ -145,7 +152,9 @@ var defaultHandlers = [
   // -> Gets passed in among `options` during library initialization
   // Title
   () => ({title: "request-finished"}),
-  () => ({canary: process.env._CANARY === "1"}),
+  // During the transition to pods, let's keep the canary field accurate
+  // whether it's in the canary pod or a canary container in homepod
+  () => ({canary: isCanary()}),
 ];
 
 const defaultContextHandlers = [];
