@@ -261,8 +261,8 @@ var formatLine = (options_arg) => {
     var base_handlers = options.base_handlers || defaultHandlers;
     base_handlers = base_handlers.concat([() => ({source: options.source})]);
 
-    // Execute custom-handlers THEN base-handlers
-    const all_handlers = custom_handlers.concat(base_handlers);
+    // Execute base-handlers THEN custom-handlers
+    const all_handlers = base_handlers.concat(custom_handlers);
     _.extend(data, handlerData(all_handlers, req, res));
 
     if (router) {
