@@ -8,6 +8,8 @@
     "url": "git://github.com/Clever/kayvee-js"
   },
   "dependencies": {
+    "async-mutex": "^0.2.1",
+    "aws-sdk": "^2.655.0",
     "js-yaml": "^3.6.1",
     "jsonschema": "^1.1.0",
     "morgan": "^1.7.0",
