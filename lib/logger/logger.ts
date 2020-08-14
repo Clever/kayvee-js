@@ -49,6 +49,9 @@ class Logger {
     this.globals.source = source;
     this.logWriter = output;
 
+    if (process.env._TEAM_OWNER) {
+      this.globals.team = process.env._TEAM_OWNER;
+    }
     if (process.env._DEPLOY_ENV) {
       this.globals.deploy_env = process.env._DEPLOY_ENV;
     }
