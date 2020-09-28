@@ -148,7 +148,7 @@
     },
     "envVarSubstValue": {
       "type": "string",
-      "pattern": "^([^\\$%{}]|\\${[^%\\${}]+})+$"
+      "pattern": "^([^\\$%{}]|\\$\\{[^%\\${}]+\\})+$"
     },
     "kvSubstValue": {
       "type": "string",
