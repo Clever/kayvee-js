@@ -59,7 +59,8 @@ function getBaseUrl(req) {
 function getQueryParams(req) {
   var url = req.originalUrl || req.url;
   var parsed = require("url").parse(url, true);
-  return parsed.search;
+  var parsedQueryString = require("qs").parse(parsed.search, {allowPrototypes: false, ignoreQueryPrefix: true});
+  return `?${require("qs").stringify(parsedQueryString)}`;
 }
 
 /**
