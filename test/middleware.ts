@@ -81,6 +81,122 @@ function createServer(server_type, clever_options, morgan_options, fn) {
 }
 
 _.each(["http", "express"], (serverType) => {
+  describe(`middleware for *${serverType}* server: prototype pollution testing`, () => {
+    it("params with toString is stripped", (done) => {
+      var cb = afterTest(2, (err, res, line) => {
+        if (err) { return done(err); }
+        const expected = {
+          method: "GET",
+          path: "/hello/world",
+          params: "?",
+          "response-size": 12345,
+          "response-time": 99999,
+          "status-code": 200,
+          ip: "::ffff:127.0.0.1",
+          via: "kayvee-middleware",
+          level: "info",
+          title: "request-finished",
+          canary: false,
+          deploy_env: "testing",
+          wf_id: "abc",
+          source: "test-app",
+          _kvmeta: {
+            team: "UNSET",
+            kv_version: "X.X.X",
+            kv_language: "js",
+            routes: [
+              {type: "analytics", series: "requests.everything", rule: "all-kv_middleware"},
+            ],
+          },
+        };
+        var actual = JSON.parse(line);
+        actual["response-time"] = 99999;     // Masking the two fields that
+        actual._kvmeta.kv_version = "X.X.X"; // are expected to change
+
+        assert.deepEqual(actual, expected);
+        return done();
+      });
+
+      var stream = createLineStream((line) => {
+        cb(null, null, line);
+      });
+
+      var options = {
+        source: "test-app",
+        ignore_dir: {
+          directory: `${__dirname}/static`,
+          // path: "/", defaults to /
+        },
+      };
+
+      var server = createServer(serverType, options, {stream}, (req, res, next) => {
+        next();
+      });
+
+      // this one is logged
+      request(server)
+      .get("/hello/world?toString=foo")
+      .expect(200, cb);
+    });
+    it("params from actual attack is stripped", (done) => {
+      var cb = afterTest(2, (err, res, line) => {
+        if (err) { return done(err); }
+        const expected = {
+          method: "GET",
+          path: "/hello/world",
+          params: "?",
+          "response-size": 12345,
+          "response-time": 99999,
+          "status-code": 200,
+          ip: "::ffff:127.0.0.1",
+          via: "kayvee-middleware",
+          level: "info",
+          title: "request-finished",
+          canary: false,
+          deploy_env: "testing",
+          wf_id: "abc",
+          source: "test-app",
+          _kvmeta: {
+            team: "UNSET",
+            kv_version: "X.X.X",
+            kv_language: "js",
+            routes: [
+              {type: "analytics", series: "requests.everything", rule: "all-kv_middleware"},
+            ],
+          },
+        };
+        var actual = JSON.parse(line);
+        actual["response-time"] = 99999;     // Masking the two fields that
+        actual._kvmeta.kv_version = "X.X.X"; // are expected to change
+
+        assert.deepEqual(actual, expected);
+        return done();
+      });
+
+      var stream = createLineStream((line) => {
+        cb(null, null, line);
+      });
+
+      var options = {
+        source: "test-app",
+        ignore_dir: {
+          directory: `${__dirname}/static`,
+          // path: "/", defaults to /
+        },
+      };
+
+      var server = createServer(serverType, options, {stream}, (req, res, next) => {
+        next();
+      });
+
+      const params = `__proto__[Expect]=xxx
+        &constructor[prototype][Expect]=xxx`;
+      // this one is logged
+      request(server)
+      .get(`/hello/world?${params}`)
+      .expect(200, cb);
+    });
+  });
   describe(`middleware for *${serverType}* server`, () => {
     it("should throw error on intialization if `source` not set in `options`", (done) => {
       var options = {};
@@ -591,7 +707,7 @@ _.each(["http", "express"], (serverType) => {
         const expected = {
           method: "GET",
           path: "/hello/world",
-          params: null,
+          params: "?",
           "response-size": 12345,
           "response-time": 99999,
           "status-code": 200,
