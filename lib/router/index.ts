@@ -1,8 +1,8 @@
-var fs           = require("fs");
-var jsonschema   = require("jsonschema");
-var schema       = require("./schema_definitions");
-var yaml         = require("js-yaml");
-var _            = require("underscore");
+var fs = require("fs");
+var jsonschema = require("jsonschema");
+var schema = require("./schema_definitions");
+var yaml = require("js-yaml");
+var _ = require("underscore");
 
 var packageJson = require("../../package.json");
 const kvVersion = packageJson.version;
@@ -58,7 +58,9 @@ function fieldMatches(obj, field, values) {
   }
 
   for (let i = 0; i < values.length; i++) {
-    if (values[i] === val) { return true; }
+    if (values[i] === val) {
+      return true;
+    }
   }
 
   return false;
@@ -91,7 +93,7 @@ class Rule {
       if (fieldVals.indexOf("*") !== -1 && fieldVals.length > 1) {
         throw new Error(
           `Invalid matcher values in ${name}.${field}.\n` +
-          "Wildcard matcher can't co-exist with other matchers."
+            "Wildcard matcher can't co-exist with other matchers.",
         );
       }
     });
@@ -106,7 +108,9 @@ class Rule {
   // matches returns true if `msg` matches against this rule
   matches(msg) {
     for (const field in this.matchers) {
-      if (!fieldMatches(msg, field, this.matchers[field])) { return false; }
+      if (!fieldMatches(msg, field, this.matchers[field])) {
+        return false;
+      }
     }
 
     return true;
@@ -161,20 +165,21 @@ function parseConfig(fileString) {
   try {
     config = yaml.safeLoad(fileString);
   } catch (e) {
-    return {valid: false, rules: [], errors: [e]};
+    return { valid: false, rules: [], errors: [e] };
   }
   const validateRes = validateKVConfig(config);
   if (!validateRes.valid) {
-    return _.assign(validateRes, {rules: []});
+    return _.assign(validateRes, { rules: [] });
   }
   try {
     const rulesObj = _.mapObject(
-      config.routes, (elem, name) => new Rule(name, elem.matchers, elem.output)
+      config.routes,
+      (elem, name) => new Rule(name, elem.matchers, elem.output),
     );
     const rules = _.values(rulesObj);
-    return {valid: true, rules, errors: []};
+    return { valid: true, rules, errors: [] };
   } catch (e) {
-    return {valid: false, rules: [], errors: [e]};
+    return { valid: false, rules: [], errors: [e] };
   }
 }
 

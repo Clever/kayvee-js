@@ -38,7 +38,9 @@ function walkDirSync(dir, files = []) {
 function skip_path(dir, base_path = "/") {
   let files = walkDirSync(dir);
   files = files.map((file) => path.join(base_path, file));
-  console.error(`KayveeMiddleware: Skipping successful requests for files in ${dir} at ${base_path}`);
+  console.error(
+    `KayveeMiddleware: Skipping successful requests for files in ${dir} at ${base_path}`,
+  );
   return (req, res) => _(files).contains(req.path) && res.statusCode < 400;
 }
 
@@ -59,7 +61,10 @@ function getBaseUrl(req) {
 function getQueryParams(req) {
   var url = req.originalUrl || req.url;
   var parsed = require("url").parse(url, true);
-  var parsedQueryString = require("qs").parse(parsed.search, {allowPrototypes: false, ignoreQueryPrefix: true});
+  var parsedQueryString = require("qs").parse(parsed.search, {
+    allowPrototypes: false,
+    ignoreQueryPrefix: true,
+  });
   return `?${require("qs").stringify(parsedQueryString)}`;
 }
 
@@ -89,8 +94,7 @@ function getResponseTimeNs(req, res) {
   }
 
   // calculate diff
-  var ns = (res._startAt[0] - req._startAt[0]) * 1e9
-    + (res._startAt[1] - req._startAt[1]);
+  var ns = (res._startAt[0] - req._startAt[0]) * 1e9 + (res._startAt[1] - req._startAt[1]);
   return ns;
 }
 
@@ -122,7 +126,10 @@ function getLogLevel(req, res) {
  * Get canary status
  */
 function isCanary() {
-  return (process.env._CANARY === "1") || ("_POD_SHORTNAME" in process.env && process.env._POD_SHORTNAME.includes("-canary"));
+  return (
+    process.env._CANARY === "1" ||
+    ("_POD_SHORTNAME" in process.env && process.env._POD_SHORTNAME.includes("-canary"))
+  );
 }
 
 /*
@@ -130,32 +137,32 @@ function isCanary() {
  */
 var defaultHandlers = [
   // Request method
-  (req) => ({method: req.method}),
+  (req) => ({ method: req.method }),
   // Path (URL without query params)
-  (req) => ({path: getBaseUrl(req)}),
+  (req) => ({ path: getBaseUrl(req) }),
   // Query params
-  (req) => ({params: getQueryParams(req)}),
+  (req) => ({ params: getQueryParams(req) }),
   // Response size
-  (req, res) => ({"response-size": getResponseSize(res)}),
+  (req, res) => ({ "response-size": getResponseSize(res) }),
   // Response time (ns)
-  (req, res) => ({"response-time": getResponseTimeNs(req, res)}),
+  (req, res) => ({ "response-time": getResponseTimeNs(req, res) }),
   // Status code
-  (req, res) => ({"status-code": res.statusCode}),
+  (req, res) => ({ "status-code": res.statusCode }),
   // Ip address
-  (req) => ({ip: getIp(req)}),
+  (req) => ({ ip: getIp(req) }),
   // Via -- what library/code produced this log?
-  () => ({via: "kayvee-middleware"}),
+  () => ({ via: "kayvee-middleware" }),
 
   // Kayvee's reserved fields
   // Log level
-  (req, res) => ({level: getLogLevel(req, res)}),
+  (req, res) => ({ level: getLogLevel(req, res) }),
   // Source -- which app emitted this log?
   // -> Gets passed in among `options` during library initialization
   // Title
-  () => ({title: "request-finished"}),
+  () => ({ title: "request-finished" }),
   // During the transition to pods, let's keep the canary field accurate
   // whether it's in the canary pod or a canary container in homepod
-  () => ({canary: isCanary()}),
+  () => ({ canary: isCanary() }),
 ];
 
 const defaultContextHandlers = [];
@@ -236,14 +243,14 @@ var formatLine = (options_arg) => {
 
   // `source` is the one required field
   if (!options.source) {
-    throw (Error("Missing required config for 'source' in Kayvee middleware 'options'"));
+    throw Error("Missing required config for 'source' in Kayvee middleware 'options'");
   }
 
   const router = KayveeLogger.getGlobalRouter();
 
   return (tokens, req, res) => {
     // Build a dict of data to log
-    var data = {_kvmeta: undefined}; // Adding _kvmeta here to make typescript compile happy
+    var data = { _kvmeta: undefined }; // Adding _kvmeta here to make typescript compile happy
 
     // Add user-configured request headers
     var custom_headers = options.headers || [];
@@ -260,7 +267,7 @@ var formatLine = (options_arg) => {
 
     // Allow user to override `base_handlers`; provide sane default set of handlers
     var base_handlers = options.base_handlers || defaultHandlers;
-    base_handlers = base_handlers.concat([() => ({source: options.source})]);
+    base_handlers = base_handlers.concat([() => ({ source: options.source })]);
 
     // Execute custom-handlers THEN base-handlers
     const all_handlers = custom_handlers.concat(base_handlers);
@@ -285,9 +292,12 @@ const defaultContextLoggerOpts = {
  */
 
 if (process.env.NODE_ENV === "test") {
-  module.exports = (clever_options, morgan_options = {skip: null}) => {
+  module.exports = (clever_options, morgan_options = { skip: null }) => {
     if (clever_options.ignore_dir) {
-      morgan_options.skip = skip_path(clever_options.ignore_dir.directory, clever_options.ignore_dir.path);
+      morgan_options.skip = skip_path(
+        clever_options.ignore_dir.directory,
+        clever_options.ignore_dir.path,
+      );
     }
     return morgan(formatLine(clever_options), morgan_options);
   };
@@ -304,7 +314,10 @@ if (process.env.NODE_ENV === "test") {
       skip: null,
     };
     if (clever_options.ignore_dir) {
-      morgan_options.skip = skip_path(clever_options.ignore_dir.directory, clever_options.ignore_dir.path);
+      morgan_options.skip = skip_path(
+        clever_options.ignore_dir.directory,
+        clever_options.ignore_dir.path,
+      );
     }
     const morgan_logger = morgan(formatLine(clever_options), morgan_options);
     return (req, res, next) => {
