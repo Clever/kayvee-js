@@ -16,6 +16,7 @@
     "underscore": "^1.8.3"
   },
   "devDependencies": {
+    "@clever/prettier-config": "1.0.0",
     "babel-eslint": "^6.0.2",
     "benchmark": "^2.1.1",
     "eslint": "^2.7.0",
@@ -24,6 +25,7 @@
     "eslint-plugin-react": "^4.3.0",
     "express": "^4.13.4",
     "mocha": "^2.5.3",
+    "prettier": "2.1.2",
     "sinon": "^1.17.4",
     "supertest": "^1.2.0",
     "ts-node": "^0.7.1",
