@@ -1,6 +1,6 @@
 .PHONY: test build format format-all format-check lint
 TESTS=$(shell cd test && ls *.ts | sed s/\.ts$$//)
-TS_FILES := $(shell find . -name "*.ts" -not -path "./node_modules/*" -not -path "./typings/*")
+TS_FILES := $(shell find . -name "*.ts" -not -path "./node_modules/*")
 FORMATTED_FILES := $(TS_FILES) # Add other file types as you see fit, e.g. JSON files, config files
 MODIFIED_FORMATTED_FILES := $(shell git diff --name-only master $(FORMATTED_FILES))
 
