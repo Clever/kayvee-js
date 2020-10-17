@@ -31,9 +31,6 @@ rules:
     - "smart"
 
   quotes: [2, "double", "avoid-escape"]
-  object-curly-spacing:
-    - 2
-    - "never"
   new-cap:
     - 2
     - newIsCapExceptions: ["kayvee.logger"]
