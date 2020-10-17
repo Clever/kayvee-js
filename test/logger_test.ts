@@ -344,7 +344,9 @@ describe("logger_test", () => {
       logObj.warn("testlogwarning");
       logObj2.info("testloginfo");
 
-      const loggerExpected = `{"deploy_env": "testing", "wf_id": "abc", "source": "logger-tester", "level": "${KayveeLogger.Warning}", "title": "testlogwarning"}`;
+      const loggerExpected = `
+      {"deploy_env": "testing", "wf_id": "abc", "source": "logger-tester", "level": "${KayveeLogger.Warning}", "title": "testlogwarning"}
+      `;
       assert.deepEqual(JSON.parse(sample), JSON.parse(loggerExpected));
 
       const logger2Expected = `{"deploy_env": "testing", "wf_id": "abc", "source": "logger-tester2", "level": "${KayveeLogger.Info}", "title": "testloginfo"}`;
