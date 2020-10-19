@@ -20,12 +20,24 @@ function replaceErrors(key, value) {
 function format(data) {
   if (deploy_env || workflow_id || pod_id || pod_shortname || pod_account || pod_region) {
     const extras: any = {};
-    if (deploy_env) { extras.deploy_env = deploy_env; }
-    if (workflow_id) { extras.wf_id = workflow_id; }
-    if (pod_id) { extras["pod-id"] = pod_id; }
-    if (pod_shortname) { extras["pod-shortname"] = pod_shortname; }
-    if (pod_region) { extras["pod-region"] = pod_region; }
-    if (pod_account) { extras["pod-account"] = pod_account; }
+    if (deploy_env) {
+      extras.deploy_env = deploy_env;
+    }
+    if (workflow_id) {
+      extras.wf_id = workflow_id;
+    }
+    if (pod_id) {
+      extras["pod-id"] = pod_id;
+    }
+    if (pod_shortname) {
+      extras["pod-shortname"] = pod_shortname;
+    }
+    if (pod_region) {
+      extras["pod-region"] = pod_region;
+    }
+    if (pod_account) {
+      extras["pod-account"] = pod_account;
+    }
 
     return JSON.stringify(_.extend(extras, data), replaceErrors);
   }
@@ -38,7 +50,7 @@ function formatLog(source = "", level = "", title = "", data = {}) {
   if (!_.isObject(data)) {
     info = {};
   }
-  const reserved = {source, level, title};
+  const reserved = { source, level, title };
 
   // reserved keys overwrite other keys in data
   return format(_.extend({}, info, reserved));
