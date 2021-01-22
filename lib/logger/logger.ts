@@ -294,3 +294,5 @@ module.exports.mockRouting = (cb) => {
 _.extend(module.exports, LEVELS);
 module.exports.LEVELS = ["trace", "debug", "info", "warn", "error", "critical"];
 module.exports.METRICS = ["counter", "gauge"];
+
+export { Logger };
