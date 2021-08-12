@@ -98,7 +98,6 @@ _.each(["http", "express"], (serverType) => {
           via: "kayvee-middleware",
           level: "info",
           title: "request-finished",
-          canary: false,
           deploy_env: "testing",
           wf_id: "abc",
           source: "test-app",
@@ -154,7 +153,6 @@ _.each(["http", "express"], (serverType) => {
           via: "kayvee-middleware",
           level: "info",
           title: "request-finished",
-          canary: false,
           deploy_env: "testing",
           wf_id: "abc",
           source: "test-app",
@@ -225,7 +223,6 @@ _.each(["http", "express"], (serverType) => {
           via: "kayvee-middleware",
           level: "info",
           title: "request-finished",
-          canary: false,
           deploy_env: "testing",
           wf_id: "abc",
           source: "test-app",
@@ -247,112 +244,6 @@ _.each(["http", "express"], (serverType) => {
         return done();
       });
 
-      var stream = createLineStream((line) => {
-        cb(null, null, line);
-      });
-
-      var options = { source: "test-app" };
-
-      var server = createServer(serverType, options, { stream }, (req, res, next) => {
-        res.setHeader("some-header", "some-header-value");
-        next();
-      });
-
-      request(server).get("/hello/world?a=1&b=2").expect(200, cb);
-    });
-
-    it("should set canary flag if env var is present", (done) => {
-      var cb = afterTest(2, (err, res, line) => {
-        if (err) {
-          return done(err);
-        }
-        const expected = {
-          method: "GET",
-          path: "/hello/world",
-          params: "?a=1&b=2",
-          "response-size": 12345,
-          "response-time": 99999,
-          "status-code": 200,
-          ip: "::ffff:127.0.0.1",
-          via: "kayvee-middleware",
-          level: "info",
-          title: "request-finished",
-          canary: true,
-          deploy_env: "testing",
-          wf_id: "abc",
-          source: "test-app",
-          _kvmeta: {
-            team: "UNSET",
-            kv_version: "X.X.X",
-            kv_language: "js",
-            routes: [
-              { type: "analytics", series: "requests.everything", rule: "all-kv_middleware" },
-            ],
-          },
-        };
-        var actual = JSON.parse(line);
-        actual["response-time"] = 99999; // Masking the two fields that
-        actual._kvmeta.kv_version = "X.X.X"; // are expected to change
-
-        assert.deepEqual(actual, expected);
-        delete process.env._CANARY;
-        return done();
-      });
-
-      process.env._CANARY = "1";
-      var stream = createLineStream((line) => {
-        cb(null, null, line);
-      });
-
-      var options = { source: "test-app" };
-
-      var server = createServer(serverType, options, { stream }, (req, res, next) => {
-        res.setHeader("some-header", "some-header-value");
-        next();
-      });
-
-      request(server).get("/hello/world?a=1&b=2").expect(200, cb);
-    });
-
-    it("should set canary flag if shortname includes -canary", (done) => {
-      var cb = afterTest(2, (err, res, line) => {
-        if (err) {
-          return done(err);
-        }
-        const expected = {
-          method: "GET",
-          path: "/hello/world",
-          params: "?a=1&b=2",
-          "response-size": 12345,
-          "response-time": 99999,
-          "status-code": 200,
-          ip: "::ffff:127.0.0.1",
-          via: "kayvee-middleware",
-          level: "info",
-          title: "request-finished",
-          canary: true,
-          deploy_env: "testing",
-          wf_id: "abc",
-          source: "test-app",
-          _kvmeta: {
-            team: "UNSET",
-            kv_version: "X.X.X",
-            kv_language: "js",
-            routes: [
-              { type: "analytics", series: "requests.everything", rule: "all-kv_middleware" },
-            ],
-          },
-        };
-        var actual = JSON.parse(line);
-        actual["response-time"] = 99999; // Masking the two fields that
-        actual._kvmeta.kv_version = "X.X.X"; // are expected to change
-
-        assert.deepEqual(actual, expected);
-        delete process.env._POD_SHORTNAME;
-        return done();
-      });
-
-      process.env._POD_SHORTNAME = "us-west-1-dev-canary-xxxxxxxx";
       var stream = createLineStream((line) => {
         cb(null, null, line);
       });
@@ -385,7 +276,6 @@ _.each(["http", "express"], (serverType) => {
           via: "kayvee-middleware",
           level: "info",
           title: "request-finished",
-          canary: false,
           deploy_env: "testing",
           wf_id: "abc",
           source: "test-app",
@@ -445,7 +335,6 @@ _.each(["http", "express"], (serverType) => {
           via: "kayvee-middleware",
           level: "info",
           title: "request-finished",
-          canary: false,
           deploy_env: "testing",
           wf_id: "abc",
           source: "test-app",
@@ -498,7 +387,6 @@ _.each(["http", "express"], (serverType) => {
           via: "kayvee-middleware",
           level: "info",
           title: "request-finished",
-          canary: false,
           deploy_env: "testing",
           wf_id: "abc",
           source: "test-app",
@@ -554,7 +442,6 @@ _.each(["http", "express"], (serverType) => {
           via: "kayvee-middleware",
           level: "info",
           title: "request-finished",
-          canary: false,
           deploy_env: "testing",
           wf_id: "abc",
           source: "test-app",
@@ -699,7 +586,6 @@ _.each(["http", "express"], (serverType) => {
           via: "kayvee-middleware",
           level: "info",
           title: "request-finished",
-          canary: false,
           deploy_env: "testing",
           wf_id: "abc",
           source: "test-app",
