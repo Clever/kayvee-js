@@ -2,6 +2,12 @@ var _ = require("underscore");
 var kv = require("../kayvee");
 var router = require("../router");
 
+const { DiagConsoleLogger, DiagLogLevel, diag } = require("@opentelemetry/api");
+const { OTLPMetricExporter } = require("@opentelemetry/exporter-otlp-grpc");
+const { MeterProvider } = require("@opentelemetry/sdk-metrics-base");
+const { Resource } = require("@opentelemetry/resources");
+const { SemanticResourceAttributes } = require("@opentelemetry/semantic-conventions");
+
 var LEVELS = {
   Trace: "trace",
   Debug: "debug",
@@ -18,6 +24,11 @@ var LOG_LEVEL_ENUM = {
   warning: 3,
   error: 4,
   critical: 5,
+};
+
+var METRICS_OUTPUT_ENUM = {
+  log: 0,
+  otel: 1,
 };
 
 const assign = Object.assign || _.assign; // Use the faster Object.assign if possible
@@ -40,6 +51,7 @@ class Logger {
   globals = null;
   logWriter = null;
   logRouter = null;
+  metricsOutput = null;
 
   constructor(
     source,
@@ -52,12 +64,16 @@ class Logger {
     this.globals = {};
     this.globals.source = source;
     this.logWriter = output;
+    this.metricsOutput = null;
 
     if (process.env._TEAM_OWNER) {
       this.globals.team = process.env._TEAM_OWNER;
     }
     if (process.env._DEPLOY_ENV) {
       this.globals.deploy_env = process.env._DEPLOY_ENV;
+    }
+    if (process.env._BUILD_ID) {
+      this.globals.build_id = process.env._BUILD_ID;
     }
     if (process.env._EXECUTION_NAME) {
       this.globals.wf_id = process.env._EXECUTION_NAME;
@@ -116,6 +132,28 @@ class Logger {
   setOutput(output) {
     this.logWriter = output;
     return this.logWriter;
+  }
+
+  setMetricsOutput(output) {
+    if (output in METRICS_OUTPUT_ENUM && output === METRICS_OUTPUT.OTEL) {
+      var metricExporter = new OTLPMetricExporter({
+        url: "http://localhost:4318/v1/metrics",
+      });
+
+      this.metricsOutput = new MeterProvider({
+        exporter: metricExporter,
+        interval: 1000,
+        resource: new Resource({
+          [SemanticResourceAttributes.SERVICE_NAME]: this.globals.source,
+          [SemanticResourceAttributes.SERVICE_VERSION]: this.globals.build_id,
+          [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: this.globals.deploy_env,
+        }),
+      }).getMeter(this.globals.source);
+    } else {
+      this.warn("invalid metrics output specified, falling back to log output");
+      this.metricsOutput = METRICS_OUTPUT.LOG;
+    }
+    return this.metricsOutput;
   }
 
   trace(title) {
@@ -211,27 +249,37 @@ class Logger {
   }
 
   counterD(title, value, data) {
-    this._logWithLevel(
-      LEVELS.Info,
-      {
-        title,
-        value,
-        type: "counter",
-      },
-      data,
-    );
+    if (this.metricsOutput == null) {
+      this._logWithLevel(
+        LEVELS.Info,
+        {
+          title,
+          value,
+          type: "counter",
+        },
+        data,
+      );
+    } else {
+      var counter = this.metricsOutput.meter.createUpDownCounter(title);
+      counter.bind(data).add(value);
+    }
   }
 
   gaugeD(title, value, data) {
-    this._logWithLevel(
-      LEVELS.Info,
-      {
-        title,
-        value,
-        type: "gauge",
-      },
-      data,
-    );
+    if (this.metricsOutput == null) {
+      this._logWithLevel(
+        LEVELS.Info,
+        {
+          title,
+          value,
+          type: "gauge",
+        },
+        data,
+      );
+    } else {
+      var gauge = this.metricsOutput.meter.createHistogram(title);
+      gauge.bind(data).record(value);
+    }
   }
 
   _logWithLevel(logLvl, metadata, userdata) {
