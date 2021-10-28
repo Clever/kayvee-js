@@ -2,9 +2,13 @@
     "compilerOptions": {
         "module": "commonjs",
         "target": "es5",
-        "noImplicitAny": false
+        "noImplicitAny": false,
+        "allowJs": true,
     },
     "exclude": [
         "node_modules"
-    ]
+    ],
+    "typingOptions": {
+        "enableAutoDiscovery": true
+    }
 }

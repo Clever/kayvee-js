@@ -179,6 +179,19 @@ Title + Metadata:
 * `log.counterD("counter-with-data", 2, {extra: "info"})`
 * `log.gaugeD("gauge-with-data", 2, {extra: "info"})`
 
+#### kayvee/logger opentelemetry metrics
+```js
+var kv = require("../kayvee-js");
+var log = new kv.logger("test-logger");
+
+log.setMetricsOutput(kv.Logger.METRICS_OUTPUT_OTEL);
+log.counterD("counter-name", 1, {"foo": "bar"});
+log.gaugeD("gauge-name", 1.02, {"foo": "bar"});
+
+// required to sync metrics with otel collector
+log.shutdown();
+```
+
 ### Formatters
 
 #### format

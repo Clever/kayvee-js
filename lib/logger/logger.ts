@@ -2,7 +2,6 @@ var _ = require("underscore");
 var kv = require("../kayvee");
 var router = require("../router");
 
-const { DiagConsoleLogger, DiagLogLevel, diag } = require("@opentelemetry/api");
 const { OTLPMetricExporter } = require("@opentelemetry/exporter-otlp-grpc");
 const { MeterProvider } = require("@opentelemetry/sdk-metrics-base");
 const { Resource } = require("@opentelemetry/resources");
@@ -26,7 +25,12 @@ var LOG_LEVEL_ENUM = {
   critical: 5,
 };
 
-var METRICS_OUTPUT_ENUM = {
+const METRICS_OUTPUT = {
+  LOG: "log",
+  OTEL: "otel",
+};
+
+const METRICS_OUTPUT_ENUM = {
   log: 0,
   otel: 1,
 };
@@ -51,7 +55,8 @@ class Logger {
   globals = null;
   logWriter = null;
   logRouter = null;
-  metricsOutput = null;
+  metricsProvider = null;
+  metrics = null;
 
   constructor(
     source,
@@ -64,7 +69,8 @@ class Logger {
     this.globals = {};
     this.globals.source = source;
     this.logWriter = output;
-    this.metricsOutput = null;
+    this.metricsProvider = null;
+    this.metrics = {};
 
     if (process.env._TEAM_OWNER) {
       this.globals.team = process.env._TEAM_OWNER;
@@ -137,10 +143,10 @@ class Logger {
   setMetricsOutput(output) {
     if (output in METRICS_OUTPUT_ENUM && output === METRICS_OUTPUT.OTEL) {
       var metricExporter = new OTLPMetricExporter({
-        url: "http://localhost:4318/v1/metrics",
+        concurrencyLimit: 1,
       });
 
-      this.metricsOutput = new MeterProvider({
+      this.metricsProvider = new MeterProvider({
         exporter: metricExporter,
         interval: 1000,
         resource: new Resource({
@@ -150,10 +156,12 @@ class Logger {
         }),
       }).getMeter(this.globals.source);
     } else {
-      this.warn("invalid metrics output specified, falling back to log output");
-      this.metricsOutput = METRICS_OUTPUT.LOG;
+      this.errorD("set-metrics-ouput", {
+        err: "invalid metrics output specified, falling back to log output",
+      });
+      this.metricsProvider = null;
     }
-    return this.metricsOutput;
+    return this.metricsProvider;
   }
 
   trace(title) {
@@ -249,7 +257,7 @@ class Logger {
   }
 
   counterD(title, value, data) {
-    if (this.metricsOutput == null) {
+    if (this.metricsProvider == null) {
       this._logWithLevel(
         LEVELS.Info,
         {
@@ -260,13 +268,15 @@ class Logger {
         data,
       );
     } else {
-      var counter = this.metricsOutput.meter.createUpDownCounter(title);
-      counter.bind(data).add(value);
+      if (this.metrics[title] === undefined) {
+        this.metrics[title] = this.metricsProvider.createUpDownCounter(title);
+      }
+      this.metrics[title].add(value, data);
     }
   }
 
   gaugeD(title, value, data) {
-    if (this.metricsOutput == null) {
+    if (this.metricsProvider == null) {
       this._logWithLevel(
         LEVELS.Info,
         {
@@ -277,9 +287,22 @@ class Logger {
         data,
       );
     } else {
-      var gauge = this.metricsOutput.meter.createHistogram(title);
-      gauge.bind(data).record(value);
+      // use a histogram post v0.26.0 of metrics sdk
+      if (this.metrics[title] === undefined) {
+        this.metrics[title] = this.metricsProvider.createValueRecorder(title);
+      }
+      this.metrics[title].record(value, data);
     }
+  }
+
+  shutdown() {
+    if (this.metricsProvider != null) {
+      return this.metricsProvider.shutdown().catch((err) => {
+        console.error(err);
+        return err;
+      });
+    }
+    return null;
   }
 
   _logWithLevel(logLvl, metadata, userdata) {
@@ -299,6 +322,8 @@ class Logger {
 module.exports = Logger;
 module.exports.setGlobalRouting = setGlobalRouting;
 module.exports.getGlobalRouter = getGlobalRouter;
+module.exports.METRICS_OUTPUT_OTEL = METRICS_OUTPUT.OTEL;
+module.exports.METRICS_OUTPUT_LOG = METRICS_OUTPUT.LOG;
 module.exports.mockRouting = (cb) => {
   const _logWithLevel: any = Logger.prototype._logWithLevel;
 

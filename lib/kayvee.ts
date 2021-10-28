@@ -70,9 +70,4 @@ const LOG_LEVELS = {
   TRACE: "trace",
 };
 
-const METRICS_OUTPUT = {
-  LOG: "log",
-  OTEL: "otel",
-};
-
-_.extend(module.exports, LOG_LEVELS, METRICS_OUTPUT);
+_.extend(module.exports, LOG_LEVELS);
