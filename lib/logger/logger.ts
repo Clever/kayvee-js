@@ -2,6 +2,11 @@ var _ = require("underscore");
 var kv = require("../kayvee");
 var router = require("../router");
 
+const { OTLPMetricExporter } = require("@opentelemetry/exporter-otlp-grpc");
+const { MeterProvider } = require("@opentelemetry/sdk-metrics-base");
+const { Resource } = require("@opentelemetry/resources");
+const { SemanticResourceAttributes } = require("@opentelemetry/semantic-conventions");
+
 var LEVELS = {
   Trace: "trace",
   Debug: "debug",
@@ -18,6 +23,16 @@ var LOG_LEVEL_ENUM = {
   warning: 3,
   error: 4,
   critical: 5,
+};
+
+const METRICS_OUTPUT = {
+  LOG: "log",
+  OTEL: "otel",
+};
+
+const METRICS_OUTPUT_ENUM = {
+  log: 0,
+  otel: 1,
 };
 
 const assign = Object.assign || _.assign; // Use the faster Object.assign if possible
@@ -40,6 +55,8 @@ class Logger {
   globals = null;
   logWriter = null;
   logRouter = null;
+  metricsProvider = null;
+  metrics = null;
 
   constructor(
     source,
@@ -52,12 +69,17 @@ class Logger {
     this.globals = {};
     this.globals.source = source;
     this.logWriter = output;
+    this.metricsProvider = null;
+    this.metrics = {};
 
     if (process.env._TEAM_OWNER) {
       this.globals.team = process.env._TEAM_OWNER;
     }
     if (process.env._DEPLOY_ENV) {
       this.globals.deploy_env = process.env._DEPLOY_ENV;
+    }
+    if (process.env._BUILD_ID) {
+      this.globals.build_id = process.env._BUILD_ID;
     }
     if (process.env._EXECUTION_NAME) {
       this.globals.wf_id = process.env._EXECUTION_NAME;
@@ -116,6 +138,30 @@ class Logger {
   setOutput(output) {
     this.logWriter = output;
     return this.logWriter;
+  }
+
+  setMetricsOutput(output) {
+    if (output in METRICS_OUTPUT_ENUM && output === METRICS_OUTPUT.OTEL) {
+      var metricExporter = new OTLPMetricExporter({
+        concurrencyLimit: 1,
+      });
+
+      this.metricsProvider = new MeterProvider({
+        exporter: metricExporter,
+        interval: 1000,
+        resource: new Resource({
+          [SemanticResourceAttributes.SERVICE_NAME]: this.globals.source,
+          [SemanticResourceAttributes.SERVICE_VERSION]: this.globals.build_id,
+          [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: this.globals.deploy_env,
+        }),
+      }).getMeter(this.globals.source);
+    } else {
+      this.errorD("set-metrics-ouput", {
+        err: "invalid metrics output specified, falling back to log output",
+      });
+      this.metricsProvider = null;
+    }
+    return this.metricsProvider;
   }
 
   trace(title) {
@@ -211,27 +257,52 @@ class Logger {
   }
 
   counterD(title, value, data) {
-    this._logWithLevel(
-      LEVELS.Info,
-      {
-        title,
-        value,
-        type: "counter",
-      },
-      data,
-    );
+    if (this.metricsProvider == null) {
+      this._logWithLevel(
+        LEVELS.Info,
+        {
+          title,
+          value,
+          type: "counter",
+        },
+        data,
+      );
+    } else {
+      if (this.metrics[title] === undefined) {
+        this.metrics[title] = this.metricsProvider.createUpDownCounter(title);
+      }
+      this.metrics[title].add(value, data);
+    }
   }
 
   gaugeD(title, value, data) {
-    this._logWithLevel(
-      LEVELS.Info,
-      {
-        title,
-        value,
-        type: "gauge",
-      },
-      data,
-    );
+    if (this.metricsProvider == null) {
+      this._logWithLevel(
+        LEVELS.Info,
+        {
+          title,
+          value,
+          type: "gauge",
+        },
+        data,
+      );
+    } else {
+      // use a histogram post v0.26.0 of metrics sdk
+      if (this.metrics[title] === undefined) {
+        this.metrics[title] = this.metricsProvider.createValueRecorder(title);
+      }
+      this.metrics[title].record(value, data);
+    }
+  }
+
+  shutdown() {
+    if (this.metricsProvider != null) {
+      return this.metricsProvider.shutdown().catch((err) => {
+        console.error(err);
+        return err;
+      });
+    }
+    return null;
   }
 
   _logWithLevel(logLvl, metadata, userdata) {
@@ -251,6 +322,8 @@ class Logger {
 module.exports = Logger;
 module.exports.setGlobalRouting = setGlobalRouting;
 module.exports.getGlobalRouter = getGlobalRouter;
+module.exports.METRICS_OUTPUT_OTEL = METRICS_OUTPUT.OTEL;
+module.exports.METRICS_OUTPUT_LOG = METRICS_OUTPUT.LOG;
 module.exports.mockRouting = (cb) => {
   const _logWithLevel: any = Logger.prototype._logWithLevel;
 
