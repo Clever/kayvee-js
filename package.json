@@ -16,23 +16,28 @@
     "underscore": "^1.8.3"
   },
   "devDependencies": {
+    "@clever/eslint-plugin": "^0.3.0",
     "@clever/prettier-config": "1.0.0",
     "@types/mocha": "^8.0.3",
     "@types/node": "^12.12.68",
+    "@typescript-eslint/eslint-plugin": "^5.2.0",
+    "@typescript-eslint/parser": "^5.2.0",
     "babel-eslint": "^6.0.2",
     "benchmark": "^2.1.1",
-    "eslint": "^2.7.0",
+    "eslint": "^7.11.0",
     "eslint-config-airbnb": "^7.0.0",
-    "eslint-plugin-jsx-a11y": "^0.6.2",
-    "eslint-plugin-react": "^4.3.0",
+    "eslint-config-prettier": "^6.12.0",
+    "eslint-formatter-summary": "^1.1.0",
+    "eslint-plugin-jsx-a11y": "^6.3.1",
+    "eslint-plugin-react": "^7.21.5",
+    "eslint-plugin-react-hooks": "^4.1.2",
     "express": "^4.13.4",
     "mocha": "^3.5.3",
     "prettier": "2.1.2",
     "sinon": "^1.17.4",
     "supertest": "^1.2.0",
     "ts-node": "^9.0.0",
-    "tslint": "^3.7.4",
-    "typescript": "^4.0.3"
+    "typescript": "^3.9.10"
   },
   "scripts": {
     "test": "make -Br test",
