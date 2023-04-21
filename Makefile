@@ -50,7 +50,6 @@ format-check:
 
 lint: format-check
 	./node_modules/.bin/eslint $(TS_FILES)
-	./node_modules/.bin/eslint $(TS_FILES)
 
 test/tests.json:
 	wget https://raw.githubusercontent.com/Clever/kayvee/master/tests.json -O test/tests.json
