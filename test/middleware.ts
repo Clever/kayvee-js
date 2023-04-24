@@ -29,7 +29,7 @@ function afterTest(count, callback) {
     args[2] = args[2] || arg2;
 
     if (count === i) {
-      callback.apply(null, args);
+      callback(...args);
     }
   };
 }

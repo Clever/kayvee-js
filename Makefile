@@ -49,7 +49,6 @@ format-check:
 		(echo -e "❌ \033[0;31m Prettier found discrepancies in the above files. Run 'make format' to fix.\033[0m" && false)
 
 lint: format-check
-	./node_modules/.bin/tslint $(TS_FILES)
 	./node_modules/.bin/eslint $(TS_FILES)
 
 test/tests.json:

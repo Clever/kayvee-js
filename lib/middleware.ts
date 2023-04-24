@@ -161,7 +161,7 @@ function handlerData(handlers, ...args) {
       const handler_data = h(...args);
       _.extend(data, handler_data);
     } catch (e) {
-      // ignore invalid handler
+      // swallow invalid handler
     }
   });
   return data;
