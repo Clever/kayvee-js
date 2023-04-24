@@ -16,7 +16,6 @@
     "underscore": "^1.8.3"
   },
   "devDependencies": {
-    "@clever/eslint-plugin": "^0.3.0",
     "@clever/prettier-config": "1.0.0",
     "@types/mocha": "^8.0.3",
     "@types/node": "^12.12.68",
