@@ -33,25 +33,28 @@ function getGlobalRouter() {
   return globalRouter;
 }
 
-// This is a port from kayvee-go/logger/logger.go
+// This is a modified from kayvee-go/logger/logger.go
 class Logger {
   formatter = null;
   logLvl = null;
   globals = null;
   logWriter = null;
   logRouter = null;
+  asyncLocalStorage = null;
 
   constructor(
     source,
     logLvl = process.env.KAYVEE_LOG_LEVEL,
     formatter = kv.format,
     output = console.error,
+    asyncLocalStorage = null,
   ) {
     this.formatter = formatter;
     this.logLvl = this._validateLogLvl(logLvl);
     this.globals = {};
     this.globals.source = source;
     this.logWriter = output;
+    this.asyncLocalStorage = asyncLocalStorage;
 
     if (process.env._TEAM_OWNER) {
       this.globals.team = process.env._TEAM_OWNER;
@@ -238,7 +241,10 @@ class Logger {
     if (LOG_LEVEL_ENUM[logLvl] < LOG_LEVEL_ENUM[this.logLvl]) {
       return;
     }
-    const data = assign({ level: logLvl }, this.globals, metadata, userdata);
+    const storeData = this.asyncLocalStorage ? this.asyncLocalStorage.getStore() || {} : {};
+    const contextData = storeData.context ? { context: storeData.context } : {};
+
+    const data = assign({ level: logLvl }, this.globals, metadata, contextData, userdata);
     if (this.logRouter) {
       data._kvmeta = this.logRouter.route(data);
     } else if (globalRouter) {
