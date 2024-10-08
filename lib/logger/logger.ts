@@ -47,14 +47,13 @@ class Logger {
     logLvl = process.env.KAYVEE_LOG_LEVEL,
     formatter = kv.format,
     output = console.error,
-    asyncLocalStorage = null,
   ) {
     this.formatter = formatter;
     this.logLvl = this._validateLogLvl(logLvl);
     this.globals = {};
     this.globals.source = source;
     this.logWriter = output;
-    this.asyncLocalStorage = asyncLocalStorage;
+    this.asyncLocalStorage = null;
 
     if (process.env._TEAM_OWNER) {
       this.globals.team = process.env._TEAM_OWNER;
@@ -77,6 +76,10 @@ class Logger {
     if (process.env._POD_ACCOUNT) {
       this.globals["pod-account"] = process.env._POD_ACCOUNT;
     }
+  }
+
+  setAsyncLocalStorage(asyncLocalStorage) {
+    this.asyncLocalStorage = asyncLocalStorage;
   }
 
   setRouter(r) {
@@ -241,7 +244,7 @@ class Logger {
     if (LOG_LEVEL_ENUM[logLvl] < LOG_LEVEL_ENUM[this.logLvl]) {
       return;
     }
-    const storeData = this.asyncLocalStorage ? this.asyncLocalStorage.getStore() || {} : {};
+    const storeData = this.asyncLocalStorage ? this.asyncLocalStorage.getStore() : {};
     const contextData = storeData.context ? { context: storeData.context } : {};
 
     const data = assign({ level: logLvl }, this.globals, metadata, contextData, userdata);
