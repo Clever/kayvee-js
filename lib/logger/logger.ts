@@ -244,8 +244,11 @@ class Logger {
     if (LOG_LEVEL_ENUM[logLvl] < LOG_LEVEL_ENUM[this.logLvl]) {
       return;
     }
-    const storeData = this.asyncLocalStorage ? this.asyncLocalStorage.getStore() : {};
-    const contextData = storeData.context ? { context: storeData.context } : {};
+    const storeData =
+      this.asyncLocalStorage && this.asyncLocalStorage.getStore()
+        ? this.asyncLocalStorage.getStore()
+        : { context: {} };
+    const contextData = storeData.context ? storeData.context : {};
 
     const data = assign({ level: logLvl }, this.globals, metadata, contextData, userdata);
     if (this.logRouter) {
