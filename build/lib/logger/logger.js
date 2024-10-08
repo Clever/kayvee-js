@@ -177,8 +177,10 @@ var Logger = /** @class */ (function () {
         if (LOG_LEVEL_ENUM[logLvl] < LOG_LEVEL_ENUM[this.logLvl]) {
             return;
         }
-        var storeData = this.asyncLocalStorage ? this.asyncLocalStorage.getStore() : {};
-        var contextData = storeData.context ? { context: storeData.context } : {};
+        var storeData = this.asyncLocalStorage && this.asyncLocalStorage.getStore()
+            ? this.asyncLocalStorage.getStore()
+            : { context: {} };
+        var contextData = storeData.context ? storeData.context : {};
         var data = assign({ level: logLvl }, this.globals, metadata, contextData, userdata);
         if (this.logRouter) {
             data._kvmeta = this.logRouter.route(data);
