@@ -28,11 +28,10 @@ function getGlobalRouter() {
 }
 // This is a modified from kayvee-go/logger/logger.go
 var Logger = /** @class */ (function () {
-    function Logger(source, logLvl, formatter, output, asyncLocalStorage) {
+    function Logger(source, logLvl, formatter, output) {
         if (logLvl === void 0) { logLvl = process.env.KAYVEE_LOG_LEVEL; }
         if (formatter === void 0) { formatter = kv.format; }
         if (output === void 0) { output = console.error; }
-        if (asyncLocalStorage === void 0) { asyncLocalStorage = null; }
         this.formatter = null;
         this.logLvl = null;
         this.globals = null;
@@ -44,7 +43,7 @@ var Logger = /** @class */ (function () {
         this.globals = {};
         this.globals.source = source;
         this.logWriter = output;
-        this.asyncLocalStorage = asyncLocalStorage;
+        this.asyncLocalStorage = null;
         if (process.env._TEAM_OWNER) {
             this.globals.team = process.env._TEAM_OWNER;
         }
@@ -67,6 +66,9 @@ var Logger = /** @class */ (function () {
             this.globals["pod-account"] = process.env._POD_ACCOUNT;
         }
     }
+    Logger.prototype.setAsyncLocalStorage = function (asyncLocalStorage) {
+        this.asyncLocalStorage = asyncLocalStorage;
+    };
     Logger.prototype.setRouter = function (r) {
         this.logRouter = r;
     };
@@ -175,7 +177,7 @@ var Logger = /** @class */ (function () {
         if (LOG_LEVEL_ENUM[logLvl] < LOG_LEVEL_ENUM[this.logLvl]) {
             return;
         }
-        var storeData = this.asyncLocalStorage ? this.asyncLocalStorage.getStore() || {} : {};
+        var storeData = this.asyncLocalStorage ? this.asyncLocalStorage.getStore() : {};
         var contextData = storeData.context ? { context: storeData.context } : {};
         var data = assign({ level: logLvl }, this.globals, metadata, contextData, userdata);
         if (this.logRouter) {
