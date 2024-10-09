@@ -17,8 +17,8 @@ var LOG_LEVEL_ENUM = {
     error: 4,
     critical: 5,
 };
-var assign = Object.assign || _.assign; // Use the faster Object.assign if possible
-var globalRouter;
+const assign = Object.assign || _.assign; // Use the faster Object.assign if possible
+let globalRouter;
 function setGlobalRouting(filename) {
     globalRouter = new router.Router();
     globalRouter.loadConfig(filename);
@@ -27,11 +27,8 @@ function getGlobalRouter() {
     return globalRouter;
 }
 // This is a modified from kayvee-go/logger/logger.go
-var Logger = /** @class */ (function () {
-    function Logger(source, logLvl, formatter, output) {
-        if (logLvl === void 0) { logLvl = process.env.KAYVEE_LOG_LEVEL; }
-        if (formatter === void 0) { formatter = kv.format; }
-        if (output === void 0) { output = console.error; }
+class Logger {
+    constructor(source, logLvl = process.env.KAYVEE_LOG_LEVEL, formatter = kv.format, output = console.error) {
         this.formatter = null;
         this.logLvl = null;
         this.globals = null;
@@ -66,20 +63,20 @@ var Logger = /** @class */ (function () {
             this.globals["pod-account"] = process.env._POD_ACCOUNT;
         }
     }
-    Logger.prototype.setAsyncLocalStorage = function (asyncLocalStorage) {
+    setAsyncLocalStorage(asyncLocalStorage) {
         this.asyncLocalStorage = asyncLocalStorage;
-    };
-    Logger.prototype.setRouter = function (r) {
+    }
+    setRouter(r) {
         this.logRouter = r;
-    };
-    Logger.prototype.setConfig = function (source, logLvl, formatter, output) {
+    }
+    setConfig(source, logLvl, formatter, output) {
         this.globals.source = source;
         this.logLvl = this._validateLogLvl(logLvl);
         this.formatter = formatter;
         this.logWriter = output;
         return this.logWriter;
-    };
-    Logger.prototype._validateLogLvl = function (logLvl) {
+    }
+    _validateLogLvl(logLvl) {
         if (logLvl == null) {
             return LEVELS.Debug;
         }
@@ -92,96 +89,99 @@ var Logger = /** @class */ (function () {
             }
         }
         return LEVELS.Debug;
-    };
-    Logger.prototype.setLogLevel = function (logLvl) {
+    }
+    setLogLevel(logLvl) {
         this.logLvl = this._validateLogLvl(logLvl);
         return this.logLvl;
-    };
-    Logger.prototype.setFormatter = function (formatter) {
+    }
+    setFormatter(formatter) {
         this.formatter = formatter;
         return this.formatter;
-    };
-    Logger.prototype.setOutput = function (output) {
+    }
+    setOutput(output) {
         this.logWriter = output;
         return this.logWriter;
-    };
-    Logger.prototype.trace = function (title) {
+    }
+    trace(title) {
         this.traceD(title, {});
-    };
-    Logger.prototype.debug = function (title) {
+    }
+    debug(title) {
         this.debugD(title, {});
-    };
-    Logger.prototype.info = function (title) {
+    }
+    info(title) {
         this.infoD(title, {});
-    };
-    Logger.prototype.warn = function (title) {
+    }
+    warn(title) {
         this.warnD(title, {});
-    };
-    Logger.prototype.error = function (title) {
+    }
+    error(title) {
         this.errorD(title, {});
-    };
-    Logger.prototype.critical = function (title) {
+    }
+    critical(title) {
         this.criticalD(title, {});
-    };
-    Logger.prototype.counter = function (title) {
+    }
+    counter(title) {
         this.counterD(title, 1, {});
-    };
-    Logger.prototype.gauge = function (title, value) {
+    }
+    gauge(title, value) {
         this.gaugeD(title, value, {});
-    };
-    Logger.prototype.traceD = function (title, data) {
+    }
+    traceD(title, data) {
         this._logWithLevel(LEVELS.Trace, {
-            title: title,
+            title,
         }, data);
-    };
-    Logger.prototype.debugD = function (title, data) {
+    }
+    debugD(title, data) {
         this._logWithLevel(LEVELS.Debug, {
-            title: title,
+            title,
         }, data);
-    };
-    Logger.prototype.infoD = function (title, data) {
+    }
+    infoD(title, data) {
         this._logWithLevel(LEVELS.Info, {
-            title: title,
+            title,
         }, data);
-    };
-    Logger.prototype.warnD = function (title, data) {
+    }
+    warnD(title, data) {
         this._logWithLevel(LEVELS.Warning, {
-            title: title,
+            title,
         }, data);
-    };
-    Logger.prototype.errorD = function (title, data) {
+    }
+    errorD(title, data) {
         this._logWithLevel(LEVELS.Error, {
-            title: title,
+            title,
         }, data);
-    };
-    Logger.prototype.criticalD = function (title, data) {
+    }
+    criticalD(title, data) {
         this._logWithLevel(LEVELS.Critical, {
-            title: title,
+            title,
         }, data);
-    };
-    Logger.prototype.counterD = function (title, value, data) {
+    }
+    counterD(title, value, data) {
         this._logWithLevel(LEVELS.Info, {
-            title: title,
-            value: value,
+            title,
+            value,
             type: "counter",
         }, data);
-    };
-    Logger.prototype.gaugeD = function (title, value, data) {
+    }
+    gaugeD(title, value, data) {
         this._logWithLevel(LEVELS.Info, {
-            title: title,
-            value: value,
+            title,
+            value,
             type: "gauge",
         }, data);
-    };
-    Logger.prototype._logWithLevel = function (logLvl, metadata, userdata) {
+    }
+    _logWithLevel(logLvl, metadata, userdata) {
         if (LOG_LEVEL_ENUM[logLvl] < LOG_LEVEL_ENUM[this.logLvl]) {
             return;
         }
-        var storeData = this.asyncLocalStorage && this.asyncLocalStorage.getStore()
-            ? this.asyncLocalStorage.getStore()
-            : { context: {} };
-        var contextData = storeData.context ? storeData.context : {};
-        var data = assign({ level: logLvl }, this.globals, metadata, contextData, userdata);
+        // I'm not clever enough to want to do these in one line without extra vars.
+        // We're on a REALLY old version of TS compiling to ES5. So I don't get a lot of the fancy tools
+        // like ?. and ??.
+        const store = this.asyncLocalStorage && this.asyncLocalStorage.getStore();
+        const storeData = store || { get: () => ({}) };
+        const contextData = storeData.get("context") ? storeData.get("context") : {};
+        const plainContextData = contextData instanceof Map ? Object.fromEntries(contextData) : contextData;
+        var data = assign({ level: logLvl }, this.globals, metadata, plainContextData, userdata);
         if (this.logRouter) {
             data._kvmeta = this.logRouter.route(data);
         }
@@ -189,27 +189,26 @@ var Logger = /** @class */ (function () {
             data._kvmeta = globalRouter.route(data);
         }
         this.logWriter(this.formatter(data));
-    };
-    return Logger;
-}());
+    }
+}
 module.exports = Logger;
 module.exports.setGlobalRouting = setGlobalRouting;
 module.exports.getGlobalRouter = getGlobalRouter;
-module.exports.mockRouting = function (cb) {
-    var _logWithLevel = Logger.prototype._logWithLevel;
+module.exports.mockRouting = (cb) => {
+    const _logWithLevel = Logger.prototype._logWithLevel;
     if (_logWithLevel.isMocked) {
         throw Error("Nested kv.mockRouting calls are not supported");
     }
-    var ruleMatches = {};
+    const ruleMatches = {};
     Logger.prototype._logWithLevel = function (logLvl, metadata, userdata) {
-        var formatter = this.formatter;
-        var logWriter = this.logWriter;
-        this.formatter = function (msg) { return msg; };
-        this.logWriter = function (msg) {
+        const formatter = this.formatter;
+        const logWriter = this.logWriter;
+        this.formatter = (msg) => msg;
+        this.logWriter = (msg) => {
             if (!msg._kvmeta) {
                 return;
             }
-            msg._kvmeta.routes.forEach(function (route) {
+            msg._kvmeta.routes.forEach((route) => {
                 ruleMatches[route.rule] = (ruleMatches[route.rule] || []).concat(route);
             });
         };
@@ -217,9 +216,9 @@ module.exports.mockRouting = function (cb) {
         this.formatter = formatter;
         this.logWriter = logWriter;
     };
-    var stfuTypeScript = Logger.prototype._logWithLevel;
+    const stfuTypeScript = Logger.prototype._logWithLevel;
     stfuTypeScript.isMocked = true;
-    var done = function () {
+    const done = () => {
         Logger.prototype._logWithLevel = _logWithLevel;
         return ruleMatches;
     };

@@ -244,13 +244,16 @@ class Logger {
     if (LOG_LEVEL_ENUM[logLvl] < LOG_LEVEL_ENUM[this.logLvl]) {
       return;
     }
-    const storeData =
-      this.asyncLocalStorage && this.asyncLocalStorage.getStore()
-        ? this.asyncLocalStorage.getStore()
-        : { context: {} };
-    const contextData = storeData.context ? storeData.context : {};
+    // I'm not clever enough to want to do these in one line without extra vars.
+    // We're on a REALLY old version of TS compiling to ES5. So I don't get a lot of the fancy tools
+    // like ?. and ??.
+    const store = this.asyncLocalStorage && this.asyncLocalStorage.getStore();
+    const storeData = store || { get: () => ({}) };
+    const contextData = storeData.get("context") ? storeData.get("context") : {};
+    const plainContextData = contextData instanceof Map ? Object.fromEntries(contextData) : contextData;
 
-    const data = assign({ level: logLvl }, this.globals, metadata, contextData, userdata);
+    var data = assign({ level: logLvl }, this.globals, metadata, plainContextData, userdata);
+
     if (this.logRouter) {
       data._kvmeta = this.logRouter.route(data);
     } else if (globalRouter) {

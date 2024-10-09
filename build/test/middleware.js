@@ -18,8 +18,8 @@ kayee_logger.setGlobalRouting(path.join(__dirname, "/kvconfig.yml"));
 function afterTest(count, callback) {
     var args = new Array(3);
     var i = 0;
-    return function (err, arg1, arg2) {
-        assert.ok(i++ < count, "callback called " + count + " times");
+    return (err, arg1, arg2) => {
+        assert.ok(i++ < count, `callback called ${count} times`);
         args[0] = args[0] || err;
         args[1] = args[1] || arg1;
         args[2] = args[2] || arg2;
@@ -39,10 +39,10 @@ function createServer(server_type, clever_options, morgan_options, fn) {
     var middle = fn || noopMiddleware;
     var server = null;
     if (server_type === "http") {
-        server = http.createServer(function (req, res) {
-            logger(req, res, function (err) {
+        server = http.createServer((req, res) => {
+            logger(req, res, (err) => {
                 // allow req, res alterations
-                middle(req, res, function () {
+                middle(req, res, () => {
                     if (err) {
                         res.statusCode = 500;
                         res.end(err.message);
@@ -57,26 +57,26 @@ function createServer(server_type, clever_options, morgan_options, fn) {
     else if (server_type === "express") {
         var app = express();
         app.use(logger);
-        app.use(express.static(__dirname + "/static"));
-        app.get("*", function (req, res) {
+        app.use(express.static(`${__dirname}/static`));
+        app.get("*", (req, res) => {
             res.header("Content-Length", 12345);
             res.end();
         });
         server = app;
     }
     else {
-        throw new Error("unknown server type: " + server_type);
+        throw new Error(`unknown server type: ${server_type}`);
     }
     return server;
 }
-_.each(["http", "express"], function (serverType) {
-    describe("middleware for *" + serverType + "* server: prototype pollution testing", function () {
-        it("params with toString is stripped", function (done) {
-            var cb = afterTest(2, function (err, res, line) {
+_.each(["http", "express"], (serverType) => {
+    describe(`middleware for *${serverType}* server: prototype pollution testing`, () => {
+        it("params with toString is stripped", (done) => {
+            var cb = afterTest(2, (err, res, line) => {
                 if (err) {
                     return done(err);
                 }
-                var expected = {
+                const expected = {
                     method: "GET",
                     path: "/hello/world",
                     params: "?",
@@ -105,27 +105,27 @@ _.each(["http", "express"], function (serverType) {
                 assert.deepEqual(actual, expected);
                 return done();
             });
-            var stream = createLineStream(function (line) {
+            var stream = createLineStream((line) => {
                 cb(null, null, line);
             });
             var options = {
                 source: "test-app",
                 ignore_dir: {
-                    directory: __dirname + "/static",
+                    directory: `${__dirname}/static`,
                 },
             };
-            var server = createServer(serverType, options, { stream: stream }, function (req, res, next) {
+            var server = createServer(serverType, options, { stream }, (req, res, next) => {
                 next();
             });
             // this one is logged
             request(server).get("/hello/world?toString=foo").expect(200, cb);
         });
-        it("params from actual attack is stripped", function (done) {
-            var cb = afterTest(2, function (err, res, line) {
+        it("params from actual attack is stripped", (done) => {
+            var cb = afterTest(2, (err, res, line) => {
                 if (err) {
                     return done(err);
                 }
-                var expected = {
+                const expected = {
                     method: "GET",
                     path: "/hello/world",
                     params: "?",
@@ -154,41 +154,40 @@ _.each(["http", "express"], function (serverType) {
                 assert.deepEqual(actual, expected);
                 return done();
             });
-            var stream = createLineStream(function (line) {
+            var stream = createLineStream((line) => {
                 cb(null, null, line);
             });
             var options = {
                 source: "test-app",
                 ignore_dir: {
-                    directory: __dirname + "/static",
+                    directory: `${__dirname}/static`,
                 },
             };
-            var server = createServer(serverType, options, { stream: stream }, function (req, res, next) {
+            var server = createServer(serverType, options, { stream }, (req, res, next) => {
                 next();
             });
-            var params = "__proto__[Expect]=xxx\n        &constructor[prototype][Expect]=xxx";
+            const params = `__proto__[Expect]=xxx
+        &constructor[prototype][Expect]=xxx`;
             // this one is logged
-            request(server).get("/hello/world?" + params).expect(200, cb);
+            request(server).get(`/hello/world?${params}`).expect(200, cb);
         });
     });
-    describe("middleware for *" + serverType + "* server", function () {
-        it("should throw error on intialization if `source` not set in `options`", function (done) {
+    describe(`middleware for *${serverType}* server`, () => {
+        it("should throw error on intialization if `source` not set in `options`", (done) => {
             var options = {};
-            var erroringServer = function () {
-                return createServer(serverType, options, null, function (req, res, next) {
-                    res.setHeader("some-header", "some-header-value");
-                    next();
-                });
-            };
+            var erroringServer = () => createServer(serverType, options, null, (req, res, next) => {
+                res.setHeader("some-header", "some-header-value");
+                next();
+            });
             assert.throws(erroringServer, Error, "Expected an error to be thrown");
             return done();
         });
-        it("should pass default fields", function (done) {
-            var cb = afterTest(2, function (err, res, line) {
+        it("should pass default fields", (done) => {
+            var cb = afterTest(2, (err, res, line) => {
                 if (err) {
                     return done(err);
                 }
-                var expected = {
+                const expected = {
                     method: "GET",
                     path: "/hello/world",
                     params: "?a=1&b=2",
@@ -217,22 +216,22 @@ _.each(["http", "express"], function (serverType) {
                 assert.deepEqual(actual, expected);
                 return done();
             });
-            var stream = createLineStream(function (line) {
+            var stream = createLineStream((line) => {
                 cb(null, null, line);
             });
             var options = { source: "test-app" };
-            var server = createServer(serverType, options, { stream: stream }, function (req, res, next) {
+            var server = createServer(serverType, options, { stream }, (req, res, next) => {
                 res.setHeader("some-header", "some-header-value");
                 next();
             });
             request(server).get("/hello/world?a=1&b=2").expect(200, cb);
         });
-        it("should allow logging user-specified request headers", function (done) {
-            var cb = afterTest(2, function (err, res, line) {
+        it("should allow logging user-specified request headers", (done) => {
+            var cb = afterTest(2, (err, res, line) => {
                 if (err) {
                     return done(err);
                 }
-                var expected = {
+                const expected = {
                     "some-header": "some-header-value",
                     "another-header": "another-header-value",
                     method: "GET",
@@ -263,14 +262,14 @@ _.each(["http", "express"], function (serverType) {
                 assert.deepEqual(actual, expected);
                 return done();
             });
-            var stream = createLineStream(function (line) {
+            var stream = createLineStream((line) => {
                 cb(null, null, line);
             });
             var options = {
                 source: "test-app",
                 headers: ["some-header", "another-header"],
             };
-            var server = createServer(serverType, options, { stream: stream }, function (req, res, next) {
+            var server = createServer(serverType, options, { stream }, (req, res, next) => {
                 next();
             });
             request(server)
@@ -279,12 +278,12 @@ _.each(["http", "express"], function (serverType) {
                 .set("another-header", "another-header-value")
                 .expect(200, cb);
         });
-        it("should allow logging from user-specified handlers", function (done) {
-            var cb = afterTest(2, function (err, res, line) {
+        it("should allow logging from user-specified handlers", (done) => {
+            var cb = afterTest(2, (err, res, line) => {
                 if (err) {
                     return done(err);
                 }
-                var expected = {
+                const expected = {
                     global: 1,
                     global2: 2,
                     url: "/hello/world?a=1&b=2",
@@ -316,24 +315,24 @@ _.each(["http", "express"], function (serverType) {
                 assert.deepEqual(actual, expected);
                 return done();
             });
-            var stream = createLineStream(function (line) {
+            var stream = createLineStream((line) => {
                 cb(null, null, line);
             });
             var options = {
                 source: "test-app",
-                handlers: [function () { return ({ global: 1 }); }, function () { return ({ global2: 2 }); }, function (req) { return ({ url: req.url }); }],
+                handlers: [() => ({ global: 1 }), () => ({ global2: 2 }), (req) => ({ url: req.url })],
             };
-            var server = createServer(serverType, options, { stream: stream }, function (req, res, next) {
+            var server = createServer(serverType, options, { stream }, (req, res, next) => {
                 next();
             });
             request(server).get("/hello/world?a=1&b=2").expect(200, cb);
         });
-        it("should not log null or undefined values", function (done) {
-            var cb = afterTest(2, function (err, res, line) {
+        it("should not log null or undefined values", (done) => {
+            var cb = afterTest(2, (err, res, line) => {
                 if (err) {
                     return done(err);
                 }
-                var expected = {
+                const expected = {
                     method: "GET",
                     path: "/hello/world",
                     params: "?a=1&b=2",
@@ -362,26 +361,26 @@ _.each(["http", "express"], function (serverType) {
                 assert.deepEqual(actual, expected);
                 return done();
             });
-            var stream = createLineStream(function (line) {
+            var stream = createLineStream((line) => {
                 cb(null, null, line);
             });
             var options = {
                 source: "test-app",
                 // These values should not be logged
                 headers: ["this-header-dne"],
-                handlers: [function () { return ({ undef: undefined }); }],
+                handlers: [() => ({ undef: undefined })],
             };
-            var server = createServer(serverType, options, { stream: stream }, function (req, res, next) {
+            var server = createServer(serverType, options, { stream }, (req, res, next) => {
                 next();
             });
             request(server).get("/hello/world?a=1&b=2").expect(200, cb);
         });
-        it("should keep processing if there are broken user-specified handlers", function (done) {
-            var cb = afterTest(2, function (err, res, line) {
+        it("should keep processing if there are broken user-specified handlers", (done) => {
+            var cb = afterTest(2, (err, res, line) => {
                 if (err) {
                     return done(err);
                 }
-                var expected = {
+                const expected = {
                     global: 1,
                     method: "GET",
                     path: "/hello/world",
@@ -411,31 +410,31 @@ _.each(["http", "express"], function (serverType) {
                 assert.deepEqual(actual, expected);
                 return done();
             });
-            var stream = createLineStream(function (line) {
+            var stream = createLineStream((line) => {
                 cb(null, null, line);
             });
             var options = {
                 source: "test-app",
                 handlers: [
                     // This handler should be ignored, because it has an error
-                    function () {
+                    () => {
                         throw new Error("handler that throws an error");
                     },
                     // This handler should still work
-                    function () { return ({ global: 1 }); },
+                    () => ({ global: 1 }),
                 ],
             };
-            var server = createServer(serverType, options, { stream: stream }, function (req, res, next) {
+            var server = createServer(serverType, options, { stream }, (req, res, next) => {
                 next();
             });
             request(server).get("/hello/world?a=1&b=2").expect(200, cb);
         });
-        it("should allow the user to override `base_handlers`", function (done) {
-            var cb = afterTest(2, function (err, res, line) {
+        it("should allow the user to override `base_handlers`", (done) => {
+            var cb = afterTest(2, (err, res, line) => {
                 if (err) {
                     return done(err);
                 }
-                var expected = {
+                const expected = {
                     global: 1,
                     base: 1,
                     deploy_env: "testing",
@@ -453,25 +452,25 @@ _.each(["http", "express"], function (serverType) {
                 assert.deepEqual(actual, expected);
                 return done();
             });
-            var stream = createLineStream(function (line) {
+            var stream = createLineStream((line) => {
                 cb(null, null, line);
             });
             var options = {
                 source: "test-app",
-                base_handlers: [function () { return ({ base: 1 }); }],
-                handlers: [function () { return ({ global: 1 }); }],
+                base_handlers: [() => ({ base: 1 })],
+                handlers: [() => ({ global: 1 })],
             };
-            var server = createServer(serverType, options, { stream: stream }, function (req, res, next) {
+            var server = createServer(serverType, options, { stream }, (req, res, next) => {
                 next();
             });
             request(server).get("/hello/world?a=1&b=2").expect(200, cb);
         });
-        it("should be robust to handlers that return non Objects", function (done) {
-            var cb = afterTest(2, function (err, res, line) {
+        it("should be robust to handlers that return non Objects", (done) => {
+            var cb = afterTest(2, (err, res, line) => {
                 if (err) {
                     return done(err);
                 }
-                var expected = {
+                const expected = {
                     global: 1,
                     base: 1,
                     source: "test-app",
@@ -489,25 +488,25 @@ _.each(["http", "express"], function (serverType) {
                 assert.deepEqual(actual, expected);
                 return done();
             });
-            var stream = createLineStream(function (line) {
+            var stream = createLineStream((line) => {
                 cb(null, null, line);
             });
             var options = {
                 source: "test-app",
-                base_handlers: [function () { return 1; }, function () { return "a"; }, function () { return []; }, function () { return ({}); }, function () { return ({ base: 1 }); }],
-                handlers: [function () { return 1; }, function () { return "a"; }, function () { return []; }, function () { return ({}); }, function () { return ({ global: 1 }); }],
+                base_handlers: [() => 1, () => "a", () => [], () => ({}), () => ({ base: 1 })],
+                handlers: [() => 1, () => "a", () => [], () => ({}), () => ({ global: 1 })],
             };
-            var server = createServer(serverType, options, { stream: stream, skip: null }, function (req, res, next) {
+            var server = createServer(serverType, options, { stream, skip: null }, (req, res, next) => {
                 next();
             });
             request(server).get("/hello/world?a=1&b=2").expect(200, cb);
         });
-        it("allows ignoring requests to files in a static directory", function (done) {
-            var cb = afterTest(2, function (err, res, line) {
+        it("allows ignoring requests to files in a static directory", (done) => {
+            var cb = afterTest(2, (err, res, line) => {
                 if (err) {
                     return done(err);
                 }
-                var expected = {
+                const expected = {
                     method: "GET",
                     path: "/hello/world",
                     params: "?",
@@ -536,16 +535,16 @@ _.each(["http", "express"], function (serverType) {
                 assert.deepEqual(actual, expected);
                 return done();
             });
-            var stream = createLineStream(function (line) {
+            var stream = createLineStream((line) => {
                 cb(null, null, line);
             });
             var options = {
                 source: "test-app",
                 ignore_dir: {
-                    directory: __dirname + "/static",
+                    directory: `${__dirname}/static`,
                 },
             };
-            var server = createServer(serverType, options, { stream: stream }, function (req, res, next) {
+            var server = createServer(serverType, options, { stream }, (req, res, next) => {
                 next();
             });
             // this line is never logged
