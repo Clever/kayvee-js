@@ -250,7 +250,8 @@ class Logger {
     const store = this.asyncLocalStorage && this.asyncLocalStorage.getStore();
     const storeData = store || { get: () => ({}) };
     const contextData = storeData.get("context") ? storeData.get("context") : {};
-    const plainContextData = contextData instanceof Map ? Object.fromEntries(contextData) : contextData;
+    const plainContextData =
+      contextData instanceof Map ? Object.fromEntries(contextData) : contextData;
 
     var data = assign({ level: logLvl }, this.globals, metadata, plainContextData, userdata);
 
