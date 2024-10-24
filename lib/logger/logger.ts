@@ -40,6 +40,7 @@ class Logger {
   globals = null;
   logWriter = null;
   logRouter = null;
+  asyncLocalStorage = null;
 
   constructor(
     source,
@@ -52,6 +53,7 @@ class Logger {
     this.globals = {};
     this.globals.source = source;
     this.logWriter = output;
+    this.asyncLocalStorage = null;
 
     if (process.env._TEAM_OWNER) {
       this.globals.team = process.env._TEAM_OWNER;
@@ -74,6 +76,10 @@ class Logger {
     if (process.env._POD_ACCOUNT) {
       this.globals["pod-account"] = process.env._POD_ACCOUNT;
     }
+  }
+
+  setAsyncLocalStorage(asyncLocalStorage) {
+    this.asyncLocalStorage = asyncLocalStorage;
   }
 
   setRouter(r) {
@@ -238,7 +244,17 @@ class Logger {
     if (LOG_LEVEL_ENUM[logLvl] < LOG_LEVEL_ENUM[this.logLvl]) {
       return;
     }
-    const data = assign({ level: logLvl }, this.globals, metadata, userdata);
+    // I'm not clever enough to want to do these in one line without extra vars.
+    // We're on a REALLY old version of TS compiling to ES5. So I don't get a lot of the fancy tools
+    // like ?. and ??.
+    const store = this.asyncLocalStorage && this.asyncLocalStorage.getStore();
+    const storeData = store || { get: () => ({}) };
+    const contextData = storeData.get("context") ? storeData.get("context") : {};
+    const plainContextData =
+      contextData instanceof Map ? Object.fromEntries(contextData) : contextData;
+
+    var data = assign({ level: logLvl }, this.globals, metadata, plainContextData, userdata);
+
     if (this.logRouter) {
       data._kvmeta = this.logRouter.route(data);
     } else if (globalRouter) {
