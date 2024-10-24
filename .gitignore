@@ -30,7 +30,7 @@ node_modules
 .lock-wscript
 
 # Compiled JS library
-# build
+build
 
 npm-debug.log
 
