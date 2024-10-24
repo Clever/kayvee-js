@@ -33,7 +33,7 @@ function getGlobalRouter() {
   return globalRouter;
 }
 
-// This is a modified from kayvee-go/logger/logger.go
+// This is a port from kayvee-go/logger/logger.go
 class Logger {
   formatter = null;
   logLvl = null;
