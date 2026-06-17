@@ -3,6 +3,7 @@
     "module": "CommonJS",
     "target": "ES2022",
     "outDir": "./build",
+    "rootDir": ".",
     "declaration": true,
     "declarationMap": true,
     "esModuleInterop": true,
