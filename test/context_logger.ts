@@ -2,7 +2,7 @@ var assert = require("assert");
 var sinon = require("sinon");
 
 var middleware = require("../lib/middleware");
-var KayveeLogger = require("../lib/logger/logger");
+const { Logger: KayveeLogger } = require("../lib/logger/logger");
 
 describe("ContextLogger", () => {
   const fake_req = { key1: "val1" };

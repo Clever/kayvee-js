@@ -1,4 +1,4 @@
-var KayveeLogger = require("../lib/logger/logger");
+const { Logger: KayveeLogger } = require("../lib/logger/logger");
 var assert = require("assert");
 
 let sample = "";
