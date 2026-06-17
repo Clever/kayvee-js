@@ -124,14 +124,30 @@ export class Logger {
     return this.logWriter;
   }
 
-  trace(title: string): void { this.traceD(title, {}); }
-  debug(title: string): void { this.debugD(title, {}); }
-  info(title: string): void { this.infoD(title, {}); }
-  warn(title: string): void { this.warnD(title, {}); }
-  error(title: string): void { this.errorD(title, {}); }
-  critical(title: string): void { this.criticalD(title, {}); }
-  counter(title: string): void { this.counterD(title, 1, {}); }
-  gauge(title: string, value: number): void { this.gaugeD(title, value, {}); }
+  trace(title: string): void {
+    this.traceD(title, {});
+  }
+  debug(title: string): void {
+    this.debugD(title, {});
+  }
+  info(title: string): void {
+    this.infoD(title, {});
+  }
+  warn(title: string): void {
+    this.warnD(title, {});
+  }
+  error(title: string): void {
+    this.errorD(title, {});
+  }
+  critical(title: string): void {
+    this.criticalD(title, {});
+  }
+  counter(title: string): void {
+    this.counterD(title, 1, {});
+  }
+  gauge(title: string, value: number): void {
+    this.gaugeD(title, value, {});
+  }
 
   traceD(title: string, data: Record<string, unknown>): void {
     this._logWithLevel(LEVELS.Trace, { title }, data);

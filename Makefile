@@ -1,6 +1,6 @@
 .PHONY: test build format format-all format-check lint
 TESTS=$(shell cd test && ls *.ts | sed s/\.ts$$//)
-TS_FILES := $(shell find . -name "*.ts" -not -path "./node_modules/*")
+TS_FILES := $(shell find . -name "*.ts" -not -path "./node_modules/*" -not -path "./build/*")
 FORMATTED_FILES := $(TS_FILES) # Add other file types as you see fit, e.g. JSON files, config files
 MODIFIED_FORMATTED_FILES := $(shell git diff --name-only master $(FORMATTED_FILES))
 
@@ -14,8 +14,8 @@ build: clean
 test: lint test/tests.json $(TESTS)
 
 $(TESTS):
-	_DEPLOY_ENV=testing _EXECUTION_NAME=abc DEBUG=us:progress NODE_ENV=test \
-	node_modules/mocha/bin/mocha --require ts-node/register --timeout 60000 test/$@.ts
+	_DEPLOY_ENV=testing _EXECUTION_NAME=abc DEBUG=us:progress NODE_ENV=test TS_NODE_PROJECT=tsconfig.test.json \
+	node_modules/.bin/mocha --require ts-node/register --timeout 60000 test/$@.ts
 
 benchmarks: build benchmark-data
 	node benchmarks/routing.js

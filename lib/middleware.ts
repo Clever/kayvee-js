@@ -100,7 +100,11 @@ function handlerData(handlers: Handler[], req: Request, res?: Response): Record<
   handlers.forEach((h) => {
     try {
       const handler_data = h(req, res);
-      if (handler_data !== null && typeof handler_data === "object" && !Array.isArray(handler_data)) {
+      if (
+        handler_data !== null &&
+        typeof handler_data === "object" &&
+        !Array.isArray(handler_data)
+      ) {
         Object.assign(data, handler_data);
       }
     } catch (e) {

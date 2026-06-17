@@ -13,8 +13,5 @@
     "types": ["node"]
   },
   "include": ["lib/**/*"],
-  "exclude": ["node_modules", "build", "test"],
-  "ts-node": {
-    "transpileOnly": true
-  }
+  "exclude": ["node_modules", "build", "test"]
 }
