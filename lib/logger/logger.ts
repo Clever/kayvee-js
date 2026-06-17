@@ -1,13 +1,5 @@
-import { createRequire } from "node:module";
-
-// mocha 10 + ts-node loads .ts files via import() on Node 22+, so this module
-// runs in ESM context where relative imports without file extensions fail in ESM
-// resolution. Use createRequire(import.meta.url) so that relative .ts imports go
-// through the CJS require chain (which includes ts-node's extension hooks).
-// @ts-ignore TS1343 - import.meta is available at runtime despite "module": "CommonJS"
-const _require = createRequire(import.meta.url);
-const kv = _require("../kayvee") as typeof import("../kayvee");
-const { Router } = _require("../router") as typeof import("../router");
+import * as kv from "../kayvee";
+import { Router } from "../router";
 
 const LEVELS = {
   Trace: "trace",
