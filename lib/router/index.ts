@@ -1,16 +1,12 @@
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+import fs from "node:fs";
+import path from "node:path";
+import { createRequire } from "node:module";
 import { Validator } from "jsonschema";
 import { load } from "js-yaml";
 
-// import.meta.url works in both ESM and Node 22+ CJS contexts
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore: TS1343 - import.meta is valid in Node 22+ CJS
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const schema = JSON.parse(fs.readFileSync(path.join(__dirname, "schema_definitions.json"), "utf8"));
-const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, "../../package.json"), "utf8"));
+const require = createRequire(import.meta.url);
+const schema = require("./schema_definitions.json");
+const packageJson = require("../../package.json");
 
 const kvVersion: string = packageJson.version;
 const teamName = process.env._TEAM_OWNER || "UNSET";
@@ -20,7 +16,10 @@ const reFieldTokens = new RegExp("%\\{(.+?)\\}", "g");
 
 // For performance reason this code is intentionally redundant and not-inlined.
 // Removing redundancy and inlining this function somehow makes performance worst.
-function substituteEnvVars(obj: Record<string, unknown>, subber: (k: string) => string | undefined): Record<string, unknown> {
+function substituteEnvVars(
+  obj: Record<string, unknown>,
+  subber: (k: string) => string | undefined,
+): Record<string, unknown> {
   const rtn: Record<string, unknown> = {};
   const replacer = (s: string) => s.replace(reEnvvarTokens, (__, p1) => subber(p1) ?? "");
 
