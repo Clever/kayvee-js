@@ -1,12 +1,15 @@
 import fs from "node:fs";
-import path from "node:path";
 import { createRequire } from "node:module";
 import { Validator } from "jsonschema";
 import { load } from "js-yaml";
 
-const require = createRequire(import.meta.url);
-const schema = require("./schema_definitions.json");
-const packageJson = require("../../package.json");
+// mocha 10 + ts-node loads .ts files via import() on Node 22+, so this module
+// runs in ESM context where __dirname is unavailable. createRequire(import.meta.url)
+// is the ESM-compatible way to require() JSON files without import attributes.
+// @ts-ignore TS1343 - import.meta is available at runtime despite "module": "CommonJS"
+const _require = createRequire(import.meta.url);
+const schema = _require("./schema_definitions.json") as Record<string, unknown>;
+const packageJson = _require("../../package.json") as { version: string };
 
 const kvVersion: string = packageJson.version;
 const teamName = process.env._TEAM_OWNER || "UNSET";
