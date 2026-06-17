@@ -161,7 +161,7 @@ export interface MiddlewareOptions {
   ignore_dir?: { directory: string; path: string };
 }
 
-var formatLine = (options_arg: MiddlewareOptions) => {
+const formatLine = (options_arg: MiddlewareOptions) => {
   const options: MiddlewareOptions = options_arg || ({} as MiddlewareOptions);
 
   if (!options.source) {
@@ -170,7 +170,7 @@ var formatLine = (options_arg: MiddlewareOptions) => {
 
   const router = getGlobalRouter();
 
-  return (tokens: any, req: Request, res: Response) => {
+  return (_tokens: any, req: Request, res: Response) => {
     const data: Record<string, unknown> = {};
 
     const custom_headers = options.headers || [];
