@@ -1,8 +1,8 @@
 var assert = require("assert");
 var sinon = require("sinon");
 
-var middleware = require("../lib/middleware");
 const { Logger: KayveeLogger } = require("../lib/logger/logger");
+var middleware = require("../lib/middleware");
 
 describe("ContextLogger", () => {
   const fake_req = { key1: "val1" };

@@ -6,7 +6,7 @@ var request = require("supertest");
 var split = require("split");
 var _ = require("underscore");
 var kayee_logger = require("../lib/logger/logger");
-var kv_middleware = require("../lib/middleware");
+const { middleware: kv_middleware } = require("../lib/middleware");
 
 kayee_logger.setGlobalRouting(path.join(__dirname, "/kvconfig.yml"));
 
@@ -55,11 +55,12 @@ function createServer(server_type, clever_options, morgan_options, fn) {
           if (err) {
             res.statusCode = 500;
             res.end(err.message);
+            return;
           }
 
           res.setHeader("X-Sent", "true");
           res.setHeader("Content-Length", 12345);
-          res.end((req.connection && req.connection.remoteAddress) || "-");
+          res.end(Buffer.alloc(12345));
         });
       });
     });
@@ -69,7 +70,7 @@ function createServer(server_type, clever_options, morgan_options, fn) {
     app.use(express.static(`${__dirname}/static`));
     app.get("*", (req, res) => {
       res.header("Content-Length", 12345);
-      res.end();
+      res.end(Buffer.alloc(12345));
     });
 
     server = app;
