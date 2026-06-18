@@ -202,7 +202,11 @@ export function mockRouting(cb: (done: () => Record<string, unknown[]>) => void)
 
   const ruleMatches: Record<string, unknown[]> = {};
 
-  (Logger.prototype._logWithLevel as any) = function (logLvl: string, metadata: LogData, userdata: LogData) {
+  (Logger.prototype._logWithLevel as any) = function (
+    logLvl: string,
+    metadata: LogData,
+    userdata: LogData,
+  ) {
     const formatter = this.formatter;
     const logWriter = this.logWriter;
 
