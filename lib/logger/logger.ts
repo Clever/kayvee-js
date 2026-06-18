@@ -1,6 +1,9 @@
 import * as kv from "../kayvee";
 import { Router } from "../router";
 
+type Formatter = (data: Record<string, unknown>) => string;
+type LogData = Record<string, unknown>;
+
 const LEVELS = {
   Trace: "trace",
   Debug: "debug",
@@ -19,14 +22,14 @@ const LOG_LEVEL_ENUM: Record<string, number> = {
   critical: 5,
 };
 
-let globalRouter: InstanceType<typeof Router> | undefined;
+let globalRouter: Router | undefined;
 
 export function setGlobalRouting(filename: string): void {
   globalRouter = new Router();
   globalRouter.loadConfig(filename);
 }
 
-export function getGlobalRouter(): InstanceType<typeof Router> | undefined {
+export function getGlobalRouter(): Router | undefined {
   return globalRouter;
 }
 
@@ -40,17 +43,17 @@ export class Logger {
   static readonly LEVELS = ["trace", "debug", "info", "warn", "error", "critical"];
   static readonly METRICS = ["counter", "gauge"];
 
-  formatter: (data: Record<string, unknown>) => string;
+  formatter: Formatter;
   logLvl: string;
-  globals: Record<string, unknown>;
+  globals: LogData;
   logWriter: (msg: string) => void;
-  logRouter: InstanceType<typeof Router> | null;
+  logRouter: Router | null;
   asyncLocalStorage: any;
 
   constructor(
     source: string,
     logLvl: string | null | undefined = process.env.KAYVEE_LOG_LEVEL,
-    formatter: (data: Record<string, unknown>) => string = kv.format,
+    formatter: Formatter = kv.format,
     output: (msg: string) => void = console.error,
   ) {
     this.formatter = formatter;
@@ -74,14 +77,14 @@ export class Logger {
     this.asyncLocalStorage = asyncLocalStorage;
   }
 
-  setRouter(r: InstanceType<typeof Router>): void {
+  setRouter(r: Router): void {
     this.logRouter = r;
   }
 
   setConfig(
     source: string,
     logLvl: string,
-    formatter: (data: Record<string, unknown>) => string,
+    formatter: Formatter,
     output: (msg: string) => void,
   ): (msg: string) => void {
     this.globals.source = source;
@@ -104,9 +107,7 @@ export class Logger {
     return this.logLvl;
   }
 
-  setFormatter(
-    formatter: (data: Record<string, unknown>) => string,
-  ): (data: Record<string, unknown>) => string {
+  setFormatter(formatter: Formatter): Formatter {
     this.formatter = formatter;
     return this.formatter;
   }
@@ -141,36 +142,32 @@ export class Logger {
     this.gaugeD(title, value, {});
   }
 
-  traceD(title: string, data: Record<string, unknown>): void {
+  traceD(title: string, data: LogData): void {
     this._logWithLevel(LEVELS.Trace, { title }, data);
   }
-  debugD(title: string, data: Record<string, unknown>): void {
+  debugD(title: string, data: LogData): void {
     this._logWithLevel(LEVELS.Debug, { title }, data);
   }
-  infoD(title: string, data: Record<string, unknown>): void {
+  infoD(title: string, data: LogData): void {
     this._logWithLevel(LEVELS.Info, { title }, data);
   }
-  warnD(title: string, data: Record<string, unknown>): void {
+  warnD(title: string, data: LogData): void {
     this._logWithLevel(LEVELS.Warning, { title }, data);
   }
-  errorD(title: string, data: Record<string, unknown>): void {
+  errorD(title: string, data: LogData): void {
     this._logWithLevel(LEVELS.Error, { title }, data);
   }
-  criticalD(title: string, data: Record<string, unknown>): void {
+  criticalD(title: string, data: LogData): void {
     this._logWithLevel(LEVELS.Critical, { title }, data);
   }
-  counterD(title: string, value: number, data: Record<string, unknown>): void {
+  counterD(title: string, value: number, data: LogData): void {
     this._logWithLevel(LEVELS.Info, { title, value, type: "counter" }, data);
   }
-  gaugeD(title: string, value: number, data: Record<string, unknown>): void {
+  gaugeD(title: string, value: number, data: LogData): void {
     this._logWithLevel(LEVELS.Info, { title, value, type: "gauge" }, data);
   }
 
-  _logWithLevel(
-    logLvl: string,
-    metadata: Record<string, unknown>,
-    userdata: Record<string, unknown>,
-  ): void {
+  _logWithLevel(logLvl: string, metadata: LogData, userdata: LogData): void {
     if (LOG_LEVEL_ENUM[logLvl] < LOG_LEVEL_ENUM[this.logLvl]) return;
 
     const store = this.asyncLocalStorage && this.asyncLocalStorage.getStore();
@@ -179,7 +176,7 @@ export class Logger {
     const plainContextData =
       contextData instanceof Map ? Object.fromEntries(contextData) : contextData;
 
-    const data: Record<string, unknown> = Object.assign(
+    const data: LogData = Object.assign(
       { level: logLvl },
       this.globals,
       metadata,
@@ -205,11 +202,7 @@ export function mockRouting(cb: (done: () => Record<string, unknown[]>) => void)
 
   const ruleMatches: Record<string, unknown[]> = {};
 
-  (Logger.prototype._logWithLevel as any) = function (
-    logLvl: string,
-    metadata: Record<string, unknown>,
-    userdata: Record<string, unknown>,
-  ) {
+  (Logger.prototype._logWithLevel as any) = function (logLvl: string, metadata: LogData, userdata: LogData) {
     const formatter = this.formatter;
     const logWriter = this.logWriter;
 
