@@ -2,8 +2,8 @@
   "compilerOptions": {
     "module": "CommonJS",
     "target": "ES2022",
-    "outDir": "./build",
-    "rootDir": ".",
+    "outDir": "./dist",
+    "rootDir": "./lib",
     "declaration": true,
     "declarationMap": true,
     "esModuleInterop": true,

@@ -2,32 +2,32 @@
   "name": "kayvee",
   "description": "Write data to key=val pairs, for human and machine readability",
   "version": "4.0.0",
-  "main": "./build/lib/kayvee.js",
-  "types": "./build/lib/kayvee.d.ts",
+  "main": "./dist/kayvee.js",
+  "types": "./dist/kayvee.d.ts",
   "exports": {
     ".": {
-      "require": "./build/lib/kayvee.js",
-      "import":  "./build/lib/kayvee.js",
-      "types":   "./build/lib/kayvee.d.ts"
+      "require": "./dist/kayvee.js",
+      "import":  "./dist/kayvee.js",
+      "types":   "./dist/kayvee.d.ts"
     },
     "./logger": {
-      "require": "./build/lib/logger/logger.js",
-      "import":  "./build/lib/logger/logger.js",
-      "types":   "./build/lib/logger/logger.d.ts"
+      "require": "./dist/logger/logger.js",
+      "import":  "./dist/logger/logger.js",
+      "types":   "./dist/logger/logger.d.ts"
     },
     "./middleware": {
-      "require": "./build/lib/middleware.js",
-      "import":  "./build/lib/middleware.js",
-      "types":   "./build/lib/middleware.d.ts"
+      "require": "./dist/middleware.js",
+      "import":  "./dist/middleware.js",
+      "types":   "./dist/middleware.d.ts"
     },
     "./router": {
-      "require": "./build/lib/router/index.js",
-      "import":  "./build/lib/router/index.js",
-      "types":   "./build/lib/router/index.d.ts"
+      "require": "./dist/router/index.js",
+      "import":  "./dist/router/index.js",
+      "types":   "./dist/router/index.d.ts"
     }
   },
   "files": [
-    "build/lib/**/*",
+    "dist/**/*",
     "README.md",
     "LICENSE"
   ],

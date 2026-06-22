@@ -1,15 +1,15 @@
 .PHONY: test build format format-all format-check lint
 TESTS=$(shell cd test && ls *.ts | sed s/\.ts$$//)
-TS_FILES := $(shell find . -name "*.ts" -not -path "./node_modules/*" -not -path "./build/*")
+TS_FILES := $(shell find . -name "*.ts" -not -path "./node_modules/*" -not -path "./dist/*")
 FORMATTED_FILES := $(TS_FILES) # Add other file types as you see fit, e.g. JSON files, config files
 MODIFIED_FORMATTED_FILES := $(shell git diff --name-only master $(FORMATTED_FILES))
 
 PRETTIER := ./node_modules/.bin/prettier
 
 build: clean
-	./node_modules/.bin/tsc --outDir build
-	cp ./lib/router/schema_definitions.json ./build/lib/router/
-	cp ./package.json ./build/
+	./node_modules/.bin/tsc
+	cp ./lib/router/schema_definitions.json ./dist/router/
+	cp ./package.json ./dist/
 
 test: lint test/tests.json $(TESTS)
 
@@ -21,7 +21,7 @@ benchmarks: build benchmark-data
 	node benchmarks/routing.js
 
 clean:
-	rm -rf build
+	rm -rf dist
 
 clean-data:
 	rm ./benchmarks/data/*.json ./benchmarks/data/*.yml
