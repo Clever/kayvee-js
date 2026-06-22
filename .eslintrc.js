@@ -9,10 +9,6 @@ module.exports = {
   extends: [
     // https://github.com/eslint/eslint
     "eslint:recommended",
-    // https://github.com/yannickcr/eslint-plugin-react
-    "plugin:react/recommended",
-    // https://github.com/facebook/react/tree/master/packages/eslint-plugin-react-hooks
-    "plugin:react-hooks/recommended",
     // https: //github.com/typescript-eslint/typescript-eslint/tree/master/packages/eslint-plugin
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended",
