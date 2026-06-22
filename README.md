@@ -5,69 +5,111 @@ Package kayvee provides methods to output human and machine parseable strings.
 
 Read the [Kayvee spec](https://github.com/Clever/kayvee) to learn more about the goals of Kayvee logging.
 
-## Example: kayvee/logger
+## Installation
 
-Initialization:
-
-```js
-var kayvee = require("kayvee");
-
-var log = new kayvee.logger("logger-source");
+```
+npm install kayvee
 ```
 
-Use it to write metrics:
+## Usage
 
-```js
-log.gauge("gauge-simple", 18)
-log.gaugeD("gauge-with-extra-data", 3, {user_id: "value", scope: "scope_system"})
-```
-and structured logs:
+### Logger
 
-```js
-log.infoD("non-metric-log", {"msg": "this is my info", user: "user-id", group: "group-id"})
-log.error("this is an error with no extra structured metadata")
-```
+```ts
+import * as kv from "kayvee";
 
-## Example: Kayvee Internals
+const log = new kv.Logger("my-app");
 
-Here's are two examples snippets that log a kayvee formatted string:
+// Title only
+log.info("server-started");
+log.warn("high-memory");
+log.error("db-connection-failed");
+log.critical("out-of-disk");
 
-```js
-console.error(kayvee.format({"hello":"world"}));
-# {"hello":"world"}
+// Title + structured data
+log.infoD("request-handled", { method: "GET", path: "/api/users", duration_ms: 42 });
+log.errorD("db-query-failed", { table: "users", error: err.message });
 ```
 
-```js
-console.error(kayvee.formatLog("test_source", kayvee.INFO, "title", {"foo" : 1, "bar" : "baz"}));
-# {"foo":1,"bar":"baz","source":"test_source","level":"info","title":"title"}
+The constructor signature is:
+
+```ts
+new kv.Logger(source, logLevel?, formatter?, output?)
 ```
 
-## Example: Kayvee Log Routing
+- `source` (required) — identifies the application or component emitting the log
+- `logLevel` — defaults to `process.env.KAYVEE_LOG_LEVEL` or `"debug"`
+- `formatter` — defaults to `kv.format`
+- `output` — defaults to `console.error`
 
-Log routing is a mechanism for defining where log lines should go once they've entered Clever's logging pipeline.   Routes are defined in a yaml file called kvconfig.yml.  Here's an example of a log routing rule that sends a slack message:
+You can also configure after construction:
 
-```js
-// main.js
-const kv = require("../kayvee-js");
+```ts
+log.setLogLevel("warning");
+log.setFormatter(kv.format);
+log.setOutput(console.error);
+```
+
+#### Logging methods
+
+Title only:
+
+- `log.debug("title")`
+- `log.info("title")`
+- `log.warn("title")`
+- `log.error("title")`
+- `log.critical("title")`
+
+Title + metadata:
+
+- `log.debugD("title", { key: "value" })`
+- `log.infoD("title", { key: "value" })`
+- `log.warnD("title", { key: "value" })`
+- `log.errorD("title", { key: "value" })`
+- `log.criticalD("title", { key: "value" })`
+
+#### Metrics
+
+```ts
+log.counter("counter-name")              // defaults to value 1
+log.counterD("counter-name", 5, { extra: "info" })
+log.gauge("gauge-name", 100)
+log.gaugeD("gauge-name", 100, { extra: "info" })
+```
+
+### Formatters
+
+#### `kv.format(data)`
+
+Converts a map to stringified JSON, automatically injecting Clever deploy environment variables (`_DEPLOY_ENV`, `_POD_ID`, etc.) when present.
+
+```ts
+console.error(kv.format({ hello: "world" }));
+// {"hello":"world"}
+```
+
+#### `kv.formatLog(source, level, title, data)`
+
+Like `format`, but takes reserved logging params:
+
+```ts
+console.error(kv.formatLog("my-app", kv.INFO, "request-handled", { duration_ms: 42 }));
+// {"duration_ms":42,"source":"my-app","level":"info","title":"request-handled"}
+```
+
+### Log Routing
+
+Log routing defines where log lines go once they enter Clever's logging pipeline. Routes are defined in `kvconfig.yml`.
+
+```ts
+// main.ts
+import * as kv from "kayvee";
+
 kv.setGlobalRouting("./kvconfig.yml");
 
-const log = new kv.logger("myApp");
+const log = new kv.Logger("my-app");
 
-module.exports = (cb) => {
-    // Simple debugging
-    log.debug("Service has started");
-
-    // Do something async
-    setImmediate(() => {
-        // Output structured data
-        log.infoD("DataResults", {"key": "value"}); // Sends slack message
-
-        // You can use an object to send arbitrary key value pairs
-        log.infoD("DataResults", {"shorter": "line"}); // will NOT send a slack message
-
-        cb(null);
-    });
-};
+log.infoD("DataResults", { key: "value" }); // triggers the route below
 ```
 
 ```yml
@@ -75,196 +117,96 @@ module.exports = (cb) => {
 routes:
   key-val:
     matchers:
-      title: [ "DataResults", "QueryResults" ]
-      key: [ "value" ]
+      title: ["DataResults"]
+      key: ["value"]
     output:
       type: "notifications"
-      channel: "#distribution"
+      channel: "#my-channel"
       icon: ":rocket:"
       message: "%{key}"
-      user: "Flight Tracker"
+      user: "My App"
 ```
 
-### Testing
+#### Testing log routing
 
-To ensure that your log-routing rules are correct, use `mockRouting` to temporarily mock out kayvee.  The mock kayvee will record which rules and how often they were matched.
+Use `mockRouting` to verify routes in tests:
 
+```ts
+import * as kv from "kayvee";
+import { main } from "./main";
 
-```js
-// main-test.js
-const assert = require("assert");
-
-const kv = require("../kayvee-js");
 kv.setGlobalRouting("./kvconfig.yml");
 
-const main = require("./main");
-
-kv.mockRouting(kvdone => { // Don't nest kv.mockRouting calls!!
-    main(err => {
-        assert.ifError(err);
-
-        let ruleMatches = kvdone();
-        assert.equal(ruleMatches["key-val"].length, 1);
-    });
+kv.mockRouting(done => {
+  main(err => {
+    const ruleMatches = done();
+    assert.equal(ruleMatches["key-val"].length, 1);
+  });
 });
 ```
 
-For more information on log routing see https://clever.atlassian.net/wiki/spaces/ENG/pages/90570917/Application+Log+Routing
+For more information see https://clever.atlassian.net/wiki/spaces/ENG/pages/90570917/Application+Log+Routing
 
-## Testing
+### Middleware
 
-Run `make test` to execute the tests
+Kayvee includes Express-compatible logging middleware:
+
+```ts
+import express from "express";
+import * as kv from "kayvee";
+
+const app = express();
+app.use(kv.middleware({ source: "my-app" }));
+```
+
+Additional options:
+
+- `headers` — array of request header names to log (e.g. `["x-request-id"]`)
+- `handlers` — array of `(req, res) => Record<string, string>` functions for custom fields
+- `ignore_dir` — suppress `2xx` logs for static file requests; object with `directory` (absolute path) and `path` (express mount point, defaults to `/`)
+
+```ts
+app.use(kv.middleware({
+  source: "my-app",
+  headers: ["x-request-id"],
+  handlers: [
+    (req, res) => ({ user_id: req.user?.id }),
+  ],
+}));
+```
+
+Log within a request handler using `req.log`:
+
+```ts
+app.get("/things/:id", (req, res) => {
+  doTheThing((err, data) => {
+    if (err) {
+      req.log.errorD("do_the_thing_error", { error: err.message });
+      return res.sendStatus(500);
+    }
+    req.log.infoD("do_the_thing_success", { id: req.params.id });
+    res.json(data);
+  });
+});
+```
+
+## Development
+
+```
+make build   # compile TypeScript to dist/
+make test    # run tests
+make lint    # lint
+```
 
 ## Change log
 
+- v4.0.0 - Rewritten in TypeScript with ESM source, CommonJS dist output; `dist/` replaces `build/`
 - v3.3.0 - Middleware log lines are now routable
 - v3.2.0 - Exposed support for overriding the value field on metrics and alerts outputs
 - v3.1.0 - Added support for matching on booleans and a wildcard ("*")
 - v3.0.0 - Introduced log-routing
-- v2.4.0 - Add middleware.
-- v2.3.0 - Convert CoffeeScript to ES6 / Typescript.
+- v2.4.0 - Add middleware
+- v2.3.0 - Convert CoffeeScript to ES6 / Typescript
 - v2.0.0 - Implement `logger` functionality along with support for `gauge` and `counter` metrics
-- v1.0.3 - Readme cleanup.
-- v1.0.2 - Prints stringified JSON, published as Javascript lib to NPM.
-- v0.0.1 - Initial release.
-
-## Usage
-
-### Logger
-
-#### kayvee/logger constructor
-
-```js
-# only source is required
-var log = new kayvee.Logger(source, logLvl = process.env.KAYVEE_LOG_LEVEL, formatter = kv.format, output = console.error)
-```
-
-An environment variable named `KAYVEE_LOG_LEVEL` can be used instead of setting `logLvl` in the application.
-
-#### kayvee/logger setConfig
-
-```js
-log.setConfig(source, logLvl, formatter, output)
-```
-
-You can also individually set the `config` using:
-
-* `setLogLevel`: defaults to `LOG_LEVELS.Debug`
-* `setFormatter`: defaults to `kv.format`
-* `setOutput`: defaults to `console.error`
-
-#### kayvee/logger logging
-
-Titles only:
-
-* `log.debug("title")`
-* `log.info("title")`
-* `log.warn("title")`
-* `log.error("title")`
-* `log.critical("title")`
-
-Title + Metadata:
-
-* `log.debugD("title" {key1: "value", key2: "val"})`
-* `log.infoD("title" {key1: "value", key2: "val"})`
-* `log.warnD("title" {key1: "value", key2: "val"})`
-* `log.errorD("title" {key1: "value", key2: "val"})`
-* `log.criticalD("title" {key1: "value", key2: "val"})`
-
-#### kayvee/logger metrics
-
-* `log.counter("counter-name")` defaults to value of `1`
-* `log.gauge("gauge-name", 100)`
-
-* `log.counterD("counter-with-data", 2, {extra: "info"})`
-* `log.gaugeD("gauge-with-data", 2, {extra: "info"})`
-
-### Formatters
-
-#### format
-
-```js
-kayvee.format(data)
-```
-Format converts a map to stringified json output
-
-#### formatLog
-
-```js
-kayvee.formatLog(source, level, title, data)
-```
-`formatLog` is similar to `format`, but takes additional reserved params to promote
-logging best-practices
-
-- `source` (string) - locality of the log; an application name or part of an application
-- `level` (string) - available levels are
-    - "unknown
-    - "critical
-    - "error"
-    - "warning"
-    - "info"
-- `title` (string) - the event that occurred
-- `data` (object) - other parameters describing the event
-
-### Middleware
-
-Kayvee includes logging middleware, compatible with expressJS.
-
-The middleware can be added most simply via
-
-```js
-var kayvee = require('kayvee');
-
-var app = express();
-app.use(kayvee.middleware({"source":"my-app"}));
-```
-
-Note that `source` is a required field, since it clarifies which application is emitting the logs.
-
-The middleware also supports further user configuration via the `options` object.
-It prints the values of `headers` or the results of `handlers`.
-If a value is `undefined`, the key will not be printed.
-
-- `headers`
-    - type: array of strings
-    - each of these strings is a request header, e.g. `X-Request-Id`
-- `handlers`
-    - type: an array of functions that return dicts of key-val pairs to be added to the logger's output.
-        These functions have the interface `(request, response) => { "key": "val" }`.
-- `ignore_dir`
-    - type: object containing the keys `directory` and `path`
-        - `directory` is the absolute file path of the directory that contains static files. This is the path passed to `express.static`
-        - `path` is the express mount point for these files. Defaults to `/`.
-        This will ignore all requests with `statusCode < 400` to `path`/`file/path/in/dir`
-
-For example, the below snippet causes the `X-Request-Id` request header and a param called `some_id` to be logged.
-
-
-```js
-var kayvee = require('kayvee');
-
-var app = express();
-var options = {
-    source: "my-app",
-    headers: ["x-request-id"],
-    handlers: [
-        (req, res) => { return {"some_id": req.params.some_id}; }
-    ],
-};
-app.use(kayvee.middleware(options));
-```
-
-You can also log with the request context using `req.log`. For example:
-
-```js
-myRouteHandler(req, res) {
-    doTheThing((err, data) => {
-        if (err) {
-            req.log.errorD("do_the_thing_error", {error: err.message});
-            res.send(500);
-        }
-        req.log.infoD("do_the_thing_success", {response: data});
-        res.send(200);
-    });
-}
-```
+- v1.0.2 - Prints stringified JSON, published as Javascript lib to NPM
+- v0.0.1 - Initial release
