@@ -17,14 +17,11 @@ module.exports = {
   ],
   parser: "@typescript-eslint/parser",
   parserOptions: {
-    ecmaFeatures: {
-      jsx: true,
-    },
     ecmaVersion: 13,
     sourceType: "module",
     project: "./tsconfig.test.json",
   },
-  plugins: ["react", "react-hooks", "@typescript-eslint"],
+  plugins: ["@typescript-eslint"],
   rules: {
     camelcase: "off",
     "comma-dangle": ["error", "always-multiline"],
@@ -79,11 +76,6 @@ module.exports = {
     "no-unused-vars": "off",
     "no-var": "off",
     quotes: ["error", "double", "avoid-escape"],
-    "react/display-name": "off",
-    "react/jsx-indent": "off",
-    "react/no-did-update-set-state": "off",
-    "react/prop-types": "off",
-    "react/sort-comp": "off",
     "vars-on-top": "off",
     "@typescript-eslint/ban-ts-comment": [
       "error",
@@ -112,8 +104,5 @@ module.exports = {
   ],
   settings: {
     "import/resolver": "webpack",
-    react: {
-      version: "detect",
-    },
   },
 };
