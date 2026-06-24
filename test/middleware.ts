@@ -1,14 +1,13 @@
-var assert = require("assert");
-var express = require("express");
-var http = require("http");
-var path = require("path");
-var request = require("supertest");
-var split = require("split");
-var _ = require("underscore");
-var kayee_logger = require("../lib/logger/logger");
-const { middleware: kv_middleware } = require("../lib/middleware");
+import assert from "assert";
+import express from "express";
+import http from "node:http";
+import path from "node:path";
+import request from "supertest";
+import split from "split";
+import { setGlobalRouting } from "../lib/logger/logger";
+import { middleware as kv_middleware } from "../lib/middleware";
 
-kayee_logger.setGlobalRouting(path.join(__dirname, "/kvconfig.yml"));
+setGlobalRouting(path.join(__dirname, "/kvconfig.yml"));
 
 /*
  * Helpers copied from expressjs/morgan
@@ -81,7 +80,7 @@ function createServer(server_type, clever_options, morgan_options, fn) {
   return server;
 }
 
-_.each(["http", "express"], (serverType) => {
+["http", "express"].forEach((serverType) => {
   describe(`middleware for *${serverType}* server: prototype pollution testing`, () => {
     it("params with toString is stripped", (done) => {
       var cb = afterTest(2, (err, res, line) => {

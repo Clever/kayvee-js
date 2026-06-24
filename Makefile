@@ -15,7 +15,7 @@ test: lint test/tests.json $(TESTS)
 
 $(TESTS):
 	_DEPLOY_ENV=testing _EXECUTION_NAME=abc DEBUG=us:progress NODE_ENV=test TS_NODE_PROJECT=tsconfig.test.json \
-	node_modules/.bin/mocha --require ts-node/register --timeout 60000 test/$@.ts
+	node_modules/.bin/mocha --require ts-node/register --timeout 60000 --exit test/$@.ts
 
 benchmarks: build benchmark-data
 	node benchmarks/routing.js
