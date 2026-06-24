@@ -26,6 +26,13 @@
       "types":   "./dist/router/index.d.ts"
     }
   },
+  "typesVersions": {
+    "*": {
+      "logger": ["dist/logger/logger.d.ts"],
+      "middleware": ["dist/middleware.d.ts"],
+      "router": ["dist/router/index.d.ts"]
+    }
+  },
   "files": [
     "dist/**/*",
     "README.md",
