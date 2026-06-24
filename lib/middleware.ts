@@ -1,6 +1,6 @@
-import fs from "fs";
-import path from "path";
-import { parse as parseUrl } from "url";
+import fs from "node:fs";
+import path from "node:path";
+import { parse as parseUrl } from "node:url";
 import morgan from "morgan";
 import qs from "qs";
 import { format as kvFormat } from "./kayvee";
