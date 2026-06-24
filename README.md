@@ -149,14 +149,17 @@ For more information see https://clever.atlassian.net/wiki/spaces/ENG/pages/9057
 
 ### Middleware
 
-Kayvee includes Express-compatible logging middleware:
+Kayvee includes Express-compatible logging middleware. Because it depends on
+express types, it is exported from the `kayvee/middleware` subpath rather than
+the package root — so consumers that only use the logger (e.g. generated API
+clients) don't need express installed:
 
 ```ts
 import express from "express";
-import * as kv from "kayvee";
+import { middleware } from "kayvee/middleware";
 
 const app = express();
-app.use(kv.middleware({ source: "my-app" }));
+app.use(middleware({ source: "my-app" }));
 ```
 
 Additional options:
@@ -166,7 +169,7 @@ Additional options:
 - `ignore_dir` — suppress `2xx` logs for static file requests; object with `directory` (absolute path) and `path` (express mount point, defaults to `/`)
 
 ```ts
-app.use(kv.middleware({
+app.use(middleware({
   source: "my-app",
   headers: ["x-request-id"],
   handlers: [
