@@ -1,21 +1,13 @@
-/**
- * Module dependencies.
- * @private
- */
+import fs from "node:fs";
+import path from "node:path";
+import { parse as parseUrl } from "node:url";
+import morgan from "morgan";
+import qs from "qs";
+import { format as kvFormat } from "./kayvee";
+import { Logger, getGlobalRouter } from "./logger/logger";
+import type { Request, Response, NextFunction } from "express";
 
-var fs = require("fs");
-var path = require("path");
-
-var kayvee = require("../lib/kayvee");
-var KayveeLogger = require("../lib/logger/logger");
-var morgan = require("morgan");
-var _ = require("underscore");
-
-/**
- * all relative files path in a directory
- */
-
-function walkDirSync(dir, files = []) {
+function walkDirSync(dir: string, files: string[] = []): string[] {
   const list = fs.readdirSync(dir);
   list.forEach((file) => {
     const f = path.join(dir, file);
@@ -28,138 +20,93 @@ function walkDirSync(dir, files = []) {
   return files.map((f) => path.relative(dir, f));
 }
 
-/**
- * returns a middleware function that checks if path exists in dir.
- *
- * Files in the directory are prefixed by base_path and compared to
- * req.path
- */
-
-function skip_path(dir, base_path = "/") {
+function skip_path(dir: string, base_path = "/"): (req: Request, res: Response) => boolean {
   let files = walkDirSync(dir);
   files = files.map((file) => path.join(base_path, file));
   console.error(
     `KayveeMiddleware: Skipping successful requests for files in ${dir} at ${base_path}`,
   );
-  return (req, res) => _(files).contains(req.path) && res.statusCode < 400;
+  return (req: Request, res: Response) => files.includes(req.path) && res.statusCode < 400;
 }
 
-/**
- * request path
- */
-
-function getBaseUrl(req) {
-  var url = req.originalUrl || req.url;
-  var parsed = require("url").parse(url, true);
-  return parsed.pathname;
+function getBaseUrl(req: Request): string | null {
+  const url = req.originalUrl || req.url;
+  const parsed = parseUrl(url, true);
+  return parsed.pathname ?? null;
 }
 
-/**
- * request query params
- */
-
-function getQueryParams(req) {
-  var url = req.originalUrl || req.url;
-  var parsed = require("url").parse(url, true);
-  var parsedQueryString = require("qs").parse(parsed.search, {
+function getQueryParams(req: Request): string {
+  const url = req.originalUrl || req.url;
+  const parsed = parseUrl(url, true);
+  const parsedQueryString = qs.parse(parsed.search ?? "", {
     allowPrototypes: false,
     ignoreQueryPrefix: true,
   });
-  return `?${require("qs").stringify(parsedQueryString)}`;
+  return `?${qs.stringify(parsedQueryString)}`;
 }
 
-/**
- * response size
- */
-
-function getResponseSize(res) {
-  var result = undefined;
-  var headers = res.headers || res._headers;
+function getResponseSize(res: Response): number | undefined {
+  const headers = res.getHeaders ? res.getHeaders() : (res as any)._headers;
   if (headers && headers["content-length"]) {
-    result = Number(headers["content-length"]);
-  } else if (res.data) {
-    result = res.data.length;
+    return Number(headers["content-length"]);
+  } else if ((res as any).data) {
+    return (res as any).data.length;
   }
-  return result;
+  return undefined;
 }
 
-/**
- * response time in nanoseconds
- */
-
-function getResponseTimeNs(req, res) {
-  if (!req._startAt || !res._startAt) {
-    // missing request and/or response start time
+function getResponseTimeNs(req: Request, res: Response): number | undefined {
+  if (!(req as any)._startAt || !(res as any)._startAt) {
     return undefined;
   }
-
-  // calculate diff
-  var ns = (res._startAt[0] - req._startAt[0]) * 1e9 + (res._startAt[1] - req._startAt[1]);
+  const ns =
+    ((res as any)._startAt[0] - (req as any)._startAt[0]) * 1e9 +
+    ((res as any)._startAt[1] - (req as any)._startAt[1]);
   return ns;
 }
 
-/**
- * IP address that sent the request.
- *
- * `req.ip` is defined in Express: http://expressjs.com/en/api.html#req.ip
- */
-function getIp(req) {
-  var remoteAddress = req.connection ? req.connection.remoteAddress : undefined;
+function getIp(req: Request): string | undefined {
+  const remoteAddress = (req as any).connection ? (req as any).connection.remoteAddress : undefined;
   return req.ip || remoteAddress;
 }
 
-/**
- * Log level
- */
-function getLogLevel(req, res) {
+function getLogLevel(req: Request, res: Response): string {
   const statusCode = res.statusCode;
-  let result;
   if (statusCode >= 499) {
-    result = KayveeLogger.Error;
-  } else {
-    result = KayveeLogger.Info;
+    return Logger.Error;
   }
-  return result;
+  return Logger.Info;
 }
 
-/*
- * Default handlers
- */
-var defaultHandlers = [
-  // Request method
-  (req) => ({ method: req.method }),
-  // Path (URL without query params)
-  (req) => ({ path: getBaseUrl(req) }),
-  // Query params
-  (req) => ({ params: getQueryParams(req) }),
-  // Response size
-  (req, res) => ({ "response-size": getResponseSize(res) }),
-  // Response time (ns)
-  (req, res) => ({ "response-time": getResponseTimeNs(req, res) }),
-  // Status code
-  (req, res) => ({ "status-code": res.statusCode }),
-  // Ip address
-  (req) => ({ ip: getIp(req) }),
-  // Via -- what library/code produced this log?
-  () => ({ via: "kayvee-middleware" }),
+type Handler = (req: Request, res?: Response) => Record<string, unknown>;
 
-  // Kayvee's reserved fields
-  // Log level
-  (req, res) => ({ level: getLogLevel(req, res) }),
-  // Source -- which app emitted this log?
-  // -> Gets passed in among `options` during library initialization
-  // Title
+const defaultHandlers: Handler[] = [
+  (req) => ({ method: req.method }),
+  (req) => ({ path: getBaseUrl(req) }),
+  (req) => ({ params: getQueryParams(req) }),
+  (req, res) => ({ "response-size": getResponseSize(res!) }),
+  (req, res) => ({ "response-time": getResponseTimeNs(req, res!) }),
+  (req, res) => ({ "status-code": res!.statusCode }),
+  (req) => ({ ip: getIp(req) }),
+  () => ({ via: "kayvee-middleware" }),
+  (req, res) => ({ level: getLogLevel(req, res!) }),
   () => ({ title: "request-finished" }),
 ];
 
-const defaultContextHandlers = [];
+const defaultContextHandlers: Handler[] = [];
 
-function handlerData(handlers, ...args) {
-  const data = {};
+function handlerData(handlers: Handler[], req: Request, res?: Response): Record<string, unknown> {
+  const data: Record<string, unknown> = {};
   handlers.forEach((h) => {
     try {
-      const handler_data = h(...args);
-      _.extend(data, handler_data);
+      const handler_data = h(req, res);
+      if (
+        handler_data !== null &&
+        typeof handler_data === "object" &&
+        !Array.isArray(handler_data)
+      ) {
+        Object.assign(data, handler_data);
+      }
     } catch (e) {
       // swallow invalid handler
     }
@@ -167,104 +114,89 @@ function handlerData(handlers, ...args) {
   return data;
 }
 
-class ContextLogger {
-  logger = null;
-  handlers = [];
-  args = [];
+export class ContextLogger {
+  logger: any;
+  handlers: Handler[];
+  req: Request;
+  res?: Response;
 
-  constructor(logger, handlers, ...args) {
+  constructor(logger: any, handlers: Handler[], req: Request, res?: Response) {
     this.logger = logger;
     this.handlers = handlers;
-    this.args = args;
+    this.req = req;
+    this.res = res;
   }
 
-  _contextualData(data) {
-    return _.extend(handlerData(this.handlers, ...this.args), data);
+  _contextualData(data: Record<string, unknown>): Record<string, unknown> {
+    return Object.assign(handlerData(this.handlers, this.req, this.res), data);
   }
 }
 
-for (const func of KayveeLogger.LEVELS) {
-  ContextLogger.prototype[func] = function (title) {
+for (const func of Logger.LEVELS) {
+  (ContextLogger.prototype as any)[func] = function (title: string) {
     this[`${func}D`](title, {});
   };
-  ContextLogger.prototype[`${func}D`] = function (title, data) {
+  (ContextLogger.prototype as any)[`${func}D`] = function (
+    title: string,
+    data: Record<string, unknown>,
+  ) {
     this.logger[`${func}D`](title, this._contextualData(data));
   };
 }
 
-for (const func of KayveeLogger.METRICS) {
-  ContextLogger.prototype[func] = function (title, value) {
+for (const func of Logger.METRICS) {
+  (ContextLogger.prototype as any)[func] = function (title: string, value: number) {
     this[`${func}D`](title, value, {});
   };
-  ContextLogger.prototype[`${func}D`] = function (title, value, data) {
+  (ContextLogger.prototype as any)[`${func}D`] = function (
+    title: string,
+    value: number,
+    data: Record<string, unknown>,
+  ) {
     this.logger[`${func}D`](title, value, this._contextualData(data));
   };
 }
 
-/*
- * User configuration is passed via an `options` object.
- * Results from configuration are prioritized such that (`base_handlers` > `handlers` > `headers`).
- *
- * // `headers` - logs these request headers, if they exist
- *
- * headers: e.g. ['X-Request-Id', 'Host']
- *
- * // `handlers` - an array of functions of that return dicts to be logged.
- *
- * handlers: e.g. [function(request, response) { return {"key":"val"}]
- *
- * // `base_handlers` - an array of functions of that return dicts to be logged.
- * // Barring exceptional circumstances, `base_handlers` should not be overriden by the user.
- * // `base_handlers` defaults to a core set of handlers to run... see `defaultHandlers`.
- * //
- * // Separating `base_handlers` from `handlers` is done to ensure that reserved keys
- * // don't accidentally get overriden by custom handlers. This can now only happen if
- * // the user explicitly overrides `base_handlers`.
- *
- * base_handlers: e.g. [function(request, response) { return {"key":"val"}]
- *
- */
+export interface MiddlewareOptions {
+  source: string;
+  headers?: string[];
+  handlers?: Handler[];
+  base_handlers?: Handler[];
+  ignore_dir?: { directory: string; path: string };
+}
 
-var formatLine = (options_arg) => {
-  var options = options_arg || {};
+const formatLine = (options_arg: MiddlewareOptions) => {
+  const options: MiddlewareOptions = options_arg || ({} as MiddlewareOptions);
 
-  // `source` is the one required field
   if (!options.source) {
     throw Error("Missing required config for 'source' in Kayvee middleware 'options'");
   }
 
-  const router = KayveeLogger.getGlobalRouter();
+  const router = getGlobalRouter();
 
-  return (tokens, req, res) => {
-    // Build a dict of data to log
-    var data = { _kvmeta: undefined }; // Adding _kvmeta here to make typescript compile happy
+  return (_tokens: any, req: Request, res: Response) => {
+    const data: Record<string, unknown> = {};
 
-    // Add user-configured request headers
-    var custom_headers = options.headers || [];
-    var header_data = {};
+    const custom_headers = options.headers || [];
+    const header_data: Record<string, unknown> = {};
     custom_headers.forEach((h) => {
-      // Header field names are case insensitive, so let's be consistent
-      var lc = h.toLowerCase();
+      const lc = h.toLowerCase();
       header_data[lc] = req.headers[lc];
     });
-    _.extend(data, header_data);
+    Object.assign(data, header_data);
 
-    // Run user-configured handlers; add custom data
-    var custom_handlers = options.handlers || [];
-
-    // Allow user to override `base_handlers`; provide sane default set of handlers
-    var base_handlers = options.base_handlers || defaultHandlers;
+    const custom_handlers = options.handlers || [];
+    let base_handlers = options.base_handlers || defaultHandlers;
     base_handlers = base_handlers.concat([() => ({ source: options.source })]);
 
-    // Execute custom-handlers THEN base-handlers
     const all_handlers = custom_handlers.concat(base_handlers);
-    _.extend(data, handlerData(all_handlers, req, res));
+    Object.assign(data, handlerData(all_handlers, req, res));
 
     if (router) {
       data._kvmeta = router.route(data);
     }
 
-    return kayvee.format(data);
+    return kvFormat(data);
   };
 };
 
@@ -273,45 +205,41 @@ const defaultContextLoggerOpts = {
   handlers: defaultContextHandlers,
 };
 
-/**
- * Module exports.
- * @public
- */
+export function middleware(
+  clever_options: MiddlewareOptions,
+  secondOpt?: any,
+): (req: Request, res: Response, next: NextFunction) => void {
+  if (process.env.NODE_ENV === "test") {
+    const morgan_options = secondOpt || { skip: null };
+    if (clever_options.ignore_dir) {
+      morgan_options.skip = skip_path(
+        clever_options.ignore_dir.directory,
+        clever_options.ignore_dir.path,
+      );
+    }
+    return morgan(formatLine(clever_options), morgan_options) as any;
+  }
 
-if (process.env.NODE_ENV === "test") {
-  module.exports = (clever_options, morgan_options = { skip: null }) => {
-    if (clever_options.ignore_dir) {
-      morgan_options.skip = skip_path(
-        clever_options.ignore_dir.directory,
-        clever_options.ignore_dir.path,
-      );
-    }
-    return morgan(formatLine(clever_options), morgan_options);
+  if (!clever_options.source) {
+    throw new Error("Missing required config for 'source' in Kayvee middleware 'options'");
+  }
+  const context_logger_options = secondOpt || defaultContextLoggerOpts;
+  const logger = new Logger(clever_options.source);
+  const morgan_options: any = {
+    stream: process.stderr,
+    skip: null,
   };
-  module.exports.ContextLogger = ContextLogger;
-} else {
-  module.exports = (clever_options, context_logger_options = defaultContextLoggerOpts) => {
-    // `source` is the one required field
-    if (!clever_options.source) {
-      throw new Error("Missing required config for 'source' in Kayvee middleware 'options'");
+  if (clever_options.ignore_dir) {
+    morgan_options.skip = skip_path(
+      clever_options.ignore_dir.directory,
+      clever_options.ignore_dir.path,
+    );
+  }
+  const morgan_logger = morgan(formatLine(clever_options), morgan_options) as any;
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (context_logger_options.enabled) {
+      (req as any).log = new ContextLogger(logger, context_logger_options.handlers, req);
     }
-    const logger = new KayveeLogger(clever_options.source);
-    const morgan_options = {
-      stream: process.stderr,
-      skip: null,
-    };
-    if (clever_options.ignore_dir) {
-      morgan_options.skip = skip_path(
-        clever_options.ignore_dir.directory,
-        clever_options.ignore_dir.path,
-      );
-    }
-    const morgan_logger = morgan(formatLine(clever_options), morgan_options);
-    return (req, res, next) => {
-      if (context_logger_options.enabled) {
-        req.log = new ContextLogger(logger, context_logger_options.handlers, req);
-      }
-      morgan_logger(req, res, next);
-    };
+    morgan_logger(req, res, next);
   };
 }

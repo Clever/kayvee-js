@@ -1,8 +1,7 @@
-var assert = require("assert");
-var sinon = require("sinon");
-
-var middleware = require("../lib/middleware");
-var KayveeLogger = require("../lib/logger/logger");
+import assert from "assert";
+import sinon from "sinon";
+import { Logger as KayveeLogger } from "../lib/logger/logger";
+import * as middleware from "../lib/middleware";
 
 describe("ContextLogger", () => {
   const fake_req = { key1: "val1" };

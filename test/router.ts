@@ -1,5 +1,5 @@
-var assert = require("assert");
-var router = require("../lib/router");
+import assert from "assert";
+import * as router from "../lib/router";
 
 describe("router.Router", () => {
   describe("constructor", () => {

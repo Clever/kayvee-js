@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "types": ["node", "mocha"]
+  },
+  "include": ["lib/**/*", "test/**/*"],
+  "exclude": ["node_modules", "build"],
+  "ts-node": {
+    "transpileOnly": true
+  }
+}

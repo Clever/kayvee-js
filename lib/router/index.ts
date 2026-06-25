@@ -1,21 +1,28 @@
-var fs = require("fs");
-var jsonschema = require("jsonschema");
-var schema = require("./schema_definitions");
-var yaml = require("js-yaml");
-var _ = require("underscore");
+import fs from "node:fs";
+import { Validator } from "jsonschema";
+import { load } from "js-yaml";
+// JSON imports with "with { type: 'json' }" work in both native ESM (Node 24) and
+// TypeScript/ts-node CJS (compiled to require()). This avoids import.meta.url which
+// prevents Node 24 from bypassing ts-node's CJS hook via loadESMFromCJS.
+// @ts-ignore TS1343 - import attributes are supported in TS 5.3+
+import schema from "./schema_definitions.json" with { type: "json" };
+// @ts-ignore TS1343
+import packageJson from "../../package.json" with { type: "json" };
 
-var packageJson = require("../../package.json");
-const kvVersion = packageJson.version;
+const kvVersion: string = packageJson.version;
 const teamName = process.env._TEAM_OWNER || "UNSET";
 
 const reEnvvarTokens = new RegExp("\\$\\{(.+?)\\}", "g");
 const reFieldTokens = new RegExp("%\\{(.+?)\\}", "g");
 
 // For performance reason this code is intentionally redundant and not-inlined.
-// Removing redundancy and inlining this function some how makes performance worst.
-function substituteEnvVars(obj, subber) {
-  const rtn = {};
-  const replacer = (s) => s.replace(reEnvvarTokens, (__, p1) => subber(p1));
+// Removing redundancy and inlining this function somehow makes performance worst.
+function substituteEnvVars(
+  obj: Record<string, unknown>,
+  subber: (k: string) => string | undefined,
+): Record<string, unknown> {
+  const rtn: Record<string, unknown> = {};
+  const replacer = (s: string) => s.replace(reEnvvarTokens, (__, p1) => subber(p1) ?? "");
 
   for (const key in obj) {
     const val = obj[key];
@@ -27,26 +34,26 @@ function substituteEnvVars(obj, subber) {
       }
       rtn[key] = updatedVals;
     } else {
-      rtn[key] = replacer(val);
+      rtn[key] = replacer(val as string);
     }
   }
 
   return rtn;
 }
 
-function deepKey(obj, key) {
+function deepKey(obj: Record<string, unknown>, key: string): unknown {
   const path = key.split(".");
 
   let idx = 0;
-  let val = obj;
+  let val: unknown = obj;
   do {
-    val = val[path[idx++]];
+    val = (val as Record<string, unknown>)[path[idx++]];
   } while (val && idx < path.length);
 
   return val;
 }
 
-function fieldMatches(obj, field, values) {
+function fieldMatches(obj: Record<string, unknown>, field: string, values: string[]): boolean {
   const val = obj[field] || deepKey(obj, field);
 
   if (val == null || val === "") {
@@ -66,16 +73,16 @@ function fieldMatches(obj, field, values) {
   return false;
 }
 
-class Rule {
-  name = null;
-  matchers = null;
-  output = null;
+export class Rule {
+  name: string;
+  matchers: Record<string, string[]>;
+  output: Record<string, unknown>;
 
-  constructor(name, matchers, output) {
+  constructor(name: string, matchers: Record<string, string[]>, output: Record<string, unknown>) {
     this.name = name;
     this.matchers = matchers;
 
-    const envMissing = [];
+    const envMissing: string[] = [];
     this.output = substituteEnvVars(output, (k) => {
       const val = process.env[k];
       if (val == null) {
@@ -105,22 +112,20 @@ class Rule {
     this.output.rule = this.name;
   }
 
-  // matches returns true if `msg` matches against this rule
-  matches(msg) {
+  matches(msg: Record<string, unknown>): boolean {
     for (const field in this.matchers) {
       if (!fieldMatches(msg, field, this.matchers[field])) {
         return false;
       }
     }
-
     return true;
   }
 
-  // returns the output with kv substitutions performed
-  outputFor(msg) {
-    const rtn = {};
-    const subst = (__, k) => msg[k] || deepKey(msg, k) || "KEY_NOT_FOUND";
-    const replacer = (s) => s.replace(reFieldTokens, subst);
+  outputFor(msg: Record<string, unknown>): Record<string, unknown> {
+    const rtn: Record<string, unknown> = {};
+    const subst = (__: string, k: string) =>
+      (msg[k] as string) || (deepKey(msg, k) as string) || "KEY_NOT_FOUND";
+    const replacer = (s: string) => s.replace(reFieldTokens, subst);
 
     for (const key in this.output) {
       const val = this.output[key];
@@ -132,7 +137,7 @@ class Rule {
         }
         rtn[key] = updatedVals;
       } else {
-        rtn[key] = replacer(val);
+        rtn[key] = replacer(val as string);
       }
     }
 
@@ -140,78 +145,77 @@ class Rule {
   }
 }
 
-// validateKVConfig ensures that `routes` matches the config schema. We have this
-// function instead of just doing a plain jsonschema.validate in order to get
-// better error messages for the "output" object (by default jsonschema would
-// just tell you that the output block doesn't match any of the known output
-// formats, but won't tell you what's wrong because it doesn't let you
-// condition on the output.type property).
-function validateKVConfig(config) {
-  const validator = new jsonschema.Validator();
-  const results = validator.validate(config, schema);
+interface ValidateResult {
+  valid: boolean;
+  errors: string[];
+}
+
+function validateKVConfig(config: unknown): ValidateResult {
+  const validator = new Validator();
+  const results = validator.validate(config, schema as any);
 
   return {
     valid: results.valid,
-    errors: results.errors.map((err) => err.stack),
+    errors: results.errors.map((err) => err.stack ?? ""),
   };
 }
 
-// parseConfig parses and validates the configuration passed as a string. It
-// returns an object of the form {valid, rules, errors}, where valid is true if
-// it was successfully parsed, rules is an array of rules, and errors is an
-// array of errors.
-function parseConfig(fileString) {
-  let config;
+interface ParseResult {
+  valid: boolean;
+  rules: Rule[];
+  errors: unknown[];
+}
+
+function parseConfig(fileString: string): ParseResult {
+  let config: any;
   try {
-    config = yaml.safeLoad(fileString);
+    config = load(fileString);
   } catch (e) {
     return { valid: false, rules: [], errors: [e] };
   }
   const validateRes = validateKVConfig(config);
   if (!validateRes.valid) {
-    return _.assign(validateRes, { rules: [] });
+    return Object.assign(validateRes, { rules: [] });
   }
   try {
-    const rulesObj = _.mapObject(
-      config.routes,
-      (elem, name) => new Rule(name, elem.matchers, elem.output),
+    const rules = Object.entries(config.routes).map(
+      ([name, elem]: [string, any]) => new Rule(name, elem.matchers, elem.output),
     );
-    const rules = _.values(rulesObj);
     return { valid: true, rules, errors: [] };
   } catch (e) {
     return { valid: false, rules: [], errors: [e] };
   }
 }
 
-class Router {
-  rules = null;
+interface RouteResult {
+  team: string;
+  kv_version: string;
+  kv_language: string;
+  routes: Record<string, unknown>[];
+}
 
-  constructor(rules) {
+export class Router {
+  rules: Rule[];
+
+  constructor(rules?: Rule[]) {
     this.rules = rules || [];
   }
 
-  // loadConfig reads in the config located at `filename` and sets the routing
-  // rules to what it finds there. It should be a YAML-formatted file with
-  // routing rules placed under the `routes` key on the root object.
-  loadConfig(filename) {
+  loadConfig(filename: string): void {
     const data = fs.readFileSync(filename, "utf8");
     this._loadConfigString(data);
   }
 
-  _loadConfigString(configStr) {
+  _loadConfigString(configStr: string): void {
     const parsedRules = parseConfig(configStr);
     if (!parsedRules.valid) {
-      throw new Error(parsedRules.errors);
+      throw new Error(String(parsedRules.errors));
     }
     this.rules = parsedRules.rules;
   }
 
-  // route matches the log line `msg` against all loaded rules and returns a
-  // metadata object describing the outputs it should be sent to based on that
-  // matching. logger.ts will attach this to log lines under the `_kvmeta`
-  // property.
-  route(msg) {
-    const outputs = [];
+  route(msg: Record<string, unknown>): RouteResult {
+    const outputs: Record<string, unknown>[] = [];
     for (let i = 0; i < this.rules.length; i++) {
       const rule = this.rules[i];
       if (rule.matches(msg)) {
@@ -227,8 +231,3 @@ class Router {
     };
   }
 }
-
-module.exports = {
-  Router,
-  Rule,
-};

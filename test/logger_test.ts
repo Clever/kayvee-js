@@ -1,5 +1,5 @@
-var KayveeLogger = require("../lib/logger/logger");
-var assert = require("assert");
+import { Logger as KayveeLogger } from "../lib/logger/logger";
+import assert from "assert";
 
 let sample = "";
 function outputFunc(text) {

@@ -1,18 +1,17 @@
-var kv = require("../lib/kayvee");
-var assert = require("assert");
-var _ = require("underscore");
-var fs = require("fs");
+import * as kv from "../lib/kayvee";
+import assert from "assert";
+import fs from "node:fs";
 
 describe("kayvee", () => {
   const tests = JSON.parse(fs.readFileSync("test/tests.json"));
   describe(".format", () => {
-    _.each(tests.format, (spec) => {
+    tests.format.forEach((spec) => {
       it(spec.title, () => {
         const actual = kv.format(spec.input.data);
         const expected = spec.output;
         assert.deepEqual(
           JSON.parse(actual),
-          _.extend({ deploy_env: "testing", wf_id: "abc" }, JSON.parse(expected)),
+          Object.assign({ deploy_env: "testing", wf_id: "abc" }, JSON.parse(expected)),
         );
       });
     });
@@ -31,7 +30,7 @@ describe("kayvee", () => {
   });
 
   describe(".formatLog", () => {
-    _.each(tests.formatLog, (spec) => {
+    tests.formatLog.forEach((spec) => {
       it(spec.title, () => {
         const actual = kv.formatLog(
           spec.input.source,
@@ -42,7 +41,7 @@ describe("kayvee", () => {
         const expected = spec.output;
         assert.deepEqual(
           JSON.parse(actual),
-          _.extend({ deploy_env: "testing", wf_id: "abc" }, JSON.parse(expected)),
+          Object.assign({ deploy_env: "testing", wf_id: "abc" }, JSON.parse(expected)),
         );
       });
     });

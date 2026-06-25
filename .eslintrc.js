@@ -9,27 +9,19 @@ module.exports = {
   extends: [
     // https://github.com/eslint/eslint
     "eslint:recommended",
-    // https://github.com/yannickcr/eslint-plugin-react
-    "plugin:react/recommended",
-    // https://github.com/facebook/react/tree/master/packages/eslint-plugin-react-hooks
-    "plugin:react-hooks/recommended",
     // https: //github.com/typescript-eslint/typescript-eslint/tree/master/packages/eslint-plugin
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended",
     // https://github.com/prettier/eslint-config-prettier
     "prettier",
-    "prettier/@typescript-eslint",
   ],
   parser: "@typescript-eslint/parser",
   parserOptions: {
-    ecmaFeatures: {
-      jsx: true,
-    },
     ecmaVersion: 13,
     sourceType: "module",
-    project: "./tsconfig.json",
+    project: "./tsconfig.test.json",
   },
-  plugins: ["react", "react-hooks", "@typescript-eslint"],
+  plugins: ["@typescript-eslint"],
   rules: {
     camelcase: "off",
     "comma-dangle": ["error", "always-multiline"],
@@ -84,11 +76,6 @@ module.exports = {
     "no-unused-vars": "off",
     "no-var": "off",
     quotes: ["error", "double", "avoid-escape"],
-    "react/display-name": "off",
-    "react/jsx-indent": "off",
-    "react/no-did-update-set-state": "off",
-    "react/prop-types": "off",
-    "react/sort-comp": "off",
     "vars-on-top": "off",
     "@typescript-eslint/ban-ts-comment": [
       "error",
@@ -117,8 +104,5 @@ module.exports = {
   ],
   settings: {
     "import/resolver": "webpack",
-    react: {
-      version: "detect",
-    },
   },
 };

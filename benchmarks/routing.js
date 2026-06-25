@@ -16,13 +16,13 @@ let basicRouting = new kv.logger("perf", kv.logger.LEVELS.Debug, (noop) => "", (
 let pathoRouting = new kv.logger("perf", kv.logger.LEVELS.Debug, (noop) => "", (noop) => "");
 let realRouting = new kv.logger("perf", kv.logger.LEVELS.Debug, (noop) => "", (noop) => "");
 
-let basicRouter = new kv.router.Router();
+let basicRouter = new kv.Router();
 basicRouter.loadConfig(dataDir + "kvconfig-basic.yml");
 
-let pathoRouter = new kv.router.Router();
+let pathoRouter = new kv.Router();
 pathoRouter.loadConfig(dataDir + "kvconfig-pathological.yml");
 
-let realRouter = new kv.router.Router();
+let realRouter = new kv.Router();
 realRouter.loadConfig(dataDir + "kvconfig-realistic.yml");
 
 basicRouting.setRouter(basicRouter);
