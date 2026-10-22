@@ -3,9 +3,9 @@ kind: Component
 metadata:
   name: kayvee-js
   description: Package kayvee provides methods to output human and machine parseable strings
-  owner: unknown
+  owner: eng-infra
 spec:
   type: unknown
   lifecycle: production
-  owner: unknown
+  owner: eng-infra
   system: Clever
